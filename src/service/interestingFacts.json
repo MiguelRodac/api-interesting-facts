@@ -1,0 +1,109 @@
+{
+  "interesting_facts_in_life": [
+    {
+      "id": 0,
+      "title": "La gratitud cambia el cerebro",
+      "description": "Escribir tres cosas por las que estás agradecido cada día puede mejorar tu bienestar emocional y reducir el estrés.",
+      "studyLocation": "Universidad de California, Berkeley",
+      "source": "https://greatergood.berkeley.edu/article/item/how_gratitude_changes_you_and_your_brain"
+    },
+    {
+      "id": 1,
+      "title": "Los abrazos reducen el estrés",
+      "description": "Un abrazo de 20 segundos libera oxitocina, la hormona del amor, ayudando a reducir el estrés y fortalecer las relaciones.",
+      "studyLocation": "Universidad Carnegie Mellon",
+      "source": "https://www.cmu.edu/news/stories/archives/2014/december/december17_hugsprotect.html"
+    },
+    {
+      "id": 2,
+      "title": "Salir a la naturaleza mejora el estado de ánimo",
+      "description": "Pasar solo 20 minutos en un entorno natural reduce los niveles de cortisol, la hormona del estrés.",
+      "studyLocation": "Universidad de Michigan",
+      "source": "https://news.umich.edu/feeling-stressed-take-a-nature-pill-says-u-m-researcher/"
+    },
+    {
+      "id": 3,
+      "title": "Leer ficción aumenta la empatía",
+      "description": "Las historias ayudan a las personas a comprender mejor las emociones y perspectivas de otros, fortaleciendo la inteligencia emocional.",
+      "studyLocation": "The New School for Social Research",
+      "source": "https://www.sciencedirect.com/science/article/abs/pii/S0272735813000797"
+    },
+    {
+      "id": 4,
+      "title": "La música feliz puede mejorar la creatividad",
+      "description": "Escuchar música alegre activa áreas del cerebro relacionadas con el pensamiento divergente y la resolución de problemas.",
+      "studyLocation": "Universidad de Radboud",
+      "source": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3741536/"
+    },
+    {
+      "id": 5,
+      "title": "El agua mejora la piel",
+      "description": "La hidratación adecuada contribuye a una piel más saludable y reduce el riesgo de sequedad.",
+      "studyLocation": "Instituto Europeo de Hidratación",
+      "source": "https://www.europeanhydrationinstitute.org/hydration_and_health/"
+    },
+    {
+      "id": 6,
+      "title": "Escribir metas incrementa el éxito",
+      "description": "Las personas que escriben sus metas tienen un 42% más de probabilidad de alcanzarlas. La escritura ayuda a clarificar pensamientos y mantener el enfoque.",
+      "studyLocation": "Dominican University of California",
+      "source": "https://www.dominican.edu/academics/lae/undergraduate-programs/psych/faculty/assets-gail-matthews/researchsummary2.pdf"
+    },
+    {
+      "id": 7,
+      "title": "La meditación mejora la concentración",
+      "description": "Meditar regularmente durante al menos 10 minutos al día mejora la capacidad de atención y reduce los niveles de ansiedad.",
+      "studyLocation": "Universidad de Harvard",
+      "source": "https://www.health.harvard.edu/blog/mindfulness-meditation-may-ease-anxiety-mental-stress-201401086967"
+    },
+    {
+      "id": 8,
+      "title": "Las caminatas fomentan la creatividad",
+      "description": "Caminar al aire libre puede aumentar el pensamiento creativo en un 60%, ayudando a resolver problemas de manera innovadora.",
+      "studyLocation": "Universidad de Stanford",
+      "source": "https://news.stanford.edu/2014/04/24/walking-vs-sitting-042414/"
+    },
+    {
+      "id": 9,
+      "title": "Practicar actos de bondad aumenta la felicidad",
+      "description": "Realizar acciones desinteresadas, como ayudar a otros o dar un cumplido, tiene efectos positivos en el bienestar emocional.",
+      "studyLocation": "Universidad de California, Riverside",
+      "source": "https://greatergood.berkeley.edu/article/item/kindness_makes_you_happy_and_happiness_makes_you_kind"
+    },
+    {
+      "id": 10,
+      "title": "Tomar agua al despertar mejora la energía",
+      "description": "Beber un vaso de agua al despertar rehidrata el cuerpo y ayuda a activar el metabolismo, mejorando la claridad mental y la energía.",
+      "studyLocation": "Instituto Europeo de Hidratación",
+      "source": "https://www.europeanhydrationinstitute.org/hydration_and_health/"
+    },
+    {
+      "id": 11,
+      "title": "Beber agua previene la deshidratación",
+      "description": "Tomar agua regularmente durante el día previene la deshidratación, mejorando la función de órganos esenciales.",
+      "studyLocation": "Instituto Europeo de Hidratación",
+      "source": "https://www.europeanhydrationinstitute.org/hydration_and_health/"
+    },
+    {
+      "id": 12,
+      "title": "El agua ayuda a la digestión",
+      "description": "Beber agua facilita el proceso digestivo y ayuda en la absorción adecuada de nutrientes.",
+      "studyLocation": "Instituto Europeo de Hidratación",
+      "source": "https://www.europeanhydrationinstitute.org/hydration_and_health/"
+    },
+    {
+      "id": 13,
+      "title": "Hidratación y rendimiento físico",
+      "description": "Mantenerse hidratado optimiza el rendimiento físico y reduce la fatiga durante actividades intensas.",
+      "studyLocation": "Instituto Europeo de Hidratación",
+      "source": "https://www.europeanhydrationinstitute.org/hydration_and_health/"
+    },
+    {
+      "id": 14,
+      "title": "El agua regula la temperatura corporal",
+      "description": "La hidratación adecuada ayuda al cuerpo a mantener una temperatura estable durante el ejercicio o el calor.",
+      "studyLocation": "Instituto Europeo de Hidratación",
+      "source": "https://www.europeanhydrationinstitute.org/hydration_and_health/"
+    }
+  ]
+}
