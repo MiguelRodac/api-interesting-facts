@@ -1,4 +1,4 @@
-import { UrlString } from './interfacesGlobals'
+import { UrlString } from './globals.interface'
 
 export interface IinterestingFact {
   id: number

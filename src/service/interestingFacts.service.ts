@@ -1,8 +1,8 @@
-import { IinterestingFact, IinterestingFactAdd } from '../interface/interestingFactsInterface'
-import crudJson from './crudJsonServices'
+import { IinterestingFact, IinterestingFactAdd } from '../interface/facts.interface'
+import crudJson from './crudJson.service'
 
 // File path
-const filePath = './src/service/interestingFacts.json'
+const filePath = './src/mock/interestingFacts.json'
 
 // Funtion to get all interesting facts
 export const getInterestingFacts = async (): Promise<IinterestingFact[]> => {

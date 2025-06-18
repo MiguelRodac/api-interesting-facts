@@ -1,5 +1,5 @@
 import express from 'express' // ESModules
-import { getInterestingFacts, addInterestingFact, getInterestingFactById, updateInterestingFact, deleteInterestingFact } from '../service/interestingFactsService'
+import { getInterestingFacts, addInterestingFact, getInterestingFactById, updateInterestingFact, deleteInterestingFact } from '../service/interestingFacts.service'
 import { validateInterestingFactAdd } from '../utils/interestingFactsValidators'
 
 const router = express.Router()
