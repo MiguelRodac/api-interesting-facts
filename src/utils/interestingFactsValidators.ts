@@ -1,6 +1,6 @@
-import { IinterestingFact, IinterestingFactAdd } from '../interface/interestingFactsInterface'
-import { UrlString } from '../interface/interfacesGlobals'
-import * as validators from './validatorsGlobals'
+import { IinterestingFact, IinterestingFactAdd } from '../interface/facts.interface'
+import { UrlString } from '../interface/globals.interface'
+import * as validators from './globlasValidators'
 
 const validateInterestingFactAdd = (fact: IinterestingFactAdd): IinterestingFactAdd => {
   const newFact: IinterestingFactAdd = {

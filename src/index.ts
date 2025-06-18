@@ -1,5 +1,5 @@
 import express from 'express'
-import interestingFacts from './routes/interestingFactsRoutes'
+import interestingFacts from './routes/interestingFacts.route'
 
 // Create Express App
 const app = express()
