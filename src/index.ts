@@ -1,14 +1,17 @@
 import express from 'express'
 import interestingFacts from './routes/interestingFacts.route'
+import { validateToken } from './middleware/authToken.middleware';
 
 // Create Express App
 const app = express()
 
-// Middleware
-app.use(express.json()) // para que express pueda entender el json
+// Middleware para validar el token
+app.use(validateToken);
+// Middlewares básicos
+app.use(express.json());
 
 // Constants
-const PORT = 3000
+const PORT = process.env.PORT || 3001;
 
 // Routes Root
 app.get('/ping', (_, res) => {
