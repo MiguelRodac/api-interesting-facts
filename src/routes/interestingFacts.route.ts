@@ -4,7 +4,7 @@ import { validateInterestingFactAdd } from '../utils/interestingFactsValidators'
 
 const router = express.Router()
 
-router.get('/', async (_, res) => {
+router.get('/', async (_req, res) => {
   try {
     const interestingFacts = await getInterestingFacts()
     res.status(200).send(interestingFacts)
