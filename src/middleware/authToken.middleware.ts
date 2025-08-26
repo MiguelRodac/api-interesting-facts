@@ -1,10 +1,12 @@
+import { NextFunction, Request, Response } from "express";
+
 /**
  * Middleware para validar el token en las peticiones.
  * @param req - Objeto de solicitud
  * @param res - Objeto de respuesta
  * @param next - Función para pasar al siguiente middleware
  */
-export const validateToken = (req:any, res:any, next:any) => {
+export const validateToken = (req: Request, res: Response, next: NextFunction): any => {
     // GET token form header
     // const authHeader = req.headers['Authorization'];
     const token = req.headers['x-auth-token'];

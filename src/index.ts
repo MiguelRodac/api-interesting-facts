@@ -1,6 +1,9 @@
 import express from 'express'
 import interestingFacts from './routes/interestingFacts.route'
 import { validateToken } from './middleware/authToken.middleware';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 // Create Express App
 const app = express()
