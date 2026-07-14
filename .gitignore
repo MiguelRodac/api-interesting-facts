@@ -29,30 +29,8 @@ logs/
 *.log
 
 # IDEs and editors
-.idea/
 .vscode/
-.settings/
-*.sublime-workspace
-*.sublime-settings
-.c9/
-*.launch
-.history/
-
-# OS files
-.DS_Store
-Thumbs.db
 
 # OpenCode / Agent configs
 .atl/
 specs/
-
-# Test coverage
-coverage/
-
-# Temporary files
-*.tmp
-*.temp
-.tmp/
-
-# Build artifacts
-*.tgz
