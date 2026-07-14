@@ -1,0 +1,230 @@
+{
+	"info": {
+		"name": "API Interesting Facts",
+		"description": "API para gestionar hechos interesantes (interesting facts). Proyecto de portafolio.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3919",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "3quaNZaYTH1okXfZ4CSCQNixmwpsRw",
+			"type": "string"
+		}
+	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "key",
+				"value": "x-auth-token",
+				"in": "header"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "GET /ping",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ping",
+							"host": ["{{baseUrl}}"],
+							"path": ["ping"]
+						},
+						"description": "Health check - responde con PONG"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Interesting Facts (sin auth)",
+			"item": [
+				{
+					"name": "GET /api/interesting-facts",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts"]
+						},
+						"description": "Obtener todos los hechos interesantes"
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/interesting-facts/:id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts", "1"]
+						},
+						"description": "Obtener un hecho interesante por ID"
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/interesting-facts",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Nuevo hecho interesante\",\n    \"description\": \"Descripción del hecho interesante discovered.\",\n    \"studyLocation\": \"Universidad de prueba\",\n    \"source\": \"https://example.com/research\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts"]
+						},
+						"description": "Crear un nuevo hecho interesante"
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /api/interesting-facts/:id",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Hecho actualizado\",\n    \"description\": \"Descripción actualizada del hecho.\",\n    \"studyLocation\": \"Universidad actualizada\",\n    \"source\": \"https://example.com/updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts", "1"]
+						},
+						"description": "Actualizar un hecho interesante por ID"
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /api/interesting-facts/:id",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts", "1"]
+						},
+						"description": "Eliminar un hecho interesante por ID"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Interesting Facts (con auth - main)",
+			"item": [
+				{
+					"name": "GET /api/interesting-facts (con token)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts"]
+						},
+						"description": "Obtener todos los hechos - CON token de autenticación (requerido en main)"
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/interesting-facts (con token)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-auth-token",
+								"value": "{{authToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Nuevo hecho con auth\",\n    \"description\": \"Descripción del hecho interesante con autenticación.\",\n    \"studyLocation\": \"Universidad con auth\",\n    \"source\": \"https://example.com/auth-research\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts"]
+						},
+						"description": "Crear un nuevo hecho - CON token (requerido en main)"
+					},
+					"response": []
+				},
+				{
+					"name": "Sin token - debe fallar (401)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts"]
+						},
+						"description": "GET sin token - verificar que devuelve 401 Unauthorized (solo en main)"
+					},
+					"response": []
+				},
+				{
+					"name": "Token inválido - debe fallar (422)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-auth-token",
+								"value": "token-invalido",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/interesting-facts",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "interesting-facts"]
+						},
+						"description": "GET con token inválido - verificar que devuelve 422 (solo en main)"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
