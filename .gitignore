@@ -1,44 +1,58 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
+# =============================================
+# API Interesting Facts - .gitignore
+# =============================================
 
 # Compiled output
-/build
+/build/
+dist/
+out/
 
 # Node
-/node_modules
-npm-debug.log
-yarn-error.log
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# Package managers lock files (use only ONE)
+# Comment/uncomment the one you use
+# npm
+# package-lock.json
+# yarn
+# yarn.lock
+# pnpm
+pnpm-lock.yaml
+
+# Environment variables (NEVER commit these)
+.env
+
+# Logs
+logs/
+*.log
 
 # IDEs and editors
 .idea/
-.project
-.classpath
-.c9/
-*.launch
+.vscode/
 .settings/
 *.sublime-workspace
+*.sublime-settings
+.c9/
+*.launch
+.history/
 
-# Visual Studio Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-.history/*
-
-# Miscellaneous
-/.angular/cache
-.sass-cache/
-/connect.lock
-/coverage
-/libpeerconnection.log
-testem.log
-/typings
-
-/src/Domains.json
-
-# System files
+# OS files
 .DS_Store
 Thumbs.db
 
-#environments
-# src/environment
+# OpenCode / Agent configs
+.atl/
+specs/
+
+# Test coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+
+# Build artifacts
+*.tgz
