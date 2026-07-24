@@ -34,3 +34,4 @@ logs/
 # OpenCode / Agent configs
 .atl/
 specs/
+openspec/
