@@ -53,7 +53,7 @@ const facts = [
   }
 ]
 
-async function seed () {
+async function seed (): Promise<void> {
   const collection = db.collection('interestingFacts')
 
   for (const fact of facts) {
