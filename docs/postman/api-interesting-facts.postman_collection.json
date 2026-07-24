@@ -1,0 +1,179 @@
+{
+  "info": {
+    "name": "Interesting Facts API",
+    "description": "API for managing interesting facts. Uses Firebase Auth (Bearer JWT) for protected endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ping",
+              "host": ["{{baseUrl}}"],
+              "path": ["ping"]
+            },
+            "description": "Health check - returns PONG"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "item": [
+        {
+          "name": "GET /api/interesting-facts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/interesting-facts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interesting-facts"]
+            },
+            "description": "Get 3 random interesting facts (no auth required)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /api/interesting-facts/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/interesting-facts/REPLACE_WITH_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interesting-facts", "REPLACE_WITH_ID"]
+            },
+            "description": "Get a single interesting fact by ID (no auth required)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Protected",
+      "item": [
+        {
+          "name": "POST /api/interesting-facts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Honey never spoils\",\n  \"description\": \"Archaeologists found 3000-year-old honey in Egyptian tombs that was still edible.\",\n  \"studyLocation\": \"University of Copenhagen\",\n  \"source\": \"https://example.com/research\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/interesting-facts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interesting-facts"]
+            },
+            "description": "Create a new interesting fact (requires Bearer token)"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /api/interesting-facts/:id",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated fact title\",\n  \"description\": \"Updated description of the interesting fact.\",\n  \"studyLocation\": \"Updated University\",\n  \"source\": \"https://example.com/updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/interesting-facts/REPLACE_WITH_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interesting-facts", "REPLACE_WITH_ID"]
+            },
+            "description": "Update an existing interesting fact (requires Bearer token)"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /api/interesting-facts/:id",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/interesting-facts/REPLACE_WITH_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "interesting-facts", "REPLACE_WITH_ID"]
+            },
+            "description": "Delete an interesting fact (requires Bearer token)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Documentation",
+      "item": [
+        {
+          "name": "GET /api/docs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "docs"]
+            },
+            "description": "Scalar API Reference UI (requires Bearer token)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

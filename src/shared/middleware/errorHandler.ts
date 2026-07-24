@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import { AppError } from '../errors/AppError'
 import { ValidationError } from '../errors/ValidationError'
+import { logger } from '../logger'
 
 export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction): void => {
   if (err instanceof AppError) {
@@ -15,7 +16,7 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
     return
   }
 
-  console.error('Unhandled error:', err)
+  logger.error({ err }, 'Unhandled error')
   res.status(500).json({
     error: 'Internal server error',
     code: 'INTERNAL_ERROR'

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
-import './shared/database/firebase/admin'
+import '../database/firebase/admin'
 import { getAuth } from 'firebase-admin/auth'
 import { UnauthorizedError } from '../errors/UnauthorizedError'
 

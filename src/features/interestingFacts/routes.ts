@@ -40,7 +40,7 @@ router.post('/', requireAuth, async (req, res, next) => {
 router.put('/:id', requireAuth, async (req, res, next) => {
   try {
     const validated = validateInterestingFactAdd(req.body)
-    const updated = await service.update(req.params.id, validated)
+    const updated = await service.update(req.params.id as string, validated)
     res.status(200).json(updated)
   } catch (err) {
     next(err)
@@ -49,7 +49,7 @@ router.put('/:id', requireAuth, async (req, res, next) => {
 
 router.delete('/:id', requireAuth, async (req, res, next) => {
   try {
-    await service.delete(req.params.id)
+    await service.delete(req.params.id as string)
     res.status(200).json({ message: 'Interesting fact deleted' })
   } catch (err) {
     next(err)
