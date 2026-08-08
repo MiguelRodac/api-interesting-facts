@@ -1,14 +1,26 @@
 openapi: 3.0.3
 info:
-  title: Interesting Facts API
-  description: API for managing interesting facts with Firebase Auth and Firestore
+  title: Social Facts API
+  description: API for social facts with Firebase Auth, PostgreSQL + Prisma
   version: 0.0.1
   contact:
     name: API Support
 
 servers:
-  - url: http://localhost:3001
+  - url: http://localhost:3000
     description: Local development
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Auth
+    description: Authentication and user onboarding
+  - name: Users
+    description: User profiles and discovery
+  - name: Facts
+    description: Facts CRUD and listing
+  - name: Likes
+    description: Like/unlike facts
 
 paths:
   /ping:
@@ -25,27 +37,12 @@ paths:
                 type: string
                 example: PONG
 
-  /api/interesting-facts:
-    get:
-      summary: Get 3 random interesting facts
-      operationId: getRandomFacts
-      tags: [Interesting Facts]
-      responses:
-        '200':
-          description: Array of 3 random facts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/InterestingFact'
-        '500':
-          $ref: '#/components/responses/InternalError'
-
+  # Auth routes (mounted at /auth)
+  /auth/profile:
     post:
-      summary: Create a new interesting fact
-      operationId: createFact
-      tags: [Interesting Facts]
+      summary: Create user profile (onboarding)
+      operationId: createProfile
+      tags: [Auth]
       security:
         - bearerAuth: []
       requestBody:
@@ -53,22 +50,147 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InterestingFactAdd'
+              $ref: '#/components/schemas/CreateProfileRequest'
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+  /auth/me:
+    get:
+      summary: Get current user profile
+      operationId: getCurrentUser
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+    patch:
+      summary: Update current user profile
+      operationId: updateCurrentUser
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+
+  # Public user routes
+  /users/{username}:
+    get:
+      summary: Get public profile by username
+      operationId: getPublicProfile
+      tags: [Users]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Username to look up
+      responses:
+        '200':
+          description: Public profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicUserResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  # Facts routes
+  /facts:
+    get:
+      summary: Get all facts (newest first)
+      operationId: getFacts
+      tags: [Facts]
+      responses:
+        '200':
+          description: Array of facts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FactResponse'
+
+    post:
+      summary: Create a new fact
+      operationId: createFact
+      tags: [Facts]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFactRequest'
       responses:
         '201':
           description: Fact created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InterestingFact'
+                $ref: '#/components/schemas/FactResponse'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/InternalError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
 
-  /api/interesting-facts/{id}:
+  /facts/popular:
+    get:
+      summary: Get all facts sorted by likes count (most liked first)
+      operationId: getPopularFacts
+      tags: [Facts]
+      responses:
+        '200':
+          description: Array of facts sorted by popularity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FactResponse'
+
+  /facts/{id}:
     parameters:
       - name: id
         in: path
@@ -80,23 +202,21 @@ paths:
     get:
       summary: Get a fact by ID
       operationId: getFactById
-      tags: [Interesting Facts]
+      tags: [Facts]
       responses:
         '200':
           description: Single fact
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InterestingFact'
+                $ref: '#/components/schemas/FactResponse'
         '404':
           $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalError'
 
     put:
-      summary: Update a fact by ID
+      summary: Update a fact (author only)
       operationId: updateFact
-      tags: [Interesting Facts]
+      tags: [Facts]
       security:
         - bearerAuth: []
       requestBody:
@@ -104,46 +224,144 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InterestingFactAdd'
+              $ref: '#/components/schemas/UpdateFactRequest'
       responses:
         '200':
           description: Fact updated
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InterestingFact'
+                $ref: '#/components/schemas/FactResponse'
         '400':
           $ref: '#/components/responses/ValidationError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalError'
 
     delete:
-      summary: Delete a fact by ID
+      summary: Delete a fact (author only)
       operationId: deleteFact
-      tags: [Interesting Facts]
+      tags: [Facts]
       security:
         - bearerAuth: []
       responses:
-        '200':
+        '204':
           description: Fact deleted
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /facts/author/{authorId}:
+    get:
+      summary: Get all facts by an author
+      operationId: getFactsByAuthor
+      tags: [Facts]
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Author's Firebase UID
+      responses:
+        '200':
+          description: Array of facts by author
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Interesting fact deleted
+                type: array
+                items:
+                  $ref: '#/components/schemas/FactResponse'
+
+  # Likes routes
+  /facts/{factId}/likes:
+    parameters:
+      - name: factId
+        in: path
+        required: true
+        schema:
+          type: string
+        description: Fact ID
+
+    post:
+      summary: Like a fact
+      operationId: likeFact
+      tags: [Likes]
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Like created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeResponse'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
         '404':
           $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/InternalError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+
+    delete:
+      summary: Unlike a fact
+      operationId: unlikeFact
+      tags: [Likes]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Like removed
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+    get:
+      summary: Get all likes for a fact
+      operationId: getFactLikes
+      tags: [Likes]
+      responses:
+        '200':
+          description: Array of likes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LikeResponse'
+
+  /users/{userId}/likes:
+    get:
+      summary: Get all likes by a user
+      operationId: getUserLikes
+      tags: [Likes]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User's Firebase UID
+      responses:
+        '200':
+          description: Array of likes by user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LikeResponse'
 
   /api/docs:
     get:
@@ -168,48 +386,163 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Firebase JWT token obtained from the React Native client
+      description: Firebase JWT token
 
   schemas:
-    InterestingFact:
+    # User schemas
+    CreateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          pattern: '^[a-zA-Z0-9_]{3,30}$'
+          description: Alphanumeric and underscores, 3-30 characters
+          example: johndoe
+        displayName:
+          type: string
+          minLength: 1
+          example: John Doe
+        avatarUrl:
+          type: string
+          format: uri
+          example: https://example.com/avatar.png
+      required: [username, displayName]
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          example: John Doe
+        avatarUrl:
+          type: string
+          example: https://example.com/new-avatar.png
+
+    UserResponse:
+      type: object
+      properties:
+        firebaseUid:
+          type: string
+          example: abc123xyz
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        username:
+          type: string
+          example: johndoe
+        displayName:
+          type: string
+          example: John Doe
+        avatarUrl:
+          type: string
+          nullable: true
+          example: https://example.com/avatar.png
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-08-07T20:00:00.000Z'
+      required: [firebaseUid, email, username, displayName, createdAt]
+
+    PublicUserResponse:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        displayName:
+          type: string
+          example: John Doe
+        avatarUrl:
+          type: string
+          nullable: true
+          example: https://example.com/avatar.png
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-08-07T20:00:00.000Z'
+      required: [username, displayName, createdAt]
+
+    # Fact schemas
+    CreateFactRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          example: Did you know?
+        content:
+          type: string
+          minLength: 10
+          maxLength: 200
+          example: Honey never spoils. Archaeologists found 3000-year-old honey in Egyptian tombs.
+      required: [content]
+
+    UpdateFactRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+          example: Updated title
+        content:
+          type: string
+          minLength: 10
+          maxLength: 200
+          example: Updated content with more than 10 characters.
+
+    FactResponse:
       type: object
       properties:
         id:
           type: string
-          example: abc123
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        authorId:
+          type: string
+          description: Author's Firebase UID
+          example: abc123xyz
         title:
           type: string
-          example: Honey never spoils
-        description:
+          nullable: true
+          example: Did you know?
+        content:
           type: string
-          example: Archaeologists found 3000-year-old honey in Egyptian tombs that was still edible
-        studyLocation:
+          example: Honey never spoils. Archaeologists found 3000-year-old honey in Egyptian tombs.
+        createdAt:
           type: string
-          example: University of Copenhagen
-        source:
+          format: date-time
+          example: '2026-08-07T20:00:00.000Z'
+        updatedAt:
           type: string
-          format: uri
-          example: https://example.com/research
-      required: [id, title, description, studyLocation, source]
+          format: date-time
+          example: '2026-08-07T20:00:00.000Z'
+      required: [id, authorId, content, createdAt, updatedAt]
 
-    InterestingFactAdd:
+    # Like schemas
+    LikeResponse:
       type: object
       properties:
-        title:
+        id:
           type: string
-          example: Honey never spoils
-        description:
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440001
+        userId:
           type: string
-          example: Archaeologists found 3000-year-old honey in Egyptian tombs that was still edible
-        studyLocation:
+          description: User's Firebase UID
+          example: abc123xyz
+        factId:
           type: string
-          example: University of Copenhagen
-        source:
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        createdAt:
           type: string
-          format: uri
-          example: https://example.com/research
-      required: [title, description, studyLocation, source]
+          format: date-time
+          example: '2026-08-07T20:00:00.000Z'
+      required: [id, userId, factId, createdAt]
 
+    # Error schemas
     ErrorResponse:
       type: object
       properties:
@@ -233,7 +566,17 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             error: Authorization header with Bearer token is required
-            code: UNAUTHORIZED
+            code: TOKEN_MISSING
+
+    ForbiddenError:
+      description: Access denied or onboarding incomplete
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: User has not completed onboarding
+            code: ONBOARDING_INCOMPLETE
 
     NotFoundError:
       description: Resource not found
@@ -242,8 +585,18 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
-            error: Interesting fact with id abc123 not found
-            code: NOT_FOUND
+            error: User 'johndoe' not found
+            code: USER_NOT_FOUND
+
+    ConflictError:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: User already exists
+            code: USER_EXISTS
 
     ValidationError:
       description: Request validation failed
@@ -252,17 +605,7 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
           example:
-            error: A fact with the same title or description already exists
-            code: VALIDATION_ERROR
+            error: Content must be between 10 and 200 characters
+            code: CONTENT_TOO_SHORT
             details:
-              title: Duplicate title or description
-
-    InternalError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-          example:
-            error: Internal server error
-            code: INTERNAL_ERROR
+              content: Content must be between 10 and 200 characters

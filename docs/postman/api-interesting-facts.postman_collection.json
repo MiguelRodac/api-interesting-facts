@@ -1,13 +1,13 @@
 {
   "info": {
-    "name": "Interesting Facts API",
-    "description": "API for managing interesting facts. Uses Firebase Auth (Bearer JWT) for protected endpoints.",
+    "name": "Social Facts API",
+    "description": "API for social facts with Firebase Auth, PostgreSQL + Prisma. Set `{{token}}` with a Firebase JWT to test protected endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3001",
+      "value": "http://localhost:3000",
       "type": "string"
     },
     {
@@ -37,43 +37,10 @@
       ]
     },
     {
-      "name": "Public",
+      "name": "Auth",
       "item": [
         {
-          "name": "GET /api/interesting-facts",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/interesting-facts",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "interesting-facts"]
-            },
-            "description": "Get 3 random interesting facts (no auth required)"
-          },
-          "response": []
-        },
-        {
-          "name": "GET /api/interesting-facts/:id",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/interesting-facts/REPLACE_WITH_ID",
-              "host": ["{{baseUrl}}"],
-              "path": ["api", "interesting-facts", "REPLACE_WITH_ID"]
-            },
-            "description": "Get a single interesting fact by ID (no auth required)"
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "Protected",
-      "item": [
-        {
-          "name": "POST /api/interesting-facts",
+          "name": "POST /auth/profile",
           "request": {
             "method": "POST",
             "header": [
@@ -89,19 +56,175 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Honey never spoils\",\n  \"description\": \"Archaeologists found 3000-year-old honey in Egyptian tombs that was still edible.\",\n  \"studyLocation\": \"University of Copenhagen\",\n  \"source\": \"https://example.com/research\"\n}"
+              "raw": "{\n  \"username\": \"johndoe\",\n  \"displayName\": \"John Doe\",\n  \"avatarUrl\": \"https://example.com/avatar.png\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/interesting-facts",
+              "raw": "{{baseUrl}}/auth/profile",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "interesting-facts"]
+              "path": ["auth", "profile"]
             },
-            "description": "Create a new interesting fact (requires Bearer token)"
+            "description": "Create user profile (onboarding). First step after Firebase login."
           },
           "response": []
         },
         {
-          "name": "PUT /api/interesting-facts/:id",
+          "name": "GET /auth/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Get current user profile (requires auth)"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /auth/me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"John Updated\",\n  \"avatarUrl\": \"https://example.com/new-avatar.png\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            },
+            "description": "Update current user profile (displayName, avatarUrl). Cannot change username or email."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "GET /users/:username",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/johndoe",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "johndoe"]
+            },
+            "description": "Get public profile by username (no auth required). Returns username, displayName, avatarUrl, createdAt. Does NOT return email."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Facts",
+      "item": [
+        {
+          "name": "GET /facts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facts",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts"]
+            },
+            "description": "Get all facts sorted by newest first (public, no auth)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /facts/popular",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facts/popular",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "popular"]
+            },
+            "description": "Get all facts sorted by likes count (most liked first, public)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /facts/:id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facts/REPLACE_WITH_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "REPLACE_WITH_ID"]
+            },
+            "description": "Get a single fact by ID (public)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /facts/author/:authorId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facts/author/REPLACE_WITH_UID",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "author", "REPLACE_WITH_UID"]
+            },
+            "description": "Get all facts by a specific author (public)"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /facts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Did you know?\",\n  \"content\": \"Honey never spoils. Archaeologists found 3000-year-old honey in Egyptian tombs.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/facts",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts"]
+            },
+            "description": "Create a new fact. Content must be 10-200 characters. Requires auth + completed profile."
+          },
+          "response": []
+        },
+        {
+          "name": "PUT /facts/:id",
           "request": {
             "method": "PUT",
             "header": [
@@ -117,19 +240,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Updated fact title\",\n  \"description\": \"Updated description of the interesting fact.\",\n  \"studyLocation\": \"Updated University\",\n  \"source\": \"https://example.com/updated\"\n}"
+              "raw": "{\n  \"title\": \"Updated title\",\n  \"content\": \"Updated content with more than 10 characters.\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/api/interesting-facts/REPLACE_WITH_ID",
+              "raw": "{{baseUrl}}/facts/REPLACE_WITH_ID",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "interesting-facts", "REPLACE_WITH_ID"]
+              "path": ["facts", "REPLACE_WITH_ID"]
             },
-            "description": "Update an existing interesting fact (requires Bearer token)"
+            "description": "Update a fact (author only, returns 403 if not the author)"
           },
           "response": []
         },
         {
-          "name": "DELETE /api/interesting-facts/:id",
+          "name": "DELETE /facts/:id",
           "request": {
             "method": "DELETE",
             "header": [
@@ -140,11 +263,84 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/interesting-facts/REPLACE_WITH_ID",
+              "raw": "{{baseUrl}}/facts/REPLACE_WITH_ID",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "interesting-facts", "REPLACE_WITH_ID"]
+              "path": ["facts", "REPLACE_WITH_ID"]
             },
-            "description": "Delete an interesting fact (requires Bearer token)"
+            "description": "Delete a fact (author only, returns 403 if not the author)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Likes",
+      "item": [
+        {
+          "name": "POST /facts/:factId/likes",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/facts/REPLACE_WITH_FACT_ID/likes",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "REPLACE_WITH_FACT_ID", "likes"]
+            },
+            "description": "Like a fact. Returns 409 if already liked, 404 if fact doesn't exist."
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /facts/:factId/likes",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/facts/REPLACE_WITH_FACT_ID/likes",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "REPLACE_WITH_FACT_ID", "likes"]
+            },
+            "description": "Unlike a fact. Returns 404 if like doesn't exist."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /facts/:factId/likes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facts/REPLACE_WITH_FACT_ID/likes",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "REPLACE_WITH_FACT_ID", "likes"]
+            },
+            "description": "Get all likes for a fact (public, no auth required)"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users/:userId/likes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/REPLACE_WITH_UID/likes",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "REPLACE_WITH_UID", "likes"]
+            },
+            "description": "Get all likes by a user (public, no auth required)"
           },
           "response": []
         }
