@@ -3,6 +3,7 @@ import { join } from 'path'
 import express from 'express'
 import { apiReference } from '@scalar/express-api-reference'
 import userRoutes from './feature/user/infrastructure/routes/routes'
+import userPublicRoutes from './feature/user/infrastructure/routes/publicRoutes'
 import factRoutes from './feature/facts/infrastructure/routes/routes'
 import likeRoutes from './feature/likes/infrastructure/routes/routes'
 import { errorHandler } from './shared/infrastructure/middleware/errorHandler'
@@ -29,6 +30,9 @@ app.use(
 
 // Mount user routes
 app.use('/auth', userRoutes)
+
+// Mount public user routes (GET /users/:username)
+app.use('/users', userPublicRoutes)
 
 // Mount fact routes
 app.use('/facts', factRoutes)

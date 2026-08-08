@@ -2,13 +2,16 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { PrismaUserRepository } from '../repositories/PrismaUserRepository'
 import { CreateUser } from '../../application/use-cases/CreateUser'
 import { GetUserByFirebaseUid } from '../../application/use-cases/GetUserByFirebaseUid'
+import { UpdateUser } from '../../application/use-cases/UpdateUser'
 import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
+import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
 import { ValidationError } from '../../../../shared/domain/errors/ValidationError'
 
 const router = Router()
 const userRepository = new PrismaUserRepository()
 const createUser = new CreateUser(userRepository)
 const getUserByFirebaseUid = new GetUserByFirebaseUid(userRepository)
+const updateUser = new UpdateUser(userRepository)
 
 // POST /auth/profile — Onboarding endpoint (no requireProfile since it creates the user)
 router.post('/profile', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
@@ -51,7 +54,7 @@ router.post('/profile', requireAuth, async (req: Request, res: Response, next: N
 })
 
 // GET /auth/me — Get current user profile
-router.get('/me', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/me', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const uid = req.user?.uid
 
@@ -60,6 +63,24 @@ router.get('/me', requireAuth, async (req: Request, res: Response, next: NextFun
     }
 
     const user = await getUserByFirebaseUid.execute(uid)
+    res.status(200).json(user)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// PATCH /auth/me — Update current user profile
+router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const uid = req.user?.uid
+
+    if (uid == null) {
+      throw new ValidationError('Authentication required', { auth: 'Authentication required' })
+    }
+
+    const { displayName, avatarUrl } = req.body
+
+    const user = await updateUser.execute(uid, { displayName, avatarUrl })
     res.status(200).json(user)
   } catch (err) {
     next(err)

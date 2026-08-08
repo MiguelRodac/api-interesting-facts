@@ -110,4 +110,40 @@ describe('Auth Endpoints', () => {
       expect(res.status).toBe(401)
     })
   })
+
+  describe('PATCH /auth/me', () => {
+    it('should update profile with valid data', async () => {
+      // First create the user
+      await request(app)
+        .post('/auth/profile')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ username: 'updateuser', displayName: 'Old Name' })
+
+      const res = await request(app)
+        .patch('/auth/me')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ displayName: 'New Name', avatarUrl: 'https://example.com/new.png' })
+
+      expect(res.status).toBe(200)
+      expect(res.body.displayName).toBe('New Name')
+      expect(res.body.avatarUrl).toBe('https://example.com/new.png')
+    })
+
+    it('should return 401 when not authenticated', async () => {
+      const res = await request(app)
+        .patch('/auth/me')
+        .send({ displayName: 'New Name' })
+
+      expect(res.status).toBe(401)
+    })
+
+    it('should return 403 when user has no profile (not onboarded)', async () => {
+      const res = await request(app)
+        .patch('/auth/me')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ displayName: 'New Name' })
+
+      expect(res.status).toBe(403)
+    })
+  })
 })
