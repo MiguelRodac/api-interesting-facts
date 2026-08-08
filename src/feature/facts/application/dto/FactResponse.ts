@@ -3,6 +3,6 @@ export interface FactResponse {
   authorId: string
   title: string | null
   content: string
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
