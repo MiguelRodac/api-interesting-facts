@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  firebaseUid  String   @id @map("firebase_uid")
+  email        String   @unique
+  username     String   @unique
+  displayName  String   @map("display_name")
+  avatarUrl    String?  @map("avatar_url")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  facts Fact[]
+  likes Like[]
+
+  @@map("users")
+}
+
+model Fact {
+  id        String   @id @default(uuid())
+  authorId  String   @map("author_id")
+  author    User     @relation(fields: [authorId], references: [firebaseUid])
+  title     String?
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  likes Like[]
+
+  @@map("facts")
+}
+
+model Like {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  factId    String   @map("fact_id")
+  user      User     @relation(fields: [userId], references: [firebaseUid])
+  fact      Fact     @relation(fields: [factId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, factId])
+  @@map("likes")
+}

@@ -8,7 +8,10 @@
     "start": "node build/index.js",
     "tsc": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "seed": "npx ts-node --transpile-only scripts/seed-firestore.ts --env-file=.env"
+    "seed": "npx ts-node --transpile-only scripts/seed-firestore.ts --env-file=.env",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
   },
   "keywords": [],
   "author": "",
@@ -18,11 +21,13 @@
     "@types/express": "5.0.1",
     "@types/pino": "^7.0.4",
     "@types/pino-http": "^5.8.4",
+    "prisma": "^6.19.3",
     "ts-node-dev": "2.0.0",
     "ts-standard": "12.0.2",
     "typescript": "5.8.3"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "@scalar/express-api-reference": "^0.10.11",
     "dotenv": "^17.2.1",
     "express": "5.1.0",
