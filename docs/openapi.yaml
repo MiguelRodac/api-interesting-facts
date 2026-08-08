@@ -7,7 +7,7 @@ info:
     name: API Support
 
 servers:
-  - url: http://localhost:3000
+  - url: http://localhost:3009
     description: Local development
 
 tags:
@@ -38,6 +38,35 @@ paths:
                 example: PONG
 
   # Auth routes (mounted at /auth)
+  /auth/dev-login:
+    post:
+      summary: Generate a Firebase token for testing (dev only)
+      operationId: devLogin
+      tags: [Auth]
+      description: |
+        **Development-only endpoint.** Generates a Firebase custom token
+        for testing the API without a real Firebase Auth setup.
+        Disabled in production (returns 404).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DevLoginRequest'
+      responses:
+        '200':
+          description: Firebase token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DevLoginResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Not available in production
+
   /auth/profile:
     post:
       summary: Create user profile (onboarding)
@@ -407,6 +436,33 @@ components:
           format: uri
           example: https://example.com/avatar.png
       required: [username, displayName]
+
+    DevLoginRequest:
+      type: object
+      properties:
+        secret:
+          type: string
+          description: Dev login secret (DEV_LOGIN_SECRET env var)
+          example: tu-dev-secret-aqui
+        email:
+          type: string
+          format: email
+          description: Firebase user email
+          example: test@example.com
+        password:
+          type: string
+          description: Firebase user password
+          example: test-password
+      required: [secret, email, password]
+
+    DevLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Firebase ID token (valid for 1 hour)
+          example: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+      required: [token]
 
     UpdateProfileRequest:
       type: object

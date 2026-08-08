@@ -8,7 +8,6 @@ import factRoutes from './feature/facts/infrastructure/routes/routes'
 import likeRoutes from './feature/likes/infrastructure/routes/routes'
 import { errorHandler } from './shared/infrastructure/middleware/errorHandler'
 import { httpLogger } from './shared/infrastructure/logger/pino-http'
-import { requireAuth } from './shared/infrastructure/middleware/auth'
 
 const app = express()
 
@@ -19,12 +18,11 @@ app.get('/ping', (_req, res) => {
   res.status(200).send('PONG')
 })
 
-// Scalar API docs
+// Scalar API docs (open, no auth)
 const openApiSpec = readFileSync(join(__dirname, '../docs/openapi.yaml'), 'utf-8')
 
 app.use(
   '/api/docs',
-  requireAuth,
   apiReference({ content: openApiSpec })
 )
 

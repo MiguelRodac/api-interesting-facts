@@ -1,18 +1,23 @@
 {
   "info": {
     "name": "Social Facts API",
-    "description": "API for social facts with Firebase Auth, PostgreSQL + Prisma. Set `{{token}}` with a Firebase JWT to test protected endpoints.",
+    "description": "API for social facts with Firebase Auth, PostgreSQL + Prisma. Use `POST /auth/dev-login` (dev-only) to get a token, then set `{{token}}` to test protected endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3000",
+      "value": "http://localhost:3009",
       "type": "string"
     },
     {
       "key": "token",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "devLoginSecret",
+      "value": "tu-dev-secret-aqui",
       "type": "string"
     }
   ],
@@ -39,6 +44,29 @@
     {
       "name": "Auth",
       "item": [
+        {
+          "name": "POST /auth/dev-login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"secret\": \"{{devLoginSecret}}\",\n  \"email\": \"test@example.com\",\n  \"password\": \"test-password\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/dev-login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "dev-login"]
+            },
+            "description": "**Dev-only.** Generate a Firebase token for testing without a real Firebase Auth setup. Set `{{devLoginSecret}}` in the environment variables."
+          },
+          "response": []
+        },
         {
           "name": "POST /auth/profile",
           "request": {
@@ -353,19 +381,13 @@
           "name": "GET /api/docs",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}",
-                "type": "text"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/api/docs",
               "host": ["{{baseUrl}}"],
               "path": ["api", "docs"]
             },
-            "description": "Scalar API Reference UI (requires Bearer token)"
+            "description": "OpenAPI docs via Scalar (open, no auth required)"
           },
           "response": []
         }

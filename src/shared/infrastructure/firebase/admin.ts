@@ -1,4 +1,5 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
 import config from '../config'
 
 if (getApps().length === 0) {
@@ -9,4 +10,8 @@ if (getApps().length === 0) {
       privateKey: config.firebase.privateKey.replace(/\\n/g, '\n')
     })
   })
+}
+
+export async function createTestToken (uid: string, email: string): Promise<string> {
+  return await getAuth().createCustomToken(uid, { email })
 }
