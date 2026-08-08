@@ -1,6 +1,6 @@
 import { type FactRepository } from '../../domain/ports/FactRepository'
 import { type FactResponse } from '../dto/FactResponse'
-import { FactNotFoundError } from '../../../../shared/domain/errors/FactNotFoundError'
+import { FactNotFoundError } from '../../domain/errors/FactNotFoundError'
 
 export class GetFactById {
   private readonly factRepository: FactRepository

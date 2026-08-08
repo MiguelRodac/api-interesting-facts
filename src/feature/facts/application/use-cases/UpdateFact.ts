@@ -1,10 +1,10 @@
 import { type FactRepository } from '../../domain/ports/FactRepository'
 import { type UpdateFactInput } from '../dto/CreateFactInput'
 import { type FactResponse } from '../dto/FactResponse'
-import { FactNotFoundError } from '../../../../shared/domain/errors/FactNotFoundError'
-import { FactForbiddenError } from '../../../../shared/domain/errors/FactForbiddenError'
-import { ContentTooShortError } from '../../../../shared/domain/errors/ContentTooShortError'
-import { ContentTooLongError } from '../../../../shared/domain/errors/ContentTooLongError'
+import { FactNotFoundError } from '../../domain/errors/FactNotFoundError'
+import { FactForbiddenError } from '../../domain/errors/FactForbiddenError'
+import { ContentTooShortError } from '../../domain/errors/ContentTooShortError'
+import { ContentTooLongError } from '../../domain/errors/ContentTooLongError'
 
 const MIN_CONTENT_LENGTH = 10
 const MAX_CONTENT_LENGTH = 200

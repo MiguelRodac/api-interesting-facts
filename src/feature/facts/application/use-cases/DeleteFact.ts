@@ -1,6 +1,6 @@
 import { type FactRepository } from '../../domain/ports/FactRepository'
-import { FactNotFoundError } from '../../../../shared/domain/errors/FactNotFoundError'
-import { FactForbiddenError } from '../../../../shared/domain/errors/FactForbiddenError'
+import { FactNotFoundError } from '../../domain/errors/FactNotFoundError'
+import { FactForbiddenError } from '../../domain/errors/FactForbiddenError'
 
 export class DeleteFact {
   private readonly factRepository: FactRepository

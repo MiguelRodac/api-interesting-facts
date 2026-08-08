@@ -1,4 +1,4 @@
-import { ConflictError } from './ConflictError'
+import { ConflictError } from '../../../../shared/domain/errors/ConflictError'
 
 export class LikeAlreadyExistsError extends ConflictError {
   constructor (message = 'User already liked this fact') {

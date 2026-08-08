@@ -1,4 +1,4 @@
-import { AppError } from './AppError'
+import { AppError } from '../../../../shared/domain/errors/AppError'
 
 export class LikeNotFoundError extends AppError {
   constructor (message = 'Like not found') {

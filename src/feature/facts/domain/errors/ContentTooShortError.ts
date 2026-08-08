@@ -1,4 +1,4 @@
-import { AppError } from './AppError'
+import { AppError } from '../../../../shared/domain/errors/AppError'
 
 export class ContentTooShortError extends AppError {
   constructor (minLength: number) {

@@ -1,8 +1,8 @@
 import { type LikeRepository } from '../../domain/ports/LikeRepository'
 import { type FactRepository } from '../../../facts/domain/ports/FactRepository'
 import { type LikeResponse } from '../dto/LikeResponse'
-import { FactNotFoundError } from '../../../../shared/domain/errors/FactNotFoundError'
-import { LikeAlreadyExistsError } from '../../../../shared/domain/errors/LikeAlreadyExistsError'
+import { FactNotFoundError } from '../../../facts/domain/errors/FactNotFoundError'
+import { LikeAlreadyExistsError } from '../../domain/errors/LikeAlreadyExistsError'
 
 export class CreateLike {
   private readonly likeRepository: LikeRepository

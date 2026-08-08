@@ -1,6 +1,6 @@
 import { type UserRepository } from '../../domain/ports/UserRepository'
 import { type UserResponse } from '../dto/UserResponse'
-import { NotFoundError } from '../../../../shared/domain/errors/NotFoundError'
+import { UserNotFoundError } from '../../domain/errors/UserNotFoundError'
 
 export class GetUserByFirebaseUid {
   private readonly userRepository: UserRepository
@@ -13,7 +13,7 @@ export class GetUserByFirebaseUid {
     const user = await this.userRepository.findByFirebaseUid(uid)
 
     if (user == null) {
-      throw new NotFoundError('User not found')
+      throw new UserNotFoundError()
     }
 
     return {
