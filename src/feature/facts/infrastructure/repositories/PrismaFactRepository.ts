@@ -51,6 +51,30 @@ export class PrismaFactRepository implements FactRepository {
     }))
   }
 
+  async findPopular (): Promise<Fact[]> {
+    const facts = await prisma.fact.findMany({
+      include: {
+        _count: {
+          select: { likes: true }
+        }
+      },
+      orderBy: {
+        likes: {
+          _count: 'desc'
+        }
+      }
+    })
+
+    return facts.map(fact => ({
+      id: fact.id,
+      authorId: fact.authorId,
+      title: fact.title,
+      content: fact.content,
+      createdAt: fact.createdAt,
+      updatedAt: fact.updatedAt
+    }))
+  }
+
   async create (data: CreateFactData): Promise<Fact> {
     const fact = await prisma.fact.create({
       data: {

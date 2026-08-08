@@ -6,6 +6,7 @@ import { UpdateFact } from '../../application/use-cases/UpdateFact'
 import { DeleteFact } from '../../application/use-cases/DeleteFact'
 import { GetFacts } from '../../application/use-cases/GetFacts'
 import { GetFactsByAuthor } from '../../application/use-cases/GetFactsByAuthor'
+import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
 import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
 import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
 
@@ -17,6 +18,7 @@ const updateFact = new UpdateFact(factRepository)
 const deleteFact = new DeleteFact(factRepository)
 const getFacts = new GetFacts(factRepository)
 const getFactsByAuthor = new GetFactsByAuthor(factRepository)
+const getPopularFacts = new GetPopularFacts(factRepository)
 
 // POST /facts — Create a fact (authenticated + profile required)
 router.post('/', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
@@ -46,6 +48,16 @@ router.get('/author/:authorId', async (req: Request, res: Response, next: NextFu
   try {
     const authorId = req.params.authorId as string
     const facts = await getFactsByAuthor.execute(authorId)
+    res.status(200).json(facts)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /facts/popular — Get all facts sorted by likes count (public)
+router.get('/popular', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const facts = await getPopularFacts.execute()
     res.status(200).json(facts)
   } catch (err) {
     next(err)

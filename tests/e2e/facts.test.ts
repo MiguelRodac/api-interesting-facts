@@ -129,6 +129,48 @@ describe('Facts Endpoints', () => {
     })
   })
 
+  describe('GET /facts/popular', () => {
+    it('should return facts sorted by likes count', async () => {
+      // Create facts
+      const fact1 = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Fact with no likes' }
+      })
+      const fact2 = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Fact with 2 likes' }
+      })
+      const fact3 = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Fact with 1 like' }
+      })
+
+      // Add likes: fact2 has 2, fact3 has 1, fact1 has 0
+      await prisma.like.createMany({
+        data: [
+          { userId: 'test-uid', factId: fact2.id },
+          { userId: 'other-uid', factId: fact2.id },
+          { userId: 'test-uid', factId: fact3.id }
+        ]
+      })
+
+      const res = await request(app).get('/facts/popular')
+
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+      expect(res.body.length).toBe(3)
+      // Most liked first
+      expect(res.body[0].id).toBe(fact2.id)
+      expect(res.body[1].id).toBe(fact3.id)
+      expect(res.body[2].id).toBe(fact1.id)
+    })
+
+    it('should return empty array when no facts', async () => {
+      const res = await request(app).get('/facts/popular')
+
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body)).toBe(true)
+      expect(res.body.length).toBe(0)
+    })
+  })
+
   describe('GET /facts/:id', () => {
     it('should return a fact by id', async () => {
       const fact = await prisma.fact.create({
