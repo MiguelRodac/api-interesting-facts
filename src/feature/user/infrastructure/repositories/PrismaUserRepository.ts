@@ -1,4 +1,4 @@
-import prisma from '../../../../shared/infrastructure/prisma'
+import prisma from '@shared/infrastructure/prisma'
 import { type User, type CreateUserData, type UpdateUserData } from '../../domain/entities/User'
 import { type UserRepository } from '../../domain/ports/UserRepository'
 

@@ -1,10 +1,7 @@
-import prisma from '../../../../shared/infrastructure/prisma'
+import prisma from '@shared/infrastructure/prisma'
 import { type Like } from '../../domain/entities/Like'
-import { type LikeRepository, type PaginatedLikes } from '../../domain/ports/LikeRepository'
-import { type BaseQueryParams } from '../../../../shared/domain/types/query-filters'
-
-const DEFAULT_PAGE = 1
-const DEFAULT_LIMIT = 10
+import { type LikeRepository } from '../../domain/ports/LikeRepository'
+import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 
 function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, 'asc' | 'desc'> {
   if (orderBy == null) return { createdAt: 'desc' }
@@ -40,7 +37,9 @@ export class PrismaLikeRepository implements LikeRepository {
     return mapLike(like)
   }
 
-  async findByFactId (factId: string, params?: BaseQueryParams): Promise<PaginatedLikes> {
+  async findByFactId (factId: string, params?: BaseQueryParams): Promise<ResultWithPagination<Like>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
     const [likes, total] = await Promise.all([
       prisma.like.findMany({
@@ -52,10 +51,12 @@ export class PrismaLikeRepository implements LikeRepository {
       prisma.like.count({ where: { factId } })
     ])
 
-    return { items: likes.map(mapLike), total }
+    return buildPaginatedResult(likes.map(mapLike), total, page, limit)
   }
 
-  async findByUserId (userId: string, params?: BaseQueryParams): Promise<PaginatedLikes> {
+  async findByUserId (userId: string, params?: BaseQueryParams): Promise<ResultWithPagination<Like>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
     const [likes, total] = await Promise.all([
       prisma.like.findMany({
@@ -67,7 +68,7 @@ export class PrismaLikeRepository implements LikeRepository {
       prisma.like.count({ where: { userId } })
     ])
 
-    return { items: likes.map(mapLike), total }
+    return buildPaginatedResult(likes.map(mapLike), total, page, limit)
   }
 
   async create (userId: string, factId: string): Promise<Like> {

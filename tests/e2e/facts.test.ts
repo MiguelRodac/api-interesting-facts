@@ -72,7 +72,7 @@ describe('Facts Endpoints', () => {
         .send({ content: 'short' })
 
       expect(res.status).toBe(400)
-      expect(res.body.code).toBe('CONTENT_TOO_SHORT')
+      expect(res.body.error_code).toBe('BAD_REQUEST')
     })
 
     it('should return 400 for content too long', async () => {
@@ -82,7 +82,7 @@ describe('Facts Endpoints', () => {
         .send({ content: 'x'.repeat(201) })
 
       expect(res.status).toBe(400)
-      expect(res.body.code).toBe('CONTENT_TOO_LONG')
+      expect(res.body.error_code).toBe('BAD_REQUEST')
     })
 
     it('should return 401 when not authenticated', async () => {
@@ -116,16 +116,18 @@ describe('Facts Endpoints', () => {
       const res = await request(app).get('/facts')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBeGreaterThan(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBeGreaterThan(0)
+      expect(res.body.page).toBe(1)
+      expect(res.body.limit).toBe(20)
     })
 
     it('should return empty array when no facts', async () => {
       const res = await request(app).get('/facts')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBe(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBe(0)
     })
   })
 
@@ -154,20 +156,20 @@ describe('Facts Endpoints', () => {
       const res = await request(app).get('/facts/popular')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBe(3)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBe(3)
       // Most liked first
-      expect(res.body[0].id).toBe(fact2.id)
-      expect(res.body[1].id).toBe(fact3.id)
-      expect(res.body[2].id).toBe(fact1.id)
+      expect(res.body.results[0].id).toBe(fact2.id)
+      expect(res.body.results[1].id).toBe(fact3.id)
+      expect(res.body.results[2].id).toBe(fact1.id)
     })
 
     it('should return empty array when no facts', async () => {
       const res = await request(app).get('/facts/popular')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBe(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBe(0)
     })
   })
 

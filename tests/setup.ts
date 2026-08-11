@@ -24,13 +24,6 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-beforeAll(async () => {
-  // Clean up any leftover data from previous test runs
-  await prisma.like.deleteMany()
-  await prisma.fact.deleteMany()
-  await prisma.user.deleteMany()
-})
-
 afterEach(async () => {
   // Cleanup test data after each test
   // Order matters due to foreign key constraints

@@ -1,3 +1,6 @@
+export const DEFAULT_PAGE = 1
+export const DEFAULT_LIMIT = 20
+
 export type FilterValue = string | number | string[]
 
 export type QueryFilters = Record<string, FilterValue>
@@ -61,6 +64,20 @@ export function parseFilterKey (key: string): { field: string, op: string } | nu
 }
 
 export type PrismaWhere = Record<string, unknown>
+
+export function buildPaginatedResult<T> (
+  items: T[],
+  total: number,
+  page: number,
+  limit: number
+): ResultWithPagination<T> {
+  return {
+    results: items,
+    page,
+    limit,
+    nextPage: page * limit < total ? page + 1 : null
+  }
+}
 
 export function buildPrismaWhere (filters: QueryFilters, fieldMap?: Record<string, string>): PrismaWhere {
   const where: PrismaWhere = {}

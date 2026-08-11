@@ -1,5 +1,5 @@
-import { DomainError } from '../../../../shared/domain/errors/domain-error'
-import { RESOURCE_NOT_FOUND } from '../../../../shared/domain/errors/not-found-error-codes'
+import { DomainError } from '@shared/domain/errors/domain-error'
+import { RESOURCE_NOT_FOUND } from '@shared/domain/errors/not-found-error-codes'
 
 export class LikeNotFoundError extends DomainError {
   constructor (message = 'Like not found') {

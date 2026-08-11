@@ -1,5 +1,6 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
+import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
 import { PrismaFactRepository } from '../repositories/PrismaFactRepository'
 import { CreateFact } from '../../application/use-cases/CreateFact'
 import { GetFactById } from '../../application/use-cases/GetFactById'
@@ -8,12 +9,12 @@ import { DeleteFact } from '../../application/use-cases/DeleteFact'
 import { GetFacts } from '../../application/use-cases/GetFacts'
 import { GetFactsByAuthor } from '../../application/use-cases/GetFactsByAuthor'
 import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
-import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
-import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
+import { requireAuth } from '@shared/infrastructure/middleware/auth'
+import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 const ListQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(10),
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
   order_by: z.string().optional(),
   order_dir: z.enum(['asc', 'desc']).optional()
 })

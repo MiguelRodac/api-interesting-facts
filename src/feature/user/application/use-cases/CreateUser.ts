@@ -2,7 +2,7 @@ import { type UserRepository } from '../../domain/ports/UserRepository'
 import { type CreateUserData } from '../../domain/entities/User'
 import { type CreateUserInput } from '../dto/CreateUserInput'
 import { type UserResponse } from '../dto/UserResponse'
-import { ConflictError } from '../../../../shared/domain/errors/ConflictError'
+import { ConflictError } from '@shared/domain/errors/ConflictError'
 
 export class CreateUser {
   private readonly userRepository: UserRepository

@@ -1,10 +1,7 @@
-import prisma from '../../../../shared/infrastructure/prisma'
+import prisma from '@shared/infrastructure/prisma'
 import { type Fact, type CreateFactData, type UpdateFactData } from '../../domain/entities/Fact'
-import { type FactRepository, type PaginatedFacts } from '../../domain/ports/FactRepository'
-import { type BaseQueryParams } from '../../../../shared/domain/types/query-filters'
-
-const DEFAULT_PAGE = 1
-const DEFAULT_LIMIT = 10
+import { type FactRepository } from '../../domain/ports/FactRepository'
+import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 
 function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, 'asc' | 'desc'> {
   if (orderBy == null) return { createdAt: 'desc' }
@@ -40,7 +37,9 @@ export class PrismaFactRepository implements FactRepository {
     return mapFact(fact)
   }
 
-  async findByAuthorId (authorId: string, params?: BaseQueryParams): Promise<PaginatedFacts> {
+  async findByAuthorId (authorId: string, params?: BaseQueryParams): Promise<ResultWithPagination<Fact>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
     const [facts, total] = await Promise.all([
       prisma.fact.findMany({
@@ -52,10 +51,12 @@ export class PrismaFactRepository implements FactRepository {
       prisma.fact.count({ where: { authorId } })
     ])
 
-    return { items: facts.map(mapFact), total }
+    return buildPaginatedResult(facts.map(mapFact), total, page, limit)
   }
 
-  async findAll (params?: BaseQueryParams): Promise<PaginatedFacts> {
+  async findAll (params?: BaseQueryParams): Promise<ResultWithPagination<Fact>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
     const [facts, total] = await Promise.all([
       prisma.fact.findMany({
@@ -66,10 +67,12 @@ export class PrismaFactRepository implements FactRepository {
       prisma.fact.count()
     ])
 
-    return { items: facts.map(mapFact), total }
+    return buildPaginatedResult(facts.map(mapFact), total, page, limit)
   }
 
-  async findPopular (params?: BaseQueryParams): Promise<PaginatedFacts> {
+  async findPopular (params?: BaseQueryParams): Promise<ResultWithPagination<Fact>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
     const [facts, total] = await Promise.all([
       prisma.fact.findMany({
@@ -89,7 +92,7 @@ export class PrismaFactRepository implements FactRepository {
       prisma.fact.count()
     ])
 
-    return { items: facts.map(mapFact), total }
+    return buildPaginatedResult(facts.map(mapFact), total, page, limit)
   }
 
   async create (data: CreateFactData): Promise<Fact> {

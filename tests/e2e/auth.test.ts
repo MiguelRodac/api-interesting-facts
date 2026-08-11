@@ -41,40 +41,40 @@ describe('Auth Endpoints', () => {
       expect(res.status).toBe(401)
     })
 
-    it('should return 400 for missing username', async () => {
+    it('should return 422 for missing username', async () => {
       const res = await request(app)
         .post('/auth/profile')
         .set('Authorization', `Bearer ${validToken}`)
         .send({ displayName: 'Test' })
 
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(422)
     })
 
-    it('should return 400 for missing displayName', async () => {
+    it('should return 422 for missing displayName', async () => {
       const res = await request(app)
         .post('/auth/profile')
         .set('Authorization', `Bearer ${validToken}`)
         .send({ username: 'testuser2' })
 
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(422)
     })
 
-    it('should return 400 for invalid username format (too short)', async () => {
+    it('should return 422 for invalid username format (too short)', async () => {
       const res = await request(app)
         .post('/auth/profile')
         .set('Authorization', `Bearer ${validToken}`)
         .send({ username: 'ab', displayName: 'Test' })
 
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(422)
     })
 
-    it('should return 400 for invalid username format (special chars)', async () => {
+    it('should return 422 for invalid username format (special chars)', async () => {
       const res = await request(app)
         .post('/auth/profile')
         .set('Authorization', `Bearer ${validToken}`)
         .send({ username: 'test@user!', displayName: 'Test' })
 
-      expect(res.status).toBe(400)
+      expect(res.status).toBe(422)
     })
   })
 

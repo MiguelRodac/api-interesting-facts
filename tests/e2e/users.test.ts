@@ -29,7 +29,7 @@ describe('Users Endpoints', () => {
       const res = await request(app).get('/users/nonexistent')
 
       expect(res.status).toBe(404)
-      expect(res.body.code).toBe('USER_NOT_FOUND')
+      expect(res.body.error_code).toBe('RESOURCE_NOT_FOUND')
     })
 
     it('should return public profile without authentication', async () => {

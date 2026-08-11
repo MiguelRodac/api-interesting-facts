@@ -1,17 +1,18 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
+import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
 import { PrismaLikeRepository } from '../repositories/PrismaLikeRepository'
 import { PrismaFactRepository } from '../../../facts/infrastructure/repositories/PrismaFactRepository'
 import { CreateLike } from '../../application/use-cases/CreateLike'
 import { DeleteLike } from '../../application/use-cases/DeleteLike'
 import { GetLikesByFact } from '../../application/use-cases/GetLikesByFact'
 import { GetLikesByUser } from '../../application/use-cases/GetLikesByUser'
-import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
-import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
+import { requireAuth } from '@shared/infrastructure/middleware/auth'
+import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 const ListQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(10),
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
   order_by: z.string().optional(),
   order_dir: z.enum(['asc', 'desc']).optional()
 })

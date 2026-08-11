@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts --env-file=.env",
+    "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts --env-file=.env",
     "lint": "ts-standard",
     "start": "node build/index.js",
     "tsc": "tsc",

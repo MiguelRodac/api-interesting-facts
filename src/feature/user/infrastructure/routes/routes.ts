@@ -3,9 +3,9 @@ import { PrismaUserRepository } from '../repositories/PrismaUserRepository'
 import { CreateUser } from '../../application/use-cases/CreateUser'
 import { GetUserByFirebaseUid } from '../../application/use-cases/GetUserByFirebaseUid'
 import { UpdateUser } from '../../application/use-cases/UpdateUser'
-import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
-import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
-import { ValidationError } from '../../../../shared/domain/errors/ValidationError'
+import { requireAuth } from '@shared/infrastructure/middleware/auth'
+import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
+import { ValidationError } from '@shared/domain/errors/ValidationError'
 
 const router = Router()
 const userRepository = new PrismaUserRepository()

@@ -136,8 +136,8 @@ describe('Likes Endpoints', () => {
       const res = await request(app).get(`/facts/${factId}/likes`)
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBeGreaterThan(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBeGreaterThan(0)
     })
 
     it('should return empty array for fact with no likes', async () => {
@@ -146,8 +146,8 @@ describe('Likes Endpoints', () => {
       const res = await request(app).get(`/facts/${factId}/likes`)
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBe(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBe(0)
     })
   })
 
@@ -162,16 +162,16 @@ describe('Likes Endpoints', () => {
       const res = await request(app).get('/users/test-uid/likes')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBeGreaterThan(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBeGreaterThan(0)
     })
 
     it('should return empty array for user with no likes', async () => {
       const res = await request(app).get('/users/test-uid/likes')
 
       expect(res.status).toBe(200)
-      expect(Array.isArray(res.body)).toBe(true)
-      expect(res.body.length).toBe(0)
+      expect(Array.isArray(res.body.results)).toBe(true)
+      expect(res.body.results.length).toBe(0)
     })
   })
 })

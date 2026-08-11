@@ -1,6 +1,6 @@
 import { type LikeRepository } from '../../domain/ports/LikeRepository'
 import { type LikeResponse } from '../dto/LikeResponse'
-import { type BaseQueryParams, type ResultWithPagination } from '../../../../shared/domain/types/query-filters'
+import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
 
 export class GetLikesByFact {
   private readonly likeRepository: LikeRepository
@@ -10,10 +10,7 @@ export class GetLikesByFact {
   }
 
   async execute (factId: string, params?: BaseQueryParams): Promise<ResultWithPagination<LikeResponse>> {
-    const { items: likes, total } = await this.likeRepository.findByFactId(factId, params)
-    const page = params?.page ?? 1
-    const limit = params?.limit ?? 10
-    const nextPage = page * limit < total ? page + 1 : null
+    const { results: likes, ...pagination } = await this.likeRepository.findByFactId(factId, params)
 
     return {
       results: likes.map(like => ({
@@ -22,9 +19,7 @@ export class GetLikesByFact {
         factId: like.factId,
         createdAt: like.createdAt.toISOString()
       })),
-      page,
-      limit,
-      nextPage
+      ...pagination
     }
   }
 }
