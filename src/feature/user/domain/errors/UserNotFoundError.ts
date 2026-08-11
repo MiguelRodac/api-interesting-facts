@@ -1,8 +1,8 @@
-import { AppError } from '../../../../shared/domain/errors/AppError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { RESOURCE_NOT_FOUND } from '../../../../shared/domain/errors/not-found-error-codes'
 
-export class UserNotFoundError extends AppError {
+export class UserNotFoundError extends DomainError {
   constructor (message = 'User not found') {
-    super(message, 404, 'USER_NOT_FOUND')
-    Object.setPrototypeOf(this, UserNotFoundError.prototype)
+    super(RESOURCE_NOT_FOUND, message)
   }
 }

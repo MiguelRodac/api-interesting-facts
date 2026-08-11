@@ -1,8 +1,8 @@
-import { AppError } from '../../../../shared/domain/errors/AppError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { RESOURCE_NOT_FOUND } from '../../../../shared/domain/errors/not-found-error-codes'
 
-export class LikeNotFoundError extends AppError {
+export class LikeNotFoundError extends DomainError {
   constructor (message = 'Like not found') {
-    super(message, 404, 'LIKE_NOT_FOUND')
-    Object.setPrototypeOf(this, LikeNotFoundError.prototype)
+    super(RESOURCE_NOT_FOUND, message)
   }
 }

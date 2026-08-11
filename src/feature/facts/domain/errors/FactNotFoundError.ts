@@ -1,8 +1,8 @@
-import { AppError } from '../../../../shared/domain/errors/AppError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { RESOURCE_NOT_FOUND } from '../../../../shared/domain/errors/not-found-error-codes'
 
-export class FactNotFoundError extends AppError {
+export class FactNotFoundError extends DomainError {
   constructor (message = 'Fact not found') {
-    super(message, 404, 'FACT_NOT_FOUND')
-    Object.setPrototypeOf(this, FactNotFoundError.prototype)
+    super(RESOURCE_NOT_FOUND, message)
   }
 }

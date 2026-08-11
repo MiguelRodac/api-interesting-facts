@@ -25,7 +25,7 @@ router.post('/dev-login', async (req: Request, res: Response, next: NextFunction
     const { secret, email, password } = req.body
 
     if (secret == null || typeof secret !== 'string' || secret.trim() === '') {
-      throw new ValidationError('secret is required', { secret: 'secret is required' })
+      throw new ValidationError('secret is required', [{ field: 'secret', message: 'secret is required' }])
     }
 
     const expectedSecret = process.env.DEV_LOGIN_SECRET
@@ -35,11 +35,11 @@ router.post('/dev-login', async (req: Request, res: Response, next: NextFunction
     }
 
     if (email == null || typeof email !== 'string' || email.trim() === '') {
-      throw new ValidationError('email is required', { email: 'email is required' })
+      throw new ValidationError('email is required', [{ field: 'email', message: 'email is required' }])
     }
 
     if (password == null || typeof password !== 'string' || password.trim() === '') {
-      throw new ValidationError('password is required', { password: 'password is required' })
+      throw new ValidationError('password is required', [{ field: 'password', message: 'password is required' }])
     }
 
     const apiKey = process.env.FIREBASE_API_KEY
@@ -79,27 +79,25 @@ router.post('/profile', requireAuth, async (req: Request, res: Response, next: N
   try {
     const { username, displayName, avatarUrl } = req.body
 
-    // Validate required fields
     if (username == null || typeof username !== 'string' || username.trim() === '') {
-      throw new ValidationError('Username is required', { username: 'Username is required' })
+      throw new ValidationError('Username is required', [{ field: 'username', message: 'Username is required' }])
     }
 
     if (displayName == null || typeof displayName !== 'string' || displayName.trim() === '') {
-      throw new ValidationError('Display name is required', { displayName: 'Display name is required' })
+      throw new ValidationError('Display name is required', [{ field: 'displayName', message: 'Display name is required' }])
     }
 
-    // Validate username format (alphanumeric + underscores, 3-30 chars)
     if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-      throw new ValidationError('Username must be 3-30 characters, alphanumeric and underscores only', {
-        username: 'Username must be 3-30 characters, alphanumeric and underscores only'
-      })
+      throw new ValidationError('Username must be 3-30 characters, alphanumeric and underscores only', [
+        { field: 'username', message: 'Username must be 3-30 characters, alphanumeric and underscores only' }
+      ])
     }
 
     const uid = req.user?.uid
     const email = req.user?.email ?? ''
 
     if (uid == null) {
-      throw new ValidationError('Authentication required', { auth: 'Authentication required' })
+      throw new ValidationError('Authentication required', [{ field: 'auth', message: 'Authentication required' }])
     }
 
     const user = await createUser.execute(
@@ -120,7 +118,7 @@ router.get('/me', requireAuth, requireProfile, async (req: Request, res: Respons
     const uid = req.user?.uid
 
     if (uid == null) {
-      throw new ValidationError('Authentication required', { auth: 'Authentication required' })
+      throw new ValidationError('Authentication required', [{ field: 'auth', message: 'Authentication required' }])
     }
 
     const user = await getUserByFirebaseUid.execute(uid)
@@ -136,7 +134,7 @@ router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Respo
     const uid = req.user?.uid
 
     if (uid == null) {
-      throw new ValidationError('Authentication required', { auth: 'Authentication required' })
+      throw new ValidationError('Authentication required', [{ field: 'auth', message: 'Authentication required' }])
     }
 
     const { displayName, avatarUrl } = req.body

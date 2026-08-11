@@ -12,21 +12,18 @@ export class CreateUser {
   }
 
   async execute (data: CreateUserInput, uid: string, email: string): Promise<UserResponse> {
-    // Check if user already exists by uid
     const existingByUid = await this.userRepository.findByFirebaseUid(uid)
 
     if (existingByUid != null) {
-      throw new ConflictError('User already exists', 'USER_EXISTS')
+      throw new ConflictError('User already exists')
     }
 
-    // Check if username is taken
     const existingByUsername = await this.userRepository.findByUsername(data.username)
 
     if (existingByUsername != null) {
-      throw new ConflictError('Username is already taken', 'USERNAME_TAKEN')
+      throw new ConflictError('Username is already taken')
     }
 
-    // Create user
     const createData: CreateUserData = {
       firebaseUid: uid,
       email,

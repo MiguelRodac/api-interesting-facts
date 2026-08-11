@@ -1,8 +1,1 @@
-import { AppError } from './AppError'
-
-export class NotFoundError extends AppError {
-  constructor (message = 'Resource not found') {
-    super(message, 404, 'NOT_FOUND')
-    Object.setPrototypeOf(this, NotFoundError.prototype)
-  }
-}
+export { NotFoundError } from './app-errors'

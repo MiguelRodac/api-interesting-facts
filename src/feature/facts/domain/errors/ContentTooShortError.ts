@@ -1,8 +1,8 @@
-import { AppError } from '../../../../shared/domain/errors/AppError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { BAD_REQUEST } from '../../../../shared/domain/errors/validation-error-codes'
 
-export class ContentTooShortError extends AppError {
+export class ContentTooShortError extends DomainError {
   constructor (minLength: number) {
-    super(`Content must be at least ${minLength} characters`, 400, 'CONTENT_TOO_SHORT')
-    Object.setPrototypeOf(this, ContentTooShortError.prototype)
+    super(BAD_REQUEST, `Content must be at least ${minLength} characters`)
   }
 }

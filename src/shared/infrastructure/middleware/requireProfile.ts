@@ -6,7 +6,7 @@ export const requireProfile = async (req: Request, _res: Response, next: NextFun
   const uid = req.user?.uid
 
   if (uid == null) {
-    next(new ForbiddenError('Authentication required', 'UNAUTHORIZED'))
+    next(new ForbiddenError('Authentication required'))
     return
   }
 
@@ -16,11 +16,10 @@ export const requireProfile = async (req: Request, _res: Response, next: NextFun
     })
 
     if (user == null) {
-      next(new ForbiddenError('User profile not found. Please complete onboarding.', 'ONBOARDING_INCOMPLETE'))
+      next(new ForbiddenError('User profile not found. Please complete onboarding.'))
       return
     }
 
-    // Attach full user profile to request
     req.user = {
       ...req.user,
       uid: user.firebaseUid,

@@ -1,8 +1,8 @@
-import { ConflictError } from '../../../../shared/domain/errors/ConflictError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { RESOURCE_CONFLICT } from '../../../../shared/domain/errors/conflict-error-codes'
 
-export class LikeAlreadyExistsError extends ConflictError {
+export class LikeAlreadyExistsError extends DomainError {
   constructor (message = 'User already liked this fact') {
-    super(message, 'LIKE_ALREADY_EXISTS')
-    Object.setPrototypeOf(this, LikeAlreadyExistsError.prototype)
+    super(RESOURCE_CONFLICT, message)
   }
 }

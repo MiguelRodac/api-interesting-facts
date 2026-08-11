@@ -1,8 +1,8 @@
-import { AppError } from '../../../../shared/domain/errors/AppError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { FORBIDDEN } from '../../../../shared/domain/errors/authorization-error-codes'
 
-export class FactForbiddenError extends AppError {
+export class FactForbiddenError extends DomainError {
   constructor (message = 'You are not authorized to perform this action on this fact') {
-    super(message, 403, 'FACT_FORBIDDEN')
-    Object.setPrototypeOf(this, FactForbiddenError.prototype)
+    super(FORBIDDEN, message)
   }
 }

@@ -1,8 +1,8 @@
-import { AppError } from '../../../../shared/domain/errors/AppError'
+import { DomainError } from '../../../../shared/domain/errors/domain-error'
+import { BAD_REQUEST } from '../../../../shared/domain/errors/validation-error-codes'
 
-export class ContentTooLongError extends AppError {
+export class ContentTooLongError extends DomainError {
   constructor (maxLength: number) {
-    super(`Content must not exceed ${maxLength} characters`, 400, 'CONTENT_TOO_LONG')
-    Object.setPrototypeOf(this, ContentTooLongError.prototype)
+    super(BAD_REQUEST, `Content must not exceed ${maxLength} characters`)
   }
 }
