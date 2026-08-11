@@ -14,6 +14,9 @@ const config = {
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? '',
     privateKey: process.env.FIREBASE_PRIVATE_KEY ?? '',
     apiKey: process.env.FIREBASE_API_KEY ?? ''
+  },
+  logging: {
+    traceIdHeader: process.env.TRACE_ID_HEADER ?? 'x-trace-id'
   }
 }
 
