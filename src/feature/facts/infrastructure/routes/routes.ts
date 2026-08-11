@@ -1,4 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
+import { z } from 'zod'
 import { PrismaFactRepository } from '../repositories/PrismaFactRepository'
 import { CreateFact } from '../../application/use-cases/CreateFact'
 import { GetFactById } from '../../application/use-cases/GetFactById'
@@ -10,6 +11,13 @@ import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
 import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
 import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
 
+const ListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+  order_by: z.string().optional(),
+  order_dir: z.enum(['asc', 'desc']).optional()
+})
+
 const router = Router()
 const factRepository = new PrismaFactRepository()
 const createFact = new CreateFact(factRepository)
@@ -20,7 +28,6 @@ const getFacts = new GetFacts(factRepository)
 const getFactsByAuthor = new GetFactsByAuthor(factRepository)
 const getPopularFacts = new GetPopularFacts(factRepository)
 
-// POST /facts — Create a fact (authenticated + profile required)
 router.post('/', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { title, content } = req.body
@@ -33,38 +40,40 @@ router.post('/', requireAuth, requireProfile, async (req: Request, res: Response
   }
 })
 
-// GET /facts — Get all facts (public)
-router.get('/', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const facts = await getFacts.execute()
-    res.status(200).json(facts)
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
+    const result = await getFacts.execute({ page, limit, order_by, order_dir })
+    res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-// GET /facts/author/:authorId — Get facts by author (public)
 router.get('/author/:authorId', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const authorId = req.params.authorId as string
-    const facts = await getFactsByAuthor.execute(authorId)
-    res.status(200).json(facts)
+    const result = await getFactsByAuthor.execute(authorId, { page, limit, order_by, order_dir })
+    res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-// GET /facts/popular — Get all facts sorted by likes count (public)
-router.get('/popular', async (_req: Request, res: Response, next: NextFunction) => {
+router.get('/popular', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const facts = await getPopularFacts.execute()
-    res.status(200).json(facts)
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
+    const result = await getPopularFacts.execute({ page, limit, order_by, order_dir })
+    res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-// GET /facts/:id — Get fact by ID (public)
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
@@ -75,7 +84,6 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-// PUT /facts/:id — Update a fact (authenticated + profile required, author only)
 router.put('/:id', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
@@ -89,7 +97,6 @@ router.put('/:id', requireAuth, requireProfile, async (req: Request, res: Respon
   }
 })
 
-// DELETE /facts/:id — Delete a fact (authenticated + profile required, author only)
 router.delete('/:id', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string

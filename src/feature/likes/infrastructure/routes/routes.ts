@@ -1,4 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
+import { z } from 'zod'
 import { PrismaLikeRepository } from '../repositories/PrismaLikeRepository'
 import { PrismaFactRepository } from '../../../facts/infrastructure/repositories/PrismaFactRepository'
 import { CreateLike } from '../../application/use-cases/CreateLike'
@@ -8,6 +9,13 @@ import { GetLikesByUser } from '../../application/use-cases/GetLikesByUser'
 import { requireAuth } from '../../../../shared/infrastructure/middleware/auth'
 import { requireProfile } from '../../../../shared/infrastructure/middleware/requireProfile'
 
+const ListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+  order_by: z.string().optional(),
+  order_dir: z.enum(['asc', 'desc']).optional()
+})
+
 const router = Router()
 const likeRepository = new PrismaLikeRepository()
 const factRepository = new PrismaFactRepository()
@@ -16,7 +24,6 @@ const deleteLike = new DeleteLike(likeRepository)
 const getLikesByFact = new GetLikesByFact(likeRepository)
 const getLikesByUser = new GetLikesByUser(likeRepository)
 
-// POST /facts/:factId/likes — Like a fact (authenticated + profile required)
 router.post('/facts/:factId/likes', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const factId = req.params.factId as string
@@ -29,7 +36,6 @@ router.post('/facts/:factId/likes', requireAuth, requireProfile, async (req: Req
   }
 })
 
-// DELETE /facts/:factId/likes — Unlike a fact (authenticated + profile required)
 router.delete('/facts/:factId/likes', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const factId = req.params.factId as string
@@ -42,25 +48,25 @@ router.delete('/facts/:factId/likes', requireAuth, requireProfile, async (req: R
   }
 })
 
-// GET /facts/:factId/likes — Get likes for a fact (public)
 router.get('/facts/:factId/likes', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const factId = req.params.factId as string
-
-    const likes = await getLikesByFact.execute(factId)
-    res.status(200).json(likes)
+    const result = await getLikesByFact.execute(factId, { page, limit, order_by, order_dir })
+    res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-// GET /users/:userId/likes — Get likes by a user (public)
 router.get('/users/:userId/likes', async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const userId = req.params.userId as string
-
-    const likes = await getLikesByUser.execute(userId)
-    res.status(200).json(likes)
+    const result = await getLikesByUser.execute(userId, { page, limit, order_by, order_dir })
+    res.status(200).json(result)
   } catch (err) {
     next(err)
   }

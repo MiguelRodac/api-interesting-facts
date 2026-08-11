@@ -168,15 +168,42 @@ paths:
       summary: Get all facts (newest first)
       operationId: getFacts
       tags: [Facts]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+          description: Page number (1-indexed)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+          description: Number of results per page
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Field to order by (e.g. createdAt, title)
+        - name: order_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+          description: Sort direction
       responses:
         '200':
-          description: Array of facts
+          description: Paginated list of facts
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FactResponse'
+                $ref: '#/components/schemas/PaginatedFactResponse'
 
     post:
       summary: Create a new fact
@@ -209,15 +236,38 @@ paths:
       summary: Get all facts sorted by likes count (most liked first)
       operationId: getPopularFacts
       tags: [Facts]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: order_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
       responses:
         '200':
-          description: Array of facts sorted by popularity
+          description: Paginated list of facts sorted by popularity
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FactResponse'
+                $ref: '#/components/schemas/PaginatedFactResponse'
 
   /facts/{id}:
     parameters:
@@ -298,15 +348,37 @@ paths:
           schema:
             type: string
           description: Author's Firebase UID
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: order_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
       responses:
         '200':
-          description: Array of facts by author
+          description: Paginated list of facts by author
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/FactResponse'
+                $ref: '#/components/schemas/PaginatedFactResponse'
 
   # Likes routes
   /facts/{factId}/likes:
@@ -360,15 +432,38 @@ paths:
       summary: Get all likes for a fact
       operationId: getFactLikes
       tags: [Likes]
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: order_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
       responses:
         '200':
-          description: Array of likes
+          description: Paginated list of likes for a fact
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LikeResponse'
+                $ref: '#/components/schemas/PaginatedLikeResponse'
 
   /users/{userId}/likes:
     get:
@@ -382,15 +477,37 @@ paths:
           schema:
             type: string
           description: User's Firebase UID
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+            maximum: 100
+        - name: order_by
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: order_dir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
       responses:
         '200':
-          description: Array of likes by user
+          description: Paginated list of likes by user
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/LikeResponse'
+                $ref: '#/components/schemas/PaginatedLikeResponse'
 
   /api/docs:
     get:
@@ -576,6 +693,25 @@ components:
           example: '2026-08-07T20:00:00.000Z'
       required: [id, authorId, content, createdAt, updatedAt]
 
+    PaginatedFactResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactResponse'
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        nextPage:
+          type: integer
+          nullable: true
+          example: 2
+      required: [results, page, limit, nextPage]
+
     # Like schemas
     LikeResponse:
       type: object
@@ -597,6 +733,25 @@ components:
           format: date-time
           example: '2026-08-07T20:00:00.000Z'
       required: [id, userId, factId, createdAt]
+
+    PaginatedLikeResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/LikeResponse'
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        nextPage:
+          type: integer
+          nullable: true
+          example: 2
+      required: [results, page, limit, nextPage]
 
     # Error schemas
     ErrorResponse:
