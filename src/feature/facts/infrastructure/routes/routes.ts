@@ -12,10 +12,19 @@ import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
+// order_by: solo campos válidos de Prisma. likesCount es campo calculado y solo se permite en listados.
+const baseOrderBySchema = z.enum(['createdAt', 'updatedAt'])
 const ListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
   limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
-  order_by: z.string().optional(),
+  order_by: baseOrderBySchema.optional(),
+  order_dir: z.enum(['asc', 'desc']).optional()
+})
+
+const PopularQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
+  order_by: z.enum(['createdAt', 'updatedAt', 'likesCount']).optional(),
   order_dir: z.enum(['asc', 'desc']).optional()
 })
 
@@ -67,7 +76,7 @@ router.get('/author/:authorId', async (req: Request, res: Response, next: NextFu
 router.get('/popular', async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
-    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
+    const { page, limit, order_by, order_dir } = PopularQuerySchema.parse(req.query)
     const result = await getPopularFacts.execute({ page, limit, order_by, order_dir })
     res.status(200).json(result)
   } catch (err) {

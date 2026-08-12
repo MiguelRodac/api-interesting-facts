@@ -1,8 +1,8 @@
 export const banner = `
   ╔══════════════════════════════════════════╗
-  ║     🦆  API Interesting Facts           ║
+  ║     🦆  API Interesting Facts            ║
   ║                                          ║
-  ║     by rodacServices                     ║
+  ║     by Rodac Services                    ║
   ║     Version 0.0.1                        ║
   ╚══════════════════════════════════════════╝
 `

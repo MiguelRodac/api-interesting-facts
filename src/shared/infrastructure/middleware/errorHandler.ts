@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express'
+import { ZodError } from 'zod'
 import { DomainError, ErrorCategory, type RFC9457Response } from '../../domain/errors/domain-error'
-import { BadRequestError, ConflictError } from '../../domain/errors/app-errors'
+import { BadRequestError, ConflictError, ValidationError } from '../../domain/errors/app-errors'
 import { INTERNAL_ERROR } from '../../domain/errors/infrastructure-error-codes'
 import { logger } from '../logger'
 
@@ -111,6 +112,18 @@ export const errorHandler = (
   if (error instanceof DomainError) {
     const problemDetails = error.toRFC9457(instance, traceId, isDev)
     res.status(error.status).json(problemDetails)
+    return
+  }
+
+  // Zod validation errors → 422 ValidationError
+  if (error instanceof ZodError) {
+    const issues = error.issues.map((issue) => ({
+      field: issue.path.join('.'),
+      message: issue.message
+    }))
+    const validationError = new ValidationError('Request validation failed', issues)
+    const problemDetails = validationError.toRFC9457(instance, traceId, isDev)
+    res.status(422).json(problemDetails)
     return
   }
 

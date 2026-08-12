@@ -2,11 +2,25 @@ import prisma from '@shared/infrastructure/prisma'
 import { type Fact, type CreateFactData, type UpdateFactData } from '../../domain/entities/Fact'
 import { type FactRepository } from '../../domain/ports/FactRepository'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
+import { ValidationError } from '@shared/domain/errors/ValidationError'
 
-function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, 'asc' | 'desc'> {
+function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, unknown> {
   if (orderBy == null) return { createdAt: 'desc' }
   const dir: 'asc' | 'desc' = orderDir === 'asc' ? 'asc' : 'desc'
-  return { [orderBy]: dir }
+
+  // Campos directos de Prisma para facts
+  const validFields = ['createdAt', 'updatedAt', 'authorId']
+  if (validFields.includes(orderBy)) {
+    return { [orderBy]: dir }
+  }
+
+  // likesCount requiere _count select (solo en findPopular)
+  if (orderBy === 'likesCount') {
+    return { likes: { _count: dir } }
+  }
+
+  // Campo inválido → 422 ValidationError en vez de dejar que Prisma crashee con 500
+  throw new ValidationError(`Invalid order_by field: '${orderBy}'. Allowed: createdAt, updatedAt, likesCount`)
 }
 
 function buildPagination (params?: BaseQueryParams): { skip: number, take: number } {

@@ -13,7 +13,7 @@ import { requireProfile } from '@shared/infrastructure/middleware/requireProfile
 const ListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
   limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
-  order_by: z.string().optional(),
+  order_by: z.enum(['createdAt']).optional(),
   order_dir: z.enum(['asc', 'desc']).optional()
 })
 

@@ -2,11 +2,18 @@ import prisma from '@shared/infrastructure/prisma'
 import { type Like } from '../../domain/entities/Like'
 import { type LikeRepository } from '../../domain/ports/LikeRepository'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
+import { ValidationError } from '@shared/domain/errors/ValidationError'
 
-function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, 'asc' | 'desc'> {
+function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, unknown> {
   if (orderBy == null) return { createdAt: 'desc' }
   const dir: 'asc' | 'desc' = orderDir === 'asc' ? 'asc' : 'desc'
-  return { [orderBy]: dir }
+
+  // Solo createdAt es válido para likes
+  if (orderBy === 'createdAt') {
+    return { createdAt: dir }
+  }
+
+  throw new ValidationError(`Invalid order_by field: '${orderBy}'. Allowed: createdAt`)
 }
 
 function buildPagination (params?: BaseQueryParams): { skip: number, take: number } {

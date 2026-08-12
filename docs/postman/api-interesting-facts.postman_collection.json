@@ -19,6 +19,16 @@
       "key": "devLoginSecret",
       "value": "tu-dev-secret-aqui",
       "type": "string"
+    },
+    {
+      "key": "testFactId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "testUserId",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -46,6 +56,23 @@
       "item": [
         {
           "name": "POST /auth/dev-login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "}",
+                  "if (jsonData.firebaseUid) {",
+                  "    pm.collectionVariables.set('testUserId', jsonData.firebaseUid);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -63,7 +90,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["auth", "dev-login"]
             },
-            "description": "**Dev-only.** Generate a Firebase token for testing without a real Firebase Auth setup. Set `{{devLoginSecret}}` in the environment variables."
+            "description": "**Dev-only.** Generate a Firebase token for testing without a real Firebase Auth setup. Set `{{devLoginSecret}}` in the environment variables. After running, `{{token}}` and `{{testUserId}}` are set automatically."
           },
           "response": []
         },
@@ -169,29 +196,177 @@
       "item": [
         {
           "name": "GET /facts",
+          "event": [
+            {
+              "listen": "pre-request",
+              "script": {
+                "exec": [
+                  "// Dynamic query param builder for GET /facts",
+                  "// Reserved keys: page, limit, order_by, order_dir",
+                  "// Filter keys: title__like, content__like, authorId__eq, createdAt__gte, createdAt__lte, etc.",
+                  "",
+                  "const params = {};",
+                  "",
+                  "// --- Reserved params ---",
+                  "params.page = 1;",
+                  "params.limit = 10;",
+                  "params.order_by = 'createdAt';",
+                  "params.order_dir = 'desc';",
+                  "",
+                  "// --- Dynamic filters (field__operation syntax) ---",
+                  "// Operations: eq, like, gt, gte, lt, lte, in, between",
+                  "params['title__like'] = 'honey';",
+                  "// params['authorId__eq'] = pm.collectionVariables.get('testUserId');",
+                  "// params['createdAt__gte'] = '2024-01-01';",
+                  "// params['createdAt__lte'] = '2024-12-31';",
+                  "",
+                  "// Build query string",
+                  "const query = Object.entries(params)",
+                  "    .filter(([, v]) => v !== undefined && v !== null && v !== '')",
+                  "    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))",
+                  "    .join('&');",
+                  "",
+                  "pm.request.url.update({",
+                  "    raw: '{{baseUrl}}/facts?' + query",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/facts",
+              "raw": "{{baseUrl}}/facts?page=1&limit=10&order_by=createdAt&order_dir=desc&title__like=honey",
               "host": ["{{baseUrl}}"],
-              "path": ["facts"]
+              "path": ["facts"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (default: 20)"
+                },
+                {
+                  "key": "order_by",
+                  "value": "createdAt",
+                  "description": "Sort field: createdAt, likesCount (default: createdAt)"
+                },
+                {
+                  "key": "order_dir",
+                  "value": "desc",
+                  "description": "Sort direction: asc, desc (default: desc)"
+                },
+                {
+                  "key": "title__like",
+                  "value": "honey",
+                  "description": "Filter: title contains text (SQL LIKE %value%)"
+                },
+                {
+                  "key": "authorId__eq",
+                  "value": "",
+                  "description": "Filter: exact author ID match",
+                  "disabled": true
+                },
+                {
+                  "key": "createdAt__gte",
+                  "value": "",
+                  "description": "Filter: createdAt >= date (YYYY-MM-DD)",
+                  "disabled": true
+                },
+                {
+                  "key": "content__like",
+                  "value": "",
+                  "description": "Filter: content contains text",
+                  "disabled": true
+                }
+              ]
             },
-            "description": "Get all facts sorted by newest first (public, no auth)"
+            "description": "Get all facts sorted by newest first (public, no auth)\n\n**Query Params:**\n- Reserved: `page`, `limit`, `order_by`, `order_dir`\n- Filters: `title__like`, `content__like`, `authorId__eq`, `createdAt__gte`, `createdAt__lte`, `createdAt__between`, `id__in`\n\n**Filter operations:** `eq`, `like`, `gt`, `gte`, `lt`, `lte`, `in`, `between`\n\n**Example:** `?title__like=honey&order_by=createdAt&order_dir=desc&page=1&limit=10`\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
           },
           "response": []
         },
         {
           "name": "GET /facts/popular",
+          "event": [
+            {
+              "listen": "pre-request",
+              "script": {
+                "exec": [
+                  "// Dynamic query param builder for GET /facts/popular",
+                  "// Sorts by likes count (most liked first) by default",
+                  "",
+                  "const params = {};",
+                  "",
+                  "params.page = 1;",
+                  "params.limit = 10;",
+                  "params.order_by = 'likesCount';",
+                  "params.order_dir = 'desc';",
+                  "",
+                  "// Filter by title or content",
+                  "params['title__like'] = 'honey';",
+                  "",
+                  "const query = Object.entries(params)",
+                  "    .filter(([, v]) => v !== undefined && v !== null && v !== '')",
+                  "    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))",
+                  "    .join('&');",
+                  "",
+                  "pm.request.url.update({",
+                  "    raw: '{{baseUrl}}/facts/popular?' + query",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/facts/popular",
+              "raw": "{{baseUrl}}/facts/popular?page=1&limit=10&order_by=likesCount&order_dir=desc&title__like=honey",
               "host": ["{{baseUrl}}"],
-              "path": ["facts", "popular"]
+              "path": ["facts", "popular"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Items per page (default: 20)"
+                },
+                {
+                  "key": "order_by",
+                  "value": "likesCount",
+                  "description": "Sort field: likesCount (default), createdAt"
+                },
+                {
+                  "key": "order_dir",
+                  "value": "desc",
+                  "description": "Sort direction: asc, desc (default: desc)"
+                },
+                {
+                  "key": "title__like",
+                  "value": "honey",
+                  "description": "Filter: title contains text",
+                  "disabled": true
+                },
+                {
+                  "key": "authorId__eq",
+                  "value": "",
+                  "description": "Filter: exact author ID match",
+                  "disabled": true
+                }
+              ]
             },
-            "description": "Get all facts sorted by likes count (most liked first, public)"
+            "description": "Get all facts sorted by likes count (most liked first, public)\n\n**Query Params:**\n- Reserved: `page`, `limit`, `order_by`, `order_dir`\n- Filters: `title__like`, `content__like`, `authorId__eq`, `createdAt__gte`, `createdAt__lte`\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
           },
           "response": []
         },
@@ -225,6 +400,20 @@
         },
         {
           "name": "POST /facts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.collectionVariables.set('testFactId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -247,7 +436,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["facts"]
             },
-            "description": "Create a new fact. Content must be 10-200 characters. Requires auth + completed profile."
+            "description": "Create a new fact. Content must be 10-200 characters. Requires auth + completed profile. After creation, `{{testFactId}}` is set automatically."
           },
           "response": []
         },
@@ -298,6 +487,141 @@
             "description": "Delete a fact (author only, returns 403 if not the author)"
           },
           "response": []
+        },
+        {
+          "name": "Query Params",
+          "item": [
+            {
+              "name": "GET /facts — Pagination",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts?page=2&limit=5&order_by=createdAt&order_dir=asc",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts"],
+                  "query": [
+                    { "key": "page", "value": "2" },
+                    { "key": "limit", "value": "5" },
+                    { "key": "order_by", "value": "createdAt" },
+                    { "key": "order_dir", "value": "asc" }
+                  ]
+                },
+                "description": "Paginated list: page 2 with 5 items per page, oldest first.\n\n**Reserved params:**\n- `page`: page number (default 1)\n- `limit`: items per page (default 20)\n- `order_by`: `createdAt` | `likesCount`\n- `order_dir`: `asc` | `desc`\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /facts — Filter by title (like)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts?title__like=honey",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts"],
+                  "query": [
+                    { "key": "title__like", "value": "honey" }
+                  ]
+                },
+                "description": "Filter facts whose title contains 'honey' (case-insensitive SQL LIKE %honey%).\n\n**Filter syntax:** `field__operation`\n- `__like` → SQL LIKE %value%\n- `__eq` → exact match\n- `__gt`, `__gte`, `__lt`, `__lte` → comparisons\n- `__in` → value in array (?id__in=1,2,3)\n- `__between` → range (?createdAt__between=2024-01-01,2024-12-31)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /facts — Filter by content (like)",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts?content__like=archaeolog",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts"],
+                  "query": [
+                    { "key": "content__like", "value": "archaeolog" }
+                  ]
+                },
+                "description": "Filter facts whose content contains 'archaeolog'."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /facts — Filter by author",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts?authorId__eq={{testUserId}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts"],
+                  "query": [
+                    { "key": "authorId__eq", "value": "{{testUserId}}" }
+                  ]
+                },
+                "description": "Filter facts by exact author ID using `authorId__eq`."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /facts — Filter by date range",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts?createdAt__gte=2024-01-01&createdAt__lte=2024-12-31",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts"],
+                  "query": [
+                    { "key": "createdAt__gte", "value": "2024-01-01" },
+                    { "key": "createdAt__lte", "value": "2024-12-31" }
+                  ]
+                },
+                "description": "Filter facts created between two dates (YYYY-MM-DD format).\n\n**Date operations:**\n- `createdAt__gte` → date >= value\n- `createdAt__lte` → date <= value\n- `createdAt__between` → between two dates (?createdAt__between=2024-01-01,2024-12-31)"
+              },
+              "response": []
+            },
+            {
+              "name": "GET /facts — Combined filters + pagination",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts?title__like=honey&createdAt__gte=2024-01-01&order_by=likesCount&order_dir=desc&page=1&limit=10",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts"],
+                  "query": [
+                    { "key": "title__like", "value": "honey" },
+                    { "key": "createdAt__gte", "value": "2024-01-01" },
+                    { "key": "order_by", "value": "likesCount" },
+                    { "key": "order_dir", "value": "desc" },
+                    { "key": "page", "value": "1" },
+                    { "key": "limit", "value": "10" }
+                  ]
+                },
+                "description": "Combined example: facts with 'honey' in title, created after 2024-01-01, sorted by most liked, page 1.\n\nAll filter and reserved params can be combined in a single request."
+              },
+              "response": []
+            },
+            {
+              "name": "GET /facts/popular — Sorted by likes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/facts/popular?order_by=likesCount&order_dir=desc&limit=5",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["facts", "popular"],
+                  "query": [
+                    { "key": "order_by", "value": "likesCount" },
+                    { "key": "order_dir", "value": "desc" },
+                    { "key": "limit", "value": "5" }
+                  ]
+                },
+                "description": "Top 5 most liked facts. Default sort is by likesCount desc. Also supports title__like and content__like filters."
+              },
+              "response": []
+            }
+          ]
         }
       ]
     },
@@ -346,29 +670,127 @@
         },
         {
           "name": "GET /facts/:factId/likes",
+          "event": [
+            {
+              "listen": "pre-request",
+              "script": {
+                "exec": [
+                  "// Dynamic query param builder for GET /facts/:factId/likes",
+                  "",
+                  "const params = {};",
+                  "params.page = 1;",
+                  "params.limit = 20;",
+                  "params.order_by = 'createdAt';",
+                  "params.order_dir = 'desc';",
+                  "",
+                  "const query = Object.entries(params)",
+                  "    .filter(([, v]) => v !== undefined && v !== null && v !== '')",
+                  "    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))",
+                  "    .join('&');",
+                  "",
+                  "const factId = pm.collectionVariables.get('testFactId') || 'REPLACE_WITH_FACT_ID';",
+                  "pm.request.url.update({",
+                  "    raw: '{{baseUrl}}/facts/' + factId + '/likes?' + query",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/facts/REPLACE_WITH_FACT_ID/likes",
+              "raw": "{{baseUrl}}/facts/{{testFactId}}/likes?page=1&limit=20&order_by=createdAt&order_dir=desc",
               "host": ["{{baseUrl}}"],
-              "path": ["facts", "REPLACE_WITH_FACT_ID", "likes"]
+              "path": ["facts", "{{testFactId}}", "likes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default: 20)"
+                },
+                {
+                  "key": "order_by",
+                  "value": "createdAt",
+                  "description": "Sort field: createdAt (default)"
+                },
+                {
+                  "key": "order_dir",
+                  "value": "desc",
+                  "description": "Sort direction: asc, desc (default: desc)"
+                }
+              ]
             },
-            "description": "Get all likes for a fact (public, no auth required)"
+            "description": "Get all likes for a fact (public, no auth required)\n\n**Query Params:**\n- Reserved: `page`, `limit`, `order_by`, `order_dir`\n- `order_by` supports: `createdAt`\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
           },
           "response": []
         },
         {
           "name": "GET /users/:userId/likes",
+          "event": [
+            {
+              "listen": "pre-request",
+              "script": {
+                "exec": [
+                  "// Dynamic query param builder for GET /users/:userId/likes",
+                  "",
+                  "const params = {};",
+                  "params.page = 1;",
+                  "params.limit = 20;",
+                  "params.order_by = 'createdAt';",
+                  "params.order_dir = 'desc';",
+                  "",
+                  "const query = Object.entries(params)",
+                  "    .filter(([, v]) => v !== undefined && v !== null && v !== '')",
+                  "    .map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v))",
+                  "    .join('&');",
+                  "",
+                  "const userId = pm.collectionVariables.get('testUserId') || 'REPLACE_WITH_UID';",
+                  "pm.request.url.update({",
+                  "    raw: '{{baseUrl}}/users/' + userId + '/likes?' + query",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/users/REPLACE_WITH_UID/likes",
+              "raw": "{{baseUrl}}/users/{{testUserId}}/likes?page=1&limit=20&order_by=createdAt&order_dir=desc",
               "host": ["{{baseUrl}}"],
-              "path": ["users", "REPLACE_WITH_UID", "likes"]
+              "path": ["users", "{{testUserId}}", "likes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page (default: 20)"
+                },
+                {
+                  "key": "order_by",
+                  "value": "createdAt",
+                  "description": "Sort field: createdAt (default)"
+                },
+                {
+                  "key": "order_dir",
+                  "value": "desc",
+                  "description": "Sort direction: asc, desc (default: desc)"
+                }
+              ]
             },
-            "description": "Get all likes by a user (public, no auth required)"
+            "description": "Get all likes by a user (public, no auth required)\n\n**Query Params:**\n- Reserved: `page`, `limit`, `order_by`, `order_dir`\n- `order_by` supports: `createdAt`\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
           },
           "response": []
         }
