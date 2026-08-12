@@ -1,15 +1,25 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
 import express from 'express'
+import cors from 'cors'
 import { apiReference } from '@scalar/express-api-reference'
 import userRoutes from '@user/infrastructure/routes/routes'
 import userPublicRoutes from '@user/infrastructure/routes/publicRoutes'
 import factRoutes from '@fact/infrastructure/routes/routes'
 import likeRoutes from '@likes/infrastructure/routes/routes'
-import { errorHandler } from './shared/infrastructure/middleware/errorHandler'
-import { httpLogger } from './shared/infrastructure/logger/pino-http'
+import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
+import { httpLogger } from '@shared/infrastructure/logger/pino-http'
 
 const app = express()
+
+// CORS — allow frontend origin
+const corsOptions: cors.CorsOptions = {
+  origin: process.env.CORS_ORIGIN ?? '*',
+  methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Trace-Id'],
+  credentials: true
+}
+app.use(cors(corsOptions))
 
 app.use(express.json())
 app.use(httpLogger)
