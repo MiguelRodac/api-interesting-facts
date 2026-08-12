@@ -61,7 +61,7 @@ Producción: `https://api.rodacservices.com` (configurar en `.env`)
 | GET | `/facts/:id` | No | Obtener un fact por ID |
 | GET | `/facts/author/:authorId` | No | Facts de un autor |
 | POST | `/facts` | Bearer + perfil | Crear fact |
-| PUT | `/facts/:id` | Bearer (autor) | Actualizar fact |
+| PATCH | `/facts/:id` | Bearer (autor) | Actualizar fact |
 | DELETE | `/facts/:id` | Bearer (autor) | Eliminar fact |
 
 ### Crear fact

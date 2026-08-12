@@ -94,7 +94,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-router.put('/:id', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/:id', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const { title, content } = req.body

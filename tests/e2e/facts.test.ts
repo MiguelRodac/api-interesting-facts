@@ -205,7 +205,7 @@ describe('Facts Endpoints', () => {
       })
 
       const res = await request(app)
-        .put(`/facts/${fact.id}`)
+        .patch(`/facts/${fact.id}`)
         .set('Authorization', `Bearer ${validToken}`)
         .send({ content: 'Updated content here' })
 
@@ -222,7 +222,7 @@ describe('Facts Endpoints', () => {
       })
 
       const res = await request(app)
-        .put(`/facts/${fact.id}`)
+        .patch(`/facts/${fact.id}`)
         .set('Authorization', `Bearer ${otherToken}`)
         .send({ content: 'Hacked content' })
 
@@ -238,7 +238,7 @@ describe('Facts Endpoints', () => {
       })
 
       const res = await request(app)
-        .put(`/facts/${fact.id}`)
+        .patch(`/facts/${fact.id}`)
         .send({ content: 'Updated content' })
 
       expect(res.status).toBe(401)
