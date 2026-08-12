@@ -1,0 +1,28 @@
+# API Service only — connects to external database (e.g. Render Postgres)
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-interesting-facts
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-production}
+      - PORT=3000
+      - DATABASE_URL=${DATABASE_URL}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+      - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY}
+      - DEV_LOGIN_SECRET=${DEV_LOGIN_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - BASE_URL=${BASE_URL:-http://localhost:3000}
+      - PINO_LOG_LEVEL=${PINO_LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped

@@ -16,7 +16,6 @@ coverage
 tests
 *.test.ts
 jest.config.js
-tsconfig.json
 openspec
 .atl
 .github
