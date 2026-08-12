@@ -49,7 +49,17 @@ app.use('/facts', factRoutes)
 app.use('/', likeRoutes)
 
 app.use((_req, res) => {
-  res.status(404).json({ error: 'Route not found', code: 'NOT_FOUND' })
+  res.status(404).json({
+    type: `${process.env.BASE_URL ?? 'http://localhost:3000'}/errors/not-found/route-not-found`,
+    title: 'Route Not Found',
+    status: 404,
+    detail: `Route ${_req.method} ${_req.originalUrl} does not exist`,
+    error_code: 'ROUTE_NOT_FOUND',
+    category: 'not_found',
+    instance: _req.originalUrl,
+    trace_id: crypto.randomUUID(),
+    timestamp: new Date().toISOString()
+  })
 })
 
 app.use(errorHandler)
