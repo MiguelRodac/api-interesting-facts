@@ -391,9 +391,9 @@
           "response": []
         },
         {
-          "name": "PUT /facts/:id",
+          "name": "PATCH /facts/:id",
           "request": {
-            "method": "PUT",
+            "method": "PATCH",
             "header": [
               {
                 "key": "Content-Type",

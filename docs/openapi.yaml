@@ -292,7 +292,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFoundError'
 
-    put:
+    patch:
       summary: Update a fact (author only)
       operationId: updateFact
       tags: [Facts]
