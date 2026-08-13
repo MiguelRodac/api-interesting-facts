@@ -20,14 +20,14 @@ const ListQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
   order_by: baseOrderBySchema.optional(),
   order_dir: z.enum(['asc', 'desc']).optional()
-})
+}).strict()
 
 const PopularQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
   limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
   order_by: z.enum(['createdAt', 'updatedAt', 'likesCount']).optional(),
   order_dir: z.enum(['asc', 'desc']).optional()
-})
+}).strict()
 
 const router = Router()
 const factRepository = new PrismaFactRepository()
