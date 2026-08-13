@@ -11,7 +11,7 @@ REST API for sharing interesting facts — built with Express.js, TypeScript, Po
 | `/users/:username` | Public user profiles |
 | `/likes` | Like/unlike facts, list likes by fact or user |
 | `/api/docs` | Interactive API docs (Scalar/OpenAPI) |
-| `/ping` | Health check — returns status, timestamp, uptime, and DB health |
+| `/ping` | Health check — HTML page in browser, JSON for API clients (includes docs link) |
 
 ## Stack
 
