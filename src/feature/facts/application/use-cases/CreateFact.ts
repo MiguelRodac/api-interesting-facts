@@ -29,13 +29,20 @@ export class CreateFact {
       content: data.content
     })
 
+    const enrichedFact = await this.factRepository.findById(fact.id)
+
+    if (enrichedFact == null) {
+      throw new Error('Failed to fetch created fact')
+    }
+
     return {
-      id: fact.id,
-      authorId: fact.authorId,
-      title: fact.title,
-      content: fact.content,
-      createdAt: fact.createdAt.toISOString(),
-      updatedAt: fact.updatedAt.toISOString()
+      id: enrichedFact.id,
+      author: enrichedFact.author,
+      title: enrichedFact.title,
+      content: enrichedFact.content,
+      likes: enrichedFact.likes,
+      createdAt: enrichedFact.createdAt.toISOString(),
+      updatedAt: enrichedFact.updatedAt.toISOString()
     }
   }
 }

@@ -11,9 +11,10 @@ export class GetPopularFacts {
     return {
       results: facts.map(fact => ({
         id: fact.id,
-        authorId: fact.authorId,
+        author: fact.author,
         title: fact.title,
         content: fact.content,
+        likes: fact.likes,
         createdAt: fact.createdAt.toISOString(),
         updatedAt: fact.updatedAt.toISOString()
       })),

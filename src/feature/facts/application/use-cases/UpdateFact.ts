@@ -37,18 +37,25 @@ export class UpdateFact {
       }
     }
 
-    const updatedFact = await this.factRepository.update(id, {
+    await this.factRepository.update(id, {
       title: data.title,
       content: data.content
     })
 
+    const enrichedFact = await this.factRepository.findById(id)
+
+    if (enrichedFact == null) {
+      throw new Error('Failed to fetch updated fact')
+    }
+
     return {
-      id: updatedFact.id,
-      authorId: updatedFact.authorId,
-      title: updatedFact.title,
-      content: updatedFact.content,
-      createdAt: updatedFact.createdAt.toISOString(),
-      updatedAt: updatedFact.updatedAt.toISOString()
+      id: enrichedFact.id,
+      author: enrichedFact.author,
+      title: enrichedFact.title,
+      content: enrichedFact.content,
+      likes: enrichedFact.likes,
+      createdAt: enrichedFact.createdAt.toISOString(),
+      updatedAt: enrichedFact.updatedAt.toISOString()
     }
   }
 }

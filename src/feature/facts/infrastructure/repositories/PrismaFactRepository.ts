@@ -1,6 +1,6 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type Fact, type CreateFactData, type UpdateFactData } from '../../domain/entities/Fact'
-import { type FactRepository } from '../../domain/ports/FactRepository'
+import { type FactRepository, type EnrichedFact } from '../../domain/ports/FactRepository'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 
@@ -8,18 +8,15 @@ function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, unkn
   if (orderBy == null) return { createdAt: 'desc' }
   const dir: 'asc' | 'desc' = orderDir === 'asc' ? 'asc' : 'desc'
 
-  // Campos directos de Prisma para facts
   const validFields = ['createdAt', 'updatedAt', 'authorId']
   if (validFields.includes(orderBy)) {
     return { [orderBy]: dir }
   }
 
-  // likesCount requiere _count select (solo en findPopular)
   if (orderBy === 'likesCount') {
     return { likes: { _count: dir } }
   }
 
-  // Campo inválido → 422 ValidationError en vez de dejar que Prisma crashee con 500
   throw new ValidationError(`Invalid order_by field: '${orderBy}'. Allowed: createdAt, updatedAt, likesCount`)
 }
 
@@ -41,23 +38,75 @@ function mapFact (fact: { id: string, authorId: string, title: string | null, co
   }
 }
 
+async function batchLikeCounts (factIds: string[]): Promise<Map<string, number>> {
+  if (factIds.length === 0) return new Map()
+  const likeCounts = await prisma.like.groupBy({
+    by: ['factId'],
+    _count: { factId: true },
+    where: { factId: { in: factIds } }
+  })
+  return new Map(likeCounts.map(l => [l.factId, l._count.factId]))
+}
+
+function enrichFact (fact: { id: string, authorId: string, author: { username: string, email: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date }, likeCountMap: Map<string, number>): EnrichedFact {
+  return {
+    id: fact.id,
+    authorId: fact.authorId,
+    author: fact.author,
+    title: fact.title,
+    content: fact.content,
+    likes: likeCountMap.get(fact.id) ?? 0,
+    createdAt: fact.createdAt,
+    updatedAt: fact.updatedAt
+  }
+}
+
 export class PrismaFactRepository implements FactRepository {
-  async findById (id: string): Promise<Fact | null> {
+  async findById (id: string): Promise<EnrichedFact | null> {
     const fact = await prisma.fact.findUnique({
-      where: { id }
+      where: { id },
+      include: {
+        author: { select: { username: true, email: true } }
+      }
     })
 
     if (fact == null) return null
-    return mapFact(fact)
+
+    const [likeCount] = await prisma.like.groupBy({
+      by: ['factId'],
+      _count: { factId: true },
+      where: { factId: id }
+    })
+
+    return {
+      id: fact.id,
+      authorId: fact.authorId,
+      author: fact.author,
+      title: fact.title,
+      content: fact.content,
+      likes: likeCount?._count.factId ?? 0,
+      createdAt: fact.createdAt,
+      updatedAt: fact.updatedAt
+    }
   }
 
-  async findByAuthorId (authorId: string, params?: BaseQueryParams): Promise<ResultWithPagination<Fact>> {
+  async findByAuthorId (authorId: string, params?: BaseQueryParams): Promise<ResultWithPagination<EnrichedFact>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
+
     const [facts, total] = await Promise.all([
       prisma.fact.findMany({
         where: { authorId },
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { username: true, email: true } }
+        },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
         take
@@ -65,15 +114,32 @@ export class PrismaFactRepository implements FactRepository {
       prisma.fact.count({ where: { authorId } })
     ])
 
-    return buildPaginatedResult(facts.map(mapFact), total, page, limit)
+    if (facts.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const likeCountMap = await batchLikeCounts(facts.map(f => f.id))
+    const enriched = facts.map(f => enrichFact(f, likeCountMap))
+
+    return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findAll (params?: BaseQueryParams): Promise<ResultWithPagination<Fact>> {
+  async findAll (params?: BaseQueryParams): Promise<ResultWithPagination<EnrichedFact>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
+
     const [facts, total] = await Promise.all([
       prisma.fact.findMany({
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { username: true, email: true } }
+        },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
         take
@@ -81,19 +147,31 @@ export class PrismaFactRepository implements FactRepository {
       prisma.fact.count()
     ])
 
-    return buildPaginatedResult(facts.map(mapFact), total, page, limit)
+    if (facts.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const likeCountMap = await batchLikeCounts(facts.map(f => f.id))
+    const enriched = facts.map(f => enrichFact(f, likeCountMap))
+
+    return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findPopular (params?: BaseQueryParams): Promise<ResultWithPagination<Fact>> {
+  async findPopular (params?: BaseQueryParams): Promise<ResultWithPagination<EnrichedFact>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
+
     const [facts, total] = await Promise.all([
       prisma.fact.findMany({
-        include: {
-          _count: {
-            select: { likes: true }
-          }
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { username: true, email: true } }
         },
         orderBy: {
           likes: {
@@ -106,7 +184,14 @@ export class PrismaFactRepository implements FactRepository {
       prisma.fact.count()
     ])
 
-    return buildPaginatedResult(facts.map(mapFact), total, page, limit)
+    if (facts.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const likeCountMap = await batchLikeCounts(facts.map(f => f.id))
+    const enriched = facts.map(f => enrichFact(f, likeCountMap))
+
+    return buildPaginatedResult(enriched, total, page, limit)
   }
 
   async create (data: CreateFactData): Promise<Fact> {
