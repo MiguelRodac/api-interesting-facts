@@ -1,7 +1,8 @@
 import { readFileSync } from 'fs'
 import { join } from 'path'
-import express from 'express'
+import express, { type Request } from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import { apiReference } from '@scalar/express-api-reference'
 import userRoutes from '@user/infrastructure/routes/routes'
 import userPublicRoutes from '@user/infrastructure/routes/publicRoutes'
@@ -10,8 +11,29 @@ import likeRoutes from '@likes/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
 import prisma from '@shared/infrastructure/prisma'
+import { renderPingHtml } from '@shared/infrastructure/views/pingHtml'
 
 const app = express()
+
+// Trust Vercel's proxy to get real client IP
+app.set('trust proxy', 1)
+
+// Global rate limiter — 100 requests per 15 minutes per IP
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip /ping so monitoring tools can always hit it
+  skip: (req) => req.path === '/ping',
+  message: (req: Request) => ({
+    status: 429,
+    error: 'Too Many Requests',
+    message: 'Rate limit exceeded. Try again in 15 minutes.',
+    documentation: `${req.protocol}://${req.get('host') ?? 'localhost'}/api/docs`
+  })
+})
+app.use(limiter)
 
 // CORS — allow frontend origin
 const corsOptions: cors.CorsOptions = {
@@ -22,7 +44,7 @@ const corsOptions: cors.CorsOptions = {
 }
 app.use(cors(corsOptions))
 
-app.use(express.json())
+app.use(express.json({ limit: '1mb' }))
 app.use(httpLogger)
 
 app.get('/ping', async (req, res) => {
@@ -38,7 +60,7 @@ app.get('/ping', async (req, res) => {
     dbStatus = 'error'
   }
 
-  const baseUrl = process.env.BASE_URL ?? `http://localhost:${process.env.PORT ?? 3000}`
+  const baseUrl = `${req.protocol}://${req.get('host') ?? 'localhost'}`
   const now = new Date().toISOString()
   const uptimeSeconds = Math.round(process.uptime())
   const version = process.env.npm_package_version ?? '0.0.1'
@@ -52,117 +74,14 @@ app.get('/ping', async (req, res) => {
   }
 
   if (prefersHtml) {
-    const dbOk = dbStatus === 'ok'
-    const dbColor = dbOk ? '#22c55e' : '#ef4444'
-    const statusColor = dbOk ? '#22c55e' : '#ef4444'
-
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.status(200).send(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>API Interesting Facts — Alive</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 16px;
-      padding: 48px;
-      max-width: 480px;
-      width: 100%;
-      text-align: center;
-    }
-    .logo { font-size: 48px; margin-bottom: 16px; }
-    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
-    .version { color: #64748b; font-size: 14px; margin-bottom: 32px; }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: ${statusColor}22;
-      border: 1px solid ${statusColor};
-      color: ${statusColor};
-      padding: 8px 20px;
-      border-radius: 999px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 32px;
-    }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: ${statusColor}; }
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 32px;
-      text-align: left;
-    }
-    .metric {
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .metric-label { color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
-    .metric-value { font-size: 20px; font-weight: 600; }
-    .docs-btn {
-      display: inline-block;
-      background: #3b82f6;
-      color: #fff;
-      text-decoration: none;
-      padding: 12px 28px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 15px;
-      transition: background 0.2s;
-    }
-    .docs-btn:hover { background: #2563eb; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="logo">🦆</div>
-    <h1>API Interesting Facts</h1>
-    <p class="version">v${version}</p>
-
-    <div class="status-badge">
-      <span class="dot"></span>
-      ${dbOk ? 'All systems operational' : 'Database unreachable'}
-    </div>
-
-    <div class="grid">
-      <div class="metric">
-        <div class="metric-label">Status</div>
-        <div class="metric-value" style="color: ${statusColor}">${dbOk ? 'OK' : 'DEGRADED'}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Uptime</div>
-        <div class="metric-value">${uptimeSeconds}s</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Database</div>
-        <div class="metric-value" style="color: ${dbColor}">${dbOk ? 'Connected' : 'Error'}</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Timestamp</div>
-        <div class="metric-value" style="font-size: 14px">${now}</div>
-      </div>
-    </div>
-
-    <a href="${baseUrl}/api/docs" class="docs-btn">📖 Open API Documentation</a>
-  </div>
-</body>
-</html>`)
+    res.status(200).send(renderPingHtml({
+      dbOk: dbStatus === 'ok',
+      uptimeSeconds,
+      timestamp: now,
+      baseUrl,
+      version
+    }))
     return
   }
 

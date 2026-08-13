@@ -12,6 +12,7 @@ REST API for sharing interesting facts — built with Express.js, TypeScript, Po
 | `/likes` | Like/unlike facts, list likes by fact or user |
 | `/api/docs` | Interactive API docs (Scalar/OpenAPI) |
 | `/ping` | Health check — HTML page in browser, JSON for API clients (includes docs link) |
+| Rate limiting | 100 req/15 min per IP (protects against floods) |
 
 ## Stack
 
@@ -99,6 +100,8 @@ docker run -p 3000:3000 --env-file .env api-interesting-facts
 
 The containerized API connects to an **external PostgreSQL database** (no DB embedded in the image). Set `DATABASE_URL` to your Render, Supabase, or any PostgreSQL instance.
 
+> **Note:** `trust proxy` is enabled so Express sees the real client IP behind Vercel/Docker proxies. Rate limiting works correctly in all deployment environments.
+
 ### Keep-alive cron
 
 Externally hosted databases (e.g. Render's free Postgres tier) go to sleep after ~30 minutes of inactivity. This API includes an **idle-based keep-alive cron** that pings the database only when no requests have arrived for a configurable threshold.
@@ -151,6 +154,50 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 | `DELETE` | `/likes/:factId` | Firebase token | Unlike a fact |
 | `GET` | `/likes/fact/:factId` | None | Get likes for a fact |
 | `GET` | `/likes/user` | Firebase token | Get current user's likes |
+
+## Security
+
+| Protection | Implementation |
+|---|---|
+| Rate limiting | 100 requests / 15 min per IP (`express-rate-limit`) |
+| SQL injection | Prisma ORM (parameterized queries — no raw SQL) |
+| Input validation | Zod schemas on all endpoints |
+| Auth | Firebase ID tokens (JWT, cryptographically verified) |
+| CORS | Configurable origin whitelist |
+| Body size | Limited to `1mb` to prevent payload floods |
+
+## Monitoring (free tools)
+
+### Sentry — Error tracking + performance
+
+1. Create account at [sentry.io](https://sentry.io) (free: 5k events/month)
+2. Create a new project for the API
+3. Install: `pnpm add @sentry/node`
+4. Add `SENTRY_DSN` to environment variables
+
+```bash
+# .env
+SENTRY_DSN=https://your-dsn@sentry.io/project-number
+```
+
+```typescript
+// src/index.ts — add at the top, before other imports
+import * as Sentry from '@sentry/node'
+Sentry.init({ dsn: process.env.SENTRY_DSN })
+```
+
+Vercel also has **built-in error tracking** — enable it in the Vercel dashboard under Project > Analytics > Errors at no extra cost.
+
+### UptimeRobot — Uptime monitoring
+
+Free tier: 50 monitors. Setup:
+
+1. Create account at [uptimerobot.com](https://uptimerobot.com)
+2. Add a monitor for `https://your-api.vercel.app/ping`
+3. Set check interval to 5 minutes
+4. Add alert notifications (email, Slack, Discord — all free)
+
+This gives you a dashboard showing API availability and alerts when it goes down.
 
 ## License
 
