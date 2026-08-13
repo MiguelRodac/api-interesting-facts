@@ -170,34 +170,44 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 
 ### Sentry — Error tracking + performance
 
-1. Create account at [sentry.io](https://sentry.io) (free: 5k events/month)
-2. Create a new project for the API
-3. Install: `pnpm add @sentry/node`
-4. Add `SENTRY_DSN` to environment variables
+Already integrated in `src/index.ts`. Free tier: 5k events/month.
 
-```bash
-# .env
-SENTRY_DSN=https://your-dsn@sentry.io/project-number
-```
+**Setup:**
 
-```typescript
-// src/index.ts — add at the top, before other imports
-import * as Sentry from '@sentry/node'
-Sentry.init({ dsn: process.env.SENTRY_DSN })
-```
+1. Create account at [sentry.io](https://sentry.io)
+2. Create a new project → choose **Express** as framework
+3. Go to **Settings → Client Keys (DSN)** → copy the DSN URL
+4. In **Vercel dashboard** → your project → **Settings → Environment Variables**:
+   - Add `SENTRY_DSN` = `https://abc123@o123.ingest.sentry.io/456789`
+   - Add to **Production**, **Preview**, and **Development** environments
 
-Vercel also has **built-in error tracking** — enable it in the Vercel dashboard under Project > Analytics > Errors at no extra cost.
+**What you get:**
+- Dashboard with all unhandled exceptions and unhandled promise rejections
+- Performance monitoring: slow endpoints, database queries, external API calls
+- Release tracking: which deploy introduced which error
+- Free for 5k events/month — more than enough for a portfolio project
+
+**Vercel built-in:** Also enable **Project → Analytics → Errors** in Vercel dashboard for additional coverage at no cost.
 
 ### UptimeRobot — Uptime monitoring
 
-Free tier: 50 monitors. Setup:
+Free tier: 50 monitors, 5-min check interval.
 
-1. Create account at [uptimerobot.com](https://uptimerobot.com)
-2. Add a monitor for `https://your-api.vercel.app/ping`
-3. Set check interval to 5 minutes
-4. Add alert notifications (email, Slack, Discord — all free)
+**Setup:**
 
-This gives you a dashboard showing API availability and alerts when it goes down.
+1. Create account at [uptimerobot.com](https://uptimerobot.com) → Free Plan
+2. Dashboard → **Add New Monitor**:
+   - **Monitor Type**: HTTP(s)
+   - **Friendly Name**: `API Interesting Facts`
+   - **URL**: `https://tu-api.vercel.app/ping`
+   - **Monitoring Interval**: 5 minutes
+   - **Alert Contacts**: your email
+3. Save
+
+**What you get:**
+- Live dashboard showing API availability percentage
+- Email alerts when `/ping` stops returning 200
+- 5-minute checks — fast detection of downtime
 
 ## License
 

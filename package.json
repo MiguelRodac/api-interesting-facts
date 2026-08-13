@@ -44,6 +44,7 @@
   "dependencies": {
     "@prisma/client": "^6.19.3",
     "@scalar/express-api-reference": "^0.10.11",
+    "@sentry/node": "^10.70.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.1",
     "express": "5.1.0",
