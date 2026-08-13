@@ -166,48 +166,10 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 | CORS | Configurable origin whitelist |
 | Body size | Limited to `1mb` to prevent payload floods |
 
-## Monitoring (free tools)
+## Monitoring
 
-### Sentry — Error tracking + performance
-
-Already integrated in `src/index.ts`. Free tier: 5k events/month.
-
-**Setup:**
-
-1. Create account at [sentry.io](https://sentry.io)
-2. Create a new project → choose **Express** as framework
-3. Go to **Settings → Client Keys (DSN)** → copy the DSN URL
-4. In **Vercel dashboard** → your project → **Settings → Environment Variables**:
-   - Add `SENTRY_DSN` = `https://abc123@o123.ingest.sentry.io/456789`
-   - Add to **Production**, **Preview**, and **Development** environments
-
-**What you get:**
-- Dashboard with all unhandled exceptions and unhandled promise rejections
-- Performance monitoring: slow endpoints, database queries, external API calls
-- Release tracking: which deploy introduced which error
-- Free for 5k events/month — more than enough for a portfolio project
-
-**Vercel built-in:** Also enable **Project → Analytics → Errors** in Vercel dashboard for additional coverage at no cost.
-
-### UptimeRobot — Uptime monitoring
-
-Free tier: 50 monitors, 5-min check interval.
-
-**Setup:**
-
-1. Create account at [uptimerobot.com](https://uptimerobot.com) → Free Plan
-2. Dashboard → **Add New Monitor**:
-   - **Monitor Type**: HTTP(s)
-   - **Friendly Name**: `API Interesting Facts`
-   - **URL**: `https://tu-api.vercel.app/ping`
-   - **Monitoring Interval**: 5 minutes
-   - **Alert Contacts**: your email
-3. Save
-
-**What you get:**
-- Live dashboard showing API availability percentage
-- Email alerts when `/ping` stops returning 200
-- 5-minute checks — fast detection of downtime
+- **Sentry** — error tracking y performance monitoring
+- **UptimeRobot** — uptime monitoring contra `/ping`
 
 ## License
 
