@@ -5,8 +5,8 @@ import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/
 export class GetPopularFacts {
   constructor (private readonly repository: FactRepository) {}
 
-  async execute (params?: BaseQueryParams): Promise<ResultWithPagination<FactResponse>> {
-    const { results: facts, ...pagination } = await this.repository.findPopular(params)
+  async execute (params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactResponse>> {
+    const { results: facts, ...pagination } = await this.repository.findPopular(params, viewerId)
 
     return {
       results: facts.map(fact => ({
@@ -15,6 +15,7 @@ export class GetPopularFacts {
         title: fact.title,
         content: fact.content,
         likes: fact.likes,
+        liked: fact.liked,
         createdAt: fact.createdAt.toISOString(),
         updatedAt: fact.updatedAt.toISOString()
       })),

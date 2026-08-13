@@ -9,8 +9,8 @@ export class GetFactById {
     this.factRepository = factRepository
   }
 
-  async execute (id: string): Promise<FactResponse> {
-    const fact = await this.factRepository.findById(id)
+  async execute (id: string, viewerId?: string): Promise<FactResponse> {
+    const fact = await this.factRepository.findById(id, viewerId)
 
     if (fact == null) {
       throw new FactNotFoundError()
@@ -22,6 +22,7 @@ export class GetFactById {
       title: fact.title,
       content: fact.content,
       likes: fact.likes,
+      liked: fact.liked,
       createdAt: fact.createdAt.toISOString(),
       updatedAt: fact.updatedAt.toISOString()
     }

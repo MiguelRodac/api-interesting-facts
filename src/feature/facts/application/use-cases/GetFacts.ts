@@ -9,8 +9,8 @@ export class GetFacts {
     this.factRepository = factRepository
   }
 
-  async execute (params?: BaseQueryParams): Promise<ResultWithPagination<FactResponse>> {
-    const { results: facts, ...pagination } = await this.factRepository.findAll(params)
+  async execute (params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactResponse>> {
+    const { results: facts, ...pagination } = await this.factRepository.findAll(params, viewerId)
 
     return {
       results: facts.map(fact => ({
@@ -19,6 +19,7 @@ export class GetFacts {
         title: fact.title,
         content: fact.content,
         likes: fact.likes,
+        liked: fact.liked,
         createdAt: fact.createdAt.toISOString(),
         updatedAt: fact.updatedAt.toISOString()
       })),

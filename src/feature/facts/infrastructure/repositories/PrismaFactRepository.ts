@@ -1,6 +1,7 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type Fact, type CreateFactData, type UpdateFactData } from '../../domain/entities/Fact'
-import { type FactRepository, type EnrichedFact } from '../../domain/ports/FactRepository'
+import { type FactRepository } from '../../domain/ports/FactRepository'
+import { type FactView } from '../../domain/models/FactView'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 
@@ -48,49 +49,77 @@ async function batchLikeCounts (factIds: string[]): Promise<Map<string, number>>
   return new Map(likeCounts.map(l => [l.factId, l._count.factId]))
 }
 
-function enrichFact (fact: { id: string, authorId: string, author: { username: string, email: string, displayName: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date }, likeCountMap: Map<string, number>): EnrichedFact {
-  return {
+async function batchUserLikes (factIds: string[], viewerId: string): Promise<Set<string>> {
+  if (factIds.length === 0) return new Set()
+  const userLikes = await prisma.like.findMany({
+    where: { factId: { in: factIds }, userId: viewerId },
+    select: { factId: true }
+  })
+  return new Set(userLikes.map(l => l.factId))
+}
+
+function enrichFact (
+  fact: { id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date },
+  likeCountMap: Map<string, number>,
+  viewerLikedSet: Set<string> | null,
+  viewerId: string | null
+): FactView {
+  const base = {
     id: fact.id,
     authorId: fact.authorId,
-    author: fact.author,
+    author: {
+      id: fact.author.firebaseUid,
+      username: fact.author.username,
+      email: fact.author.email,
+      displayName: fact.author.displayName
+    },
     title: fact.title,
     content: fact.content,
     likes: likeCountMap.get(fact.id) ?? 0,
     createdAt: fact.createdAt,
     updatedAt: fact.updatedAt
   }
+  if (viewerId !== null && viewerLikedSet !== null) {
+    return { ...base, liked: viewerLikedSet.has(fact.id) }
+  }
+  return base
+}
+
+async function enrichFacts (
+  facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>,
+  likeCountMap: Map<string, number>,
+  viewerId: string | null
+): Promise<FactView[]> {
+  if (facts.length === 0) return []
+  const viewerLikedSet = viewerId !== null ? await batchUserLikes(facts.map(f => f.id), viewerId) : null
+  return facts.map(f => enrichFact(f, likeCountMap, viewerLikedSet, viewerId))
 }
 
 export class PrismaFactRepository implements FactRepository {
-  async findById (id: string): Promise<EnrichedFact | null> {
+  async findById (id: string, viewerId?: string): Promise<FactView | null> {
     const fact = await prisma.fact.findUnique({
       where: { id },
       include: {
-        author: { select: { username: true, email: true, displayName: true } }
+        author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
       }
     })
 
     if (fact == null) return null
 
-    const [likeCount] = await prisma.like.groupBy({
-      by: ['factId'],
-      _count: { factId: true },
-      where: { factId: id }
-    })
+    const [likeCountMap, viewerLikedSet] = await Promise.all([
+      batchLikeCounts([id]),
+      viewerId !== undefined ? batchUserLikes([id], viewerId) : null
+    ])
 
-    return {
-      id: fact.id,
-      authorId: fact.authorId,
-      author: fact.author,
-      title: fact.title,
-      content: fact.content,
-      likes: likeCount?._count.factId ?? 0,
-      createdAt: fact.createdAt,
-      updatedAt: fact.updatedAt
-    }
+    return enrichFact(
+      fact,
+      likeCountMap,
+      viewerLikedSet,
+      viewerId ?? null
+    )
   }
 
-  async findByAuthorId (authorId: string, params?: BaseQueryParams): Promise<ResultWithPagination<EnrichedFact>> {
+  async findByAuthorId (authorId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
@@ -105,7 +134,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
         },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
@@ -119,12 +148,12 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const likeCountMap = await batchLikeCounts(facts.map(f => f.id))
-    const enriched = facts.map(f => enrichFact(f, likeCountMap))
+    const enriched = await enrichFacts(facts, likeCountMap, viewerId ?? null)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findAll (params?: BaseQueryParams): Promise<ResultWithPagination<EnrichedFact>> {
+  async findAll (params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
@@ -138,7 +167,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
         },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
@@ -152,12 +181,12 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const likeCountMap = await batchLikeCounts(facts.map(f => f.id))
-    const enriched = facts.map(f => enrichFact(f, likeCountMap))
+    const enriched = await enrichFacts(facts, likeCountMap, viewerId ?? null)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findPopular (params?: BaseQueryParams): Promise<ResultWithPagination<EnrichedFact>> {
+  async findPopular (params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
@@ -171,7 +200,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
         },
         orderBy: {
           likes: {
@@ -189,7 +218,7 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const likeCountMap = await batchLikeCounts(facts.map(f => f.id))
-    const enriched = facts.map(f => enrichFact(f, likeCountMap))
+    const enriched = await enrichFacts(facts, likeCountMap, viewerId ?? null)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }

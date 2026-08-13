@@ -10,6 +10,7 @@ import { GetFacts } from '../../application/use-cases/GetFacts'
 import { GetFactsByAuthor } from '../../application/use-cases/GetFactsByAuthor'
 import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
+import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 // order_by: solo campos válidos de Prisma. likesCount es campo calculado y solo se permite en listados.
@@ -50,44 +51,48 @@ router.post('/', requireAuth, requireProfile, async (req: Request, res: Response
   }
 })
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
-    const result = await getFacts.execute({ page, limit, order_by, order_dir })
+    const viewerId = req.user?.uid as string | undefined
+    const result = await getFacts.execute({ page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-router.get('/author/:authorId', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/author/:authorId', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const authorId = req.params.authorId as string
-    const result = await getFactsByAuthor.execute(authorId, { page, limit, order_by, order_dir })
+    const viewerId = req.user?.uid as string | undefined
+    const result = await getFactsByAuthor.execute(authorId, { page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-router.get('/popular', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/popular', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = PopularQuerySchema.parse(req.query)
-    const result = await getPopularFacts.execute({ page, limit, order_by, order_dir })
+    const viewerId = req.user?.uid as string | undefined
+    const result = await getPopularFacts.execute({ page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)
   }
 })
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
-    const fact = await getFactById.execute(id)
+    const viewerId = req.user?.uid as string | undefined
+    const fact = await getFactById.execute(id, viewerId)
     res.status(200).json(fact)
   } catch (err) {
     next(err)

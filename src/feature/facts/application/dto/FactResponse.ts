@@ -1,4 +1,5 @@
 export interface FactAuthorPreview {
+  id: string
   username: string
   email: string
   displayName: string
@@ -10,6 +11,7 @@ export interface FactResponse {
   title: string | null
   content: string
   likes: number
+  liked?: boolean
   createdAt: string
   updatedAt: string
 }
