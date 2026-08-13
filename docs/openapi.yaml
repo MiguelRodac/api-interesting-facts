@@ -678,6 +678,10 @@ components:
         author:
           type: object
           properties:
+            id:
+              type: string
+              description: Author's Firebase UID (use to GET /users/:username for profile)
+              example: abc123xyz
             username:
               type: string
               example: mike07
@@ -688,7 +692,7 @@ components:
             displayName:
               type: string
               example: Mike García
-          required: [username, email, displayName]
+          required: [id, username, email, displayName]
         title:
           type: string
           nullable: true
@@ -700,6 +704,10 @@ components:
           type: integer
           description: Total number of likes on this fact
           example: 42
+        liked:
+          type: boolean
+          description: Whether the authenticated viewer has liked this fact. Omitted if unauthenticated.
+          example: true
         createdAt:
           type: string
           format: date-time
