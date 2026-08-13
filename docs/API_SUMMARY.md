@@ -1,6 +1,6 @@
 # API Summary — Social Facts
 
-Base URL: `http://localhost:3009` (desarrollo)
+Base URL: `http://localhost:3000` (desarrollo)
 Producción: `https://api.rodacservices.com` (configurar en `.env`)
 
 ---
@@ -57,12 +57,33 @@ Producción: `https://api.rodacservices.com` (configurar en `.env`)
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
 | GET | `/facts` | No | Listar facts (paginable, filtrable) |
-| GET | `/facts/popular` | No | Listar facts por likes |
+| GET | `/facts/popular` | No | Listar facts por likes (respuesta enriquecida) |
 | GET | `/facts/:id` | No | Obtener un fact por ID |
 | GET | `/facts/author/:authorId` | No | Facts de un autor |
 | POST | `/facts` | Bearer + perfil | Crear fact |
 | PATCH | `/facts/:id` | Bearer (autor) | Actualizar fact |
 | DELETE | `/facts/:id` | Bearer (autor) | Eliminar fact |
+
+### Listar facts
+```json
+// GET /facts — Response 200
+{
+  "results": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "author": { "username": "mike07", "email": "mike@example.com" },
+      "title": "Did you know?",
+      "content": "Honey never spoils...",
+      "likes": 42,
+      "createdAt": "2026-08-07T20:00:00.000Z",
+      "updatedAt": "2026-08-07T20:00:00.000Z"
+    }
+  ],
+  "page": 1,
+  "limit": 20,
+  "nextPage": null
+}
+```
 
 ### Crear fact
 ```json
@@ -70,18 +91,38 @@ Producción: `https://api.rodacservices.com` (configurar en `.env`)
 { "title": "Título opcional", "content": "Contenido de 10-200 caracteres" }
 
 // Response 201
-{ "id": "uuid", "title": "...", "content": "...", "authorId": "firebaseUid", "createdAt": "...", "updatedAt": "..." }
+{ "id": "uuid", "author": { "username": "...", "email": "..." }, "title": "...", "content": "...", "likes": 0, "createdAt": "...", "updatedAt": "..." }
 ```
 
 ### Obtener fact por ID
 ```json
 // Response 200
-{ "id": "uuid", "title": "...", "content": "...", "authorId": "...", "author": { "username": "...", "displayName": "...", "avatarUrl": "..." }, "likesCount": 5, "createdAt": "...", "updatedAt": "..." }
+{ "id": "uuid", "author": { "username": "...", "email": "..." }, "title": "...", "content": "...", "likes": 5, "createdAt": "...", "updatedAt": "..." }
 ```
 
 ---
 
-## 3. Likes
+## 3. Ping
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| GET | `/ping` | No | Health check |
+
+```json
+// GET /ping — Response 200
+// Devuelve JSON con status, timestamp, uptime, database health y docs link
+{
+  "status": "ok",
+  "timestamp": "2026-08-13T00:00:00.000Z",
+  "uptime": 3600.5,
+  "database": "connected",
+  "docs": "http://localhost:3000"
+}
+```
+
+---
+
+## 4. Likes
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
@@ -102,7 +143,7 @@ Producción: `https://api.rodacservices.com` (configurar en `.env`)
 
 ---
 
-## 4. Users
+## 5. Users
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
@@ -116,7 +157,7 @@ Producción: `https://api.rodacservices.com` (configurar en `.env`)
 
 ---
 
-## 5. Paginación y Filtros
+## 6. Paginación y Filtros
 
 ### Formato de respuesta (listados)
 ```json
@@ -164,7 +205,7 @@ GET /facts?authorId__eq=firebaseUid&order_by=createdAt
 
 ---
 
-## 6. Formato de Errores (RFC 9457)
+## 7. Formato de Errores (RFC 9457)
 
 Todos los errores devuelven:
 ```json
@@ -197,7 +238,7 @@ Todos los errores devuelven:
 
 ---
 
-## 7. Headers a enviar
+## 8. Headers a enviar
 
 ### Requests autenticadas
 ```
@@ -213,12 +254,12 @@ X-Trace-Id: uuid  // útil para debugging
 
 ---
 
-## 8. Notas Importantes
+## 9. Notas Importantes
 
 - **Username** es único a nivel global
 - **Dar like** requiere perfil completo (onboarding hecho)
 - **Actualizar/Eliminar fact** solo el autor puede
 - **Listar facts** con `authorId__eq` para filtrar por autor específico
-- **LikesCount** solo está disponible en `/facts` y `/facts/popular`
+- **Likes** está disponible en todos los endpoints de facts (respuesta enriquecida con `author: {username, email}`)
 - **No existe 404 en listados** — si no hay resultados devuelve `results: []` con 200
 - El token de dev-login es un JWT de Firebase mockeado — en producción usar Firebase Auth real
