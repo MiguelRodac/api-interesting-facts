@@ -7,7 +7,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:3009",
+      "value": "http://localhost:3000",
       "type": "string"
     },
     {
@@ -45,7 +45,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["ping"]
             },
-            "description": "Health check - returns PONG"
+            "description": "Health check - returns HTML page in browser, JSON for API clients"
           },
           "response": []
         }
@@ -262,7 +262,7 @@
                 }
               ]
             },
-            "description": "Get all facts sorted by newest first (public, no auth)\n\n**Toggle query params in the Params tab to test combinations.**\n\n**Reserved:** `page`, `limit`, `order_by`, `order_dir`\n**Filters:** `title__like`, `content__like`, `authorId__eq`, `createdAt__gte`, `createdAt__lte`, `createdAt__between`\n\n**Filter ops:** `__like` (contains), `__eq` (exact), `__gt/gte/lt/lte` (comparisons), `__in` (comma-separated), `__between` (comma-separated)\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
+            "description": "Get all facts sorted by newest first (public, no auth)\n\n**Response now includes:** nested `author: { username, email }` and `likes` count per fact.\n\n`{ results: [{ id, author: { username, email }, title, content, likes, createdAt, updatedAt }], page, limit, nextPage }`"
           },
           "response": []
         },
@@ -316,7 +316,7 @@
                 }
               ]
             },
-            "description": "Get all facts sorted by likes count (most liked first, public)\n\n**Toggle query params in the Params tab to test combinations.**\n\n**Response:** `{ results: [...], page, limit, nextPage }`"
+            "description": "Get all facts sorted by likes count (most liked first, public)\n\n**Response now includes:** nested `author: { username, email }` and `likes` count per fact."
           },
           "response": []
         },
@@ -330,7 +330,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["facts", "REPLACE_WITH_ID"]
             },
-            "description": "Get a single fact by ID (public)"
+            "description": "Get a single fact by ID (public). **Response includes:** nested author: { username, email } and likes count."
           },
           "response": []
         },
@@ -344,7 +344,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["facts", "author", "REPLACE_WITH_UID"]
             },
-            "description": "Get all facts by a specific author (public)"
+            "description": "Get all facts by a specific author (public). **Response includes:** nested author: { username, email } and likes count."
           },
           "response": []
         },

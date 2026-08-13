@@ -7,7 +7,7 @@ info:
     name: API Support
 
 servers:
-  - url: http://localhost:3009
+  - url: http://localhost:3000
     description: Local development
 
 tags:
@@ -28,14 +28,20 @@ paths:
       summary: Health check
       operationId: ping
       tags: [Health]
+      description: |
+        Returns server status.
+        - Browser: returns an HTML status page
+        - API client (Accept: application/json): returns JSON with status, timestamp, uptime, and DB health
       responses:
         '200':
           description: Server is alive
           content:
-            text/plain:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingResponse'
+            text/html:
               schema:
                 type: string
-                example: PONG
 
   # Auth routes (mounted at /auth)
   /auth/dev-login:
@@ -165,7 +171,7 @@ paths:
   # Facts routes
   /facts:
     get:
-      summary: Get all facts (newest first)
+      summary: Get all facts (newest first, enriched with author and like counts)
       operationId: getFacts
       tags: [Facts]
       parameters:
@@ -233,7 +239,7 @@ paths:
 
   /facts/popular:
     get:
-      summary: Get all facts sorted by likes count (most liked first)
+      summary: Get all facts sorted by likes count (most liked first, enriched)
       operationId: getPopularFacts
       tags: [Facts]
       parameters:
@@ -514,8 +520,7 @@ paths:
       summary: Scalar API Reference UI
       operationId: apiDocs
       tags: [Documentation]
-      security:
-        - bearerAuth: []
+      security: []  # No auth required
       responses:
         '200':
           description: Scalar API reference HTML
@@ -523,8 +528,6 @@ paths:
             text/html:
               schema:
                 type: string
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
 
 components:
   securitySchemes:
@@ -672,10 +675,17 @@ components:
           type: string
           format: uuid
           example: 550e8400-e29b-41d4-a716-446655440000
-        authorId:
-          type: string
-          description: Author's Firebase UID
-          example: abc123xyz
+        author:
+          type: object
+          properties:
+            username:
+              type: string
+              example: mike07
+            email:
+              type: string
+              format: email
+              example: mike@example.com
+          required: [username, email]
         title:
           type: string
           nullable: true
@@ -683,6 +693,10 @@ components:
         content:
           type: string
           example: Honey never spoils. Archaeologists found 3000-year-old honey in Egyptian tombs.
+        likes:
+          type: integer
+          description: Total number of likes on this fact
+          example: 42
         createdAt:
           type: string
           format: date-time
@@ -691,7 +705,7 @@ components:
           type: string
           format: date-time
           example: '2026-08-07T20:00:00.000Z'
-      required: [id, authorId, content, createdAt, updatedAt]
+      required: [id, author, content, likes, createdAt, updatedAt]
 
     PaginatedFactResponse:
       type: object
@@ -752,6 +766,29 @@ components:
           nullable: true
           example: 2
       required: [results, page, limit, nextPage]
+
+    PingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+          example: '2026-08-13T02:00:00.000Z'
+        uptimeSeconds:
+          type: integer
+          example: 3600
+        database:
+          type: string
+          enum: [ok, error]
+          example: ok
+        documentation:
+          type: string
+          format: uri
+          example: https://api.example.com/api/docs
+      required: [status, timestamp, uptimeSeconds, database, documentation]
 
     # Error schemas
     ErrorResponse:
