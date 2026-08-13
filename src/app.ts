@@ -9,6 +9,7 @@ import factRoutes from '@fact/infrastructure/routes/routes'
 import likeRoutes from '@likes/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
+import prisma from '@shared/infrastructure/prisma'
 
 const app = express()
 
@@ -24,8 +25,22 @@ app.use(cors(corsOptions))
 app.use(express.json())
 app.use(httpLogger)
 
-app.get('/ping', (_req, res) => {
-  res.status(200).send('PONG')
+app.get('/ping', async (_req, res) => {
+  let dbStatus: 'ok' | 'error' = 'ok'
+  try {
+    await prisma.$queryRaw<[{ now: Date }]>`
+      SELECT 1 AS result
+    `
+  } catch {
+    dbStatus = 'error'
+  }
+
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.round(process.uptime()),
+    database: dbStatus
+  })
 })
 
 // Scalar API docs (open, no auth)

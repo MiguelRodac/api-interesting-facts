@@ -17,6 +17,10 @@ const config = {
   },
   logging: {
     traceIdHeader: process.env.TRACE_ID_HEADER ?? 'x-trace-id'
+  },
+  keepAlive: {
+    // Fire a DB ping after this many ms of idle (default 20 min — Render free tier sleeps after 30 min)
+    idleThresholdMs: Number(process.env.KEEP_ALIVE_IDLE_THRESHOLD_MS ?? '1200000')
   }
 }
 

@@ -11,7 +11,7 @@ REST API for sharing interesting facts — built with Express.js, TypeScript, Po
 | `/users/:username` | Public user profiles |
 | `/likes` | Like/unlike facts, list likes by fact or user |
 | `/api/docs` | Interactive API docs (Scalar/OpenAPI) |
-| `/ping` | Health check |
+| `/ping` | Health check — returns status, timestamp, uptime, and DB health |
 
 ## Stack
 
@@ -74,6 +74,7 @@ The API runs on `http://localhost:3000`. API docs at `http://localhost:3000/api/
 | `DEV_LOGIN_SECRET` | Secret for `/auth/dev-login` (dev only) |
 | `CORS_ORIGIN` | Allowed origin for CORS (default: `*`) |
 | `PORT` | Server port (default: `3000`) |
+| `KEEP_ALIVE_IDLE_THRESHOLD_MS` | Fire a DB ping after this many ms of idle (default: `1200000` / 20 min) |
 
 ## Running locally
 
@@ -98,6 +99,16 @@ docker run -p 3000:3000 --env-file .env api-interesting-facts
 
 The containerized API connects to an **external PostgreSQL database** (no DB embedded in the image). Set `DATABASE_URL` to your Render, Supabase, or any PostgreSQL instance.
 
+### Keep-alive cron
+
+Externally hosted databases (e.g. Render's free Postgres tier) go to sleep after ~30 minutes of inactivity. This API includes an **idle-based keep-alive cron** that pings the database only when no requests have arrived for a configurable threshold.
+
+- Every incoming request resets the idle timer
+- If the API sits idle for `KEEP_ALIVE_IDLE_THRESHOLD_MS` (default: 20 min), a lightweight `SELECT NOW()` runs against the DB
+- As soon as a request arrives, the timer resets — no wasted pings under load
+
+Configure with `KEEP_ALIVE_IDLE_THRESHOLD_MS` (in milliseconds). Set it below your DB's sleep threshold (Render free tier ≈ 30 min → default 20 min is safe).
+
 ## Deploy to Vercel
 
 Vercel builds and runs the Docker image directly. Ensure these environment variables are set in your Vercel project:
@@ -109,6 +120,7 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 - `FIREBASE_API_KEY`
 - `DEV_LOGIN_SECRET`
 - `CORS_ORIGIN`
+- `KEEP_ALIVE_IDLE_THRESHOLD_MS` (optional, default: 1200000)
 
 ## API overview
 
