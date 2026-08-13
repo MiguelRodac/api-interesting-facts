@@ -116,6 +116,16 @@ async function createUser(data: CreateUserInput): Promise<User> {
 }
 ```
 
+### Prisma client
+- Single instance exported as default: `export default prisma`
+- Enable query logging in dev only:
+```typescript
+const isDev = process.env.NODE_ENV !== 'production'
+export const prisma = new PrismaClient({
+  log: isDev ? ['query', 'error'] : ['error']
+})
+```
+
 ## 5. Error Handling
 
 ### Error Class Pattern
@@ -230,6 +240,11 @@ res.status(404).json({
 - `409` — Conflict (duplicate)
 - `500` — Internal error
 
+### Rate limiting
+- Use `express-rate-limit` with `trust proxy` enabled (`app.set('trust proxy', 1)`)
+- Skip `/ping` so monitoring tools can always hit it
+- Use `req.protocol` + `req.get('host')` for dynamic URLs in error messages
+
 ## 8. Use Case Pattern
 
 ```typescript
@@ -265,7 +280,106 @@ export interface UserResponse {
 }
 ```
 
-## 10. Testing (future)
+## 11. Docker & Deployment
+
+### Dockerfile
+- Multi-stage build: `builder` stage compiles TypeScript, `production` stage runs the app
+- Production image only needs: `build/`, `node_modules/`, `prisma/`, `src/`, `docs/`, `package.json`, `tsconfig.json`
+- Always rewrite `tsconfig.json` baseUrl to `./build` in the production stage for tsconfig-paths to resolve aliases
+- Use `node -r tsconfig-paths/register build/index.js` as CMD (not `pnpm start`)
+
+### Prisma in Docker
+- Run `prisma generate` in the builder stage only
+- Copy `node_modules/.pnpm/@prisma/*` to production image for the generated client
+- Never copy the entire `node_modules/` — only what's needed
+
+### Environment variables
+- All env vars must be documented in `.env.example`
+- No defaults hardcoded in code — use `config/index.ts` with `??` fallbacks
+- `KEEP_ALIVE_IDLE_THRESHOLD_MS` for the idle-based DB keep-alive cron
+
+### Content negotiation for /ping
+- Browser (Accept: text/html) → HTML page
+- API client (Accept: application/json) → JSON
+- Use `req.protocol` + `req.get('host')` for dynamic URLs, never hardcode `localhost`
+
+## 12. API Response Design
+
+### Enriched responses
+List endpoints return nested objects + denormalized counts in a single query (max 2 DB queries):
+
+```typescript
+// ✅ Good — 2 queries total regardless of page size
+async findAll(params): Promise<ResultWithPagination<EnrichedFact>> {
+  // Query 1: facts + author (select only needed fields)
+  const [facts, total] = await Promise.all([
+    prisma.fact.findMany({
+      select: {
+        id: true, title: true, content: true, createdAt: true, updatedAt: true,
+        author: { select: { username: true, email: true } }
+      },
+      skip, take, orderBy
+    }),
+    prisma.fact.count()
+  ])
+
+  if (facts.length === 0) return buildPaginatedResult([], total, page, limit)
+
+  // Query 2: batch all like counts for these fact IDs
+  const likeCounts = await prisma.like.groupBy({
+    by: ['factId'],
+    _count: { factId: true },
+    where: { factId: { in: factIds } }
+  })
+  const likeCountMap = new Map(likeCounts.map(l => [l.factId, l._count.factId]))
+
+  // Merge in memory
+  const enriched = facts.map(f => ({
+    ...f, likes: likeCountMap.get(f.id) ?? 0
+  }))
+  return buildPaginatedResult(enriched, total, page, limit)
+}
+
+// ❌ Bad — N+1 queries (one per fact)
+for (const fact of facts) {
+  fact.likes = await prisma.like.count({ where: { factId: fact.id } })
+}
+```
+
+### Response DTOs
+DTOs must reflect exactly what the client needs — no extra fields, no leaking internal IDs:
+```typescript
+// ✅ Good — client gets author preview
+interface FactResponse {
+  id: string
+  author: { username: string; email: string }
+  likes: number
+  ...
+}
+
+// ❌ Bad — exposes internal authorId, leaks implementation
+interface FactResponse {
+  id: string
+  authorId: string  // internal Prisma ID, don't expose
+  likesCount: number  // underscore prefix suggests internal
+  ...
+}
+```
+
+## 13. Monitoring
+
+### Error tracking — Sentry
+- Import at the very top of `src/index.ts` (before other imports)
+- Initialize only if `SENTRY_DSN` is set (graceful no-op if absent)
+- Capture server errors via `server.on('error', Sentry.captureException)`
+- Call `Sentry.close()` on graceful shutdown
+
+### Keep-alive cron
+- Timer resets on every request (via middleware in `index.ts`)
+- Fires only when idle exceeds `KEEP_ALIVE_IDLE_THRESHOLD_MS` (default 20 min)
+- Runs every `idleThreshold / 3` ms — catches idle without constant pinging
+
+## 14. Testing (future)
 
 ```typescript
 // Unit tests: {entity}.test.ts
@@ -276,4 +390,4 @@ export interface UserResponse {
 
 ---
 
-**Last updated**: 2026-08-07
+**Last updated**: 2026-08-13
