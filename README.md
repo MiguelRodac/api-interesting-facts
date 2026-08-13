@@ -1,0 +1,145 @@
+# API Interesting Facts
+
+REST API for sharing interesting facts — built with Express.js, TypeScript, PostgreSQL (Prisma), and Firebase Authentication.
+
+## Capabilities
+
+| Resource | What |
+|---------|------|
+| `/auth` | Register, login, profile management (Firebase ID token auth) |
+| `/facts` | Create, read, update, delete interesting facts |
+| `/users/:username` | Public user profiles |
+| `/likes` | Like/unlike facts, list likes by fact or user |
+| `/api/docs` | Interactive API docs (Scalar/OpenAPI) |
+| `/ping` | Health check |
+
+## Stack
+
+| Layer | Technology |
+|-------|------------|
+| Runtime | Node.js 22 (Alpine Linux) |
+| Framework | Express.js 5 + TypeScript |
+| ORM | Prisma 6 (PostgreSQL) |
+| Auth | Firebase Authentication (ID tokens) |
+| Validation | Zod |
+| Logging | Pino + pino-http |
+| API Docs | Scalar (OpenAPI 3) |
+
+## Architecture
+
+Clean Architecture — each feature lives under `src/feature/<name>/` with domain/application/infrastructure layers:
+
+```
+src/
+├── feature/
+│   ├── facts/       # Domain, use-cases, routes, repositories
+│   ├── likes/       # Same structure
+│   └── user/        # Same structure
+└── shared/
+    ├── infrastructure/
+    │   ├── config/       # Environment variables (Zod-validated)
+    │   ├── firebase/     # Firebase Admin SDK (lazy init)
+    │   ├── logger/       # Pino HTTP logger
+    │   └── middleware/   # Auth, error handling
+    └── domain/
+        └── errors/       # Shared error types
+```
+
+## Quick start
+
+```bash
+# 1. Clone and install
+pnpm install
+
+# 2. Set up environment
+cp .env.example .env
+# Edit .env with your PostgreSQL and Firebase credentials
+
+# 3. Run migrations and start
+pnpm run prisma:migrate
+pnpm run dev
+```
+
+The API runs on `http://localhost:3000`. API docs at `http://localhost:3000/api/docs`.
+
+## Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `FIREBASE_PROJECT_ID` | Firebase project ID |
+| `FIREBASE_CLIENT_EMAIL` | Firebase service account email |
+| `FIREBASE_PRIVATE_KEY` | Firebase service account private key |
+| `FIREBASE_API_KEY` | Firebase web API key |
+| `DEV_LOGIN_SECRET` | Secret for `/auth/dev-login` (dev only) |
+| `CORS_ORIGIN` | Allowed origin for CORS (default: `*`) |
+| `PORT` | Server port (default: `3000`) |
+
+## Running locally
+
+```bash
+pnpm run dev        # Development server with hot-reload
+pnpm run lint       # Lint with ts-standard
+pnpm run test       # Run all test suites
+pnpm run prisma:studio  # Open Prisma Studio (database GUI)
+```
+
+## Docker
+
+```bash
+# Development (from .env.docker template)
+cp .env.docker .env
+docker compose up --build
+
+# Production (standalone)
+docker build -t api-interesting-facts .
+docker run -p 3000:3000 --env-file .env api-interesting-facts
+```
+
+The containerized API connects to an **external PostgreSQL database** (no DB embedded in the image). Set `DATABASE_URL` to your Render, Supabase, or any PostgreSQL instance.
+
+## Deploy to Vercel
+
+Vercel builds and runs the Docker image directly. Ensure these environment variables are set in your Vercel project:
+
+- `DATABASE_URL`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_CLIENT_EMAIL`
+- `FIREBASE_PRIVATE_KEY`
+- `FIREBASE_API_KEY`
+- `DEV_LOGIN_SECRET`
+- `CORS_ORIGIN`
+
+## API overview
+
+### Auth — `/auth`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/auth/register` | None | Register + auto-login |
+| `POST` | `/auth/dev-login` | `DEV_LOGIN_SECRET` | Dev login with email/password → Firebase token |
+| `GET` | `/auth/me` | Firebase token | Get current user profile |
+| `PATCH` | `/auth/me` | Firebase token | Update profile |
+
+### Facts — `/facts`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/facts` | Firebase token | Create a fact |
+| `GET` | `/facts` | None | List facts (paginated) |
+| `GET` | `/facts/:id` | None | Get single fact |
+| `PATCH` | `/facts/:id` | Firebase token | Update own fact |
+| `DELETE` | `/facts/:id` | Firebase token | Delete own fact |
+
+### Likes — `/likes`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/likes` | Firebase token | Like a fact |
+| `DELETE` | `/likes/:factId` | Firebase token | Unlike a fact |
+| `GET` | `/likes/fact/:factId` | None | Get likes for a fact |
+| `GET` | `/likes/user` | Firebase token | Get current user's likes |
+
+## License
+
+ISC
