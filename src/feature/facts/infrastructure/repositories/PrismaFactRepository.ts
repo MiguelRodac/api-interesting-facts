@@ -48,7 +48,7 @@ async function batchLikeCounts (factIds: string[]): Promise<Map<string, number>>
   return new Map(likeCounts.map(l => [l.factId, l._count.factId]))
 }
 
-function enrichFact (fact: { id: string, authorId: string, author: { username: string, email: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date }, likeCountMap: Map<string, number>): EnrichedFact {
+function enrichFact (fact: { id: string, authorId: string, author: { username: string, email: string, displayName: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date }, likeCountMap: Map<string, number>): EnrichedFact {
   return {
     id: fact.id,
     authorId: fact.authorId,
@@ -66,7 +66,7 @@ export class PrismaFactRepository implements FactRepository {
     const fact = await prisma.fact.findUnique({
       where: { id },
       include: {
-        author: { select: { username: true, email: true } }
+        author: { select: { username: true, email: true, displayName: true } }
       }
     })
 
@@ -105,7 +105,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { username: true, email: true } }
+          author: { select: { username: true, email: true, displayName: true } }
         },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
@@ -138,7 +138,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { username: true, email: true } }
+          author: { select: { username: true, email: true, displayName: true } }
         },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
@@ -171,7 +171,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { username: true, email: true } }
+          author: { select: { username: true, email: true, displayName: true } }
         },
         orderBy: {
           likes: {

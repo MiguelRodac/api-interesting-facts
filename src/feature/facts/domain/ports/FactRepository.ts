@@ -4,7 +4,7 @@ import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/
 export interface EnrichedFact {
   id: string
   authorId: string
-  author: { username: string, email: string }
+  author: { username: string, email: string, displayName: string }
   title: string | null
   content: string
   likes: number

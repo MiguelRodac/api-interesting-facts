@@ -685,7 +685,10 @@ components:
               type: string
               format: email
               example: mike@example.com
-          required: [username, email]
+            displayName:
+              type: string
+              example: Mike García
+          required: [username, email, displayName]
         title:
           type: string
           nullable: true

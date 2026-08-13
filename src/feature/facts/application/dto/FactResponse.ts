@@ -1,6 +1,7 @@
 export interface FactAuthorPreview {
   username: string
   email: string
+  displayName: string
 }
 
 export interface FactResponse {
