@@ -136,6 +136,8 @@ components:
     UserSearchResult:
       type: object
       properties:
+        id:
+          type: string
         username:
           type: string
         displayName:
@@ -143,10 +145,15 @@ components:
         avatarUrl:
           type: string
           nullable: true
+        avatarColor:
+          type: string
+          nullable: true
       required:
+        - id
         - username
         - displayName
         - avatarUrl
+        - avatarColor
     CheckUsernameResponse:
       type: object
       properties:
@@ -993,6 +1000,8 @@ paths:
                 items:
                   type: object
                   properties:
+                    id:
+                      type: string
                     username:
                       type: string
                     displayName:
@@ -1000,10 +1009,15 @@ paths:
                     avatarUrl:
                       type: string
                       nullable: true
+                    avatarColor:
+                      type: string
+                      nullable: true
                   required:
+                    - id
                     - username
                     - displayName
                     - avatarUrl
+                    - avatarColor
         '400':
           description: Request validation failed
           content:
@@ -1472,6 +1486,8 @@ paths:
                     items:
                       type: object
                       properties:
+                        id:
+                          type: string
                         username:
                           type: string
                         displayName:
@@ -1479,10 +1495,15 @@ paths:
                         avatarUrl:
                           type: string
                           nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
                       required:
+                        - id
                         - username
                         - displayName
                         - avatarUrl
+                        - avatarColor
                   facts:
                     type: array
                     items:
