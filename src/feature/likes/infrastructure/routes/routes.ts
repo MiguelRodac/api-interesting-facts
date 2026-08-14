@@ -49,7 +49,7 @@ router.delete('/facts/:factId/likes', requireAuth, requireProfile, async (req: R
   }
 })
 
-router.get('/facts/:factId/likes', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/facts/:factId/likes', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
@@ -61,7 +61,7 @@ router.get('/facts/:factId/likes', async (req: Request, res: Response, next: Nex
   }
 })
 
-router.get('/users/:userId/likes', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/users/:userId/likes', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
