@@ -69,6 +69,27 @@ export class PrismaHashtagRepository {
     })
   }
 
+  async findByTagUsed (query: string): Promise<HashtagResponse[]> {
+    const normalizedQuery = query.toLowerCase()
+
+    const hashtags = await prisma.hashtag.findMany({
+      where: {
+        tag: { contains: normalizedQuery }
+      },
+      include: {
+        _count: {
+          select: { factHashtags: true }
+        }
+      },
+      orderBy: { tag: 'asc' },
+      take: 10
+    })
+
+    return hashtags
+      .filter(h => h._count.factHashtags > 0)
+      .map(h => ({ id: h.id, tag: h.tag }))
+  }
+
   async extractHashtags (content: string): Promise<string[]> {
     const regex = /#([a-zA-Z0-9_]+)/g
     const matches = content.match(regex)
