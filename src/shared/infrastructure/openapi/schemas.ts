@@ -104,7 +104,9 @@ export const FactAuthorPreviewSchema = z.object({
   id: z.string(),
   username: z.string(),
   email: z.string().email(),
-  displayName: z.string()
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable()
 })
 
 export const FactResponseSchema = z.object({

@@ -3,6 +3,8 @@ export interface FactAuthorPreview {
   username: string
   email: string
   displayName: string
+  avatarUrl: string | null
+  avatarColor: string | null
 }
 
 export interface HashtagPreview {

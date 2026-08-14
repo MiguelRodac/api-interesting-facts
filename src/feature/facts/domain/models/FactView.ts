@@ -5,7 +5,7 @@
 export interface FactView {
   id: string
   authorId: string
-  author: { id: string, username: string, email: string, displayName: string }
+  author: { id: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }
   title: string | null
   content: string
   likes: number

@@ -76,7 +76,7 @@ async function batchHashtags (factIds: string[]): Promise<Map<string, Array<{ id
 }
 
 function enrichFact (
-  fact: { id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date },
+  fact: { id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date },
   likeCountMap: Map<string, number>,
   viewerLikedSet: Set<string> | null,
   viewerId: string | null,
@@ -89,7 +89,9 @@ function enrichFact (
       id: fact.author.firebaseUid,
       username: fact.author.username,
       email: fact.author.email,
-      displayName: fact.author.displayName
+      displayName: fact.author.displayName,
+      avatarUrl: fact.author.avatarUrl,
+      avatarColor: fact.author.avatarColor
     },
     title: fact.title,
     content: fact.content,
@@ -105,7 +107,7 @@ function enrichFact (
 }
 
 async function enrichFacts (
-  facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>,
+  facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>,
   likeCountMap: Map<string, number>,
   viewerId: string | null,
   hashtagsMap: Map<string, Array<{ id: string, tag: string }>>
@@ -120,7 +122,7 @@ export class PrismaFactRepository implements FactRepository {
     const fact = await prisma.fact.findUnique({
       where: { id },
       include: {
-        author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
+        author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
       }
     })
 
@@ -156,7 +158,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
@@ -192,7 +194,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
@@ -228,7 +230,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
         orderBy: {
           likes: {
@@ -288,7 +290,7 @@ export class PrismaFactRepository implements FactRepository {
           content: true,
           createdAt: true,
           updatedAt: true,
-          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
         orderBy: { createdAt: 'desc' },
         skip,
