@@ -1,6 +1,7 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type User, type CreateUserData, type UpdateUserData } from '../../domain/entities/User'
 import { type UserRepository } from '../../domain/ports/UserRepository'
+import { type SearchOrderParams } from '@shared/domain/types/query-filters'
 
 export class PrismaUserRepository implements UserRepository {
   async findById (id: string): Promise<User | null> {
@@ -43,7 +44,36 @@ export class PrismaUserRepository implements UserRepository {
     }
   }
 
-  async findBySearch (query: string): Promise<User[]> {
+  async findBySearch (query: string, orderParams?: SearchOrderParams): Promise<User[]> {
+    const orderBy = orderParams?.order_by ?? 'popular'
+    const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
+
+    // For "popular" ordering by fact count, we fetch with _count and sort in memory
+    // For "recent" ordering, we sort by createdAt directly in the query
+    if (orderBy === 'recent') {
+      const users = await prisma.user.findMany({
+        where: {
+          OR: [
+            { username: { startsWith: query, mode: 'insensitive' } },
+            { displayName: { contains: query, mode: 'insensitive' } }
+          ]
+        },
+        take: 10,
+        orderBy: { createdAt: dir }
+      })
+
+      return users.map(user => ({
+        id: user.firebaseUid,
+        email: user.email,
+        username: user.username,
+        displayName: user.displayName,
+        avatarUrl: user.avatarUrl,
+        avatarColor: user.avatarColor,
+        createdAt: user.createdAt
+      }))
+    }
+
+    // Popular: order by fact count
     const users = await prisma.user.findMany({
       where: {
         OR: [
@@ -51,11 +81,21 @@ export class PrismaUserRepository implements UserRepository {
           { displayName: { contains: query, mode: 'insensitive' } }
         ]
       },
-      take: 10,
-      orderBy: { username: 'asc' }
+      include: {
+        _count: {
+          select: { facts: true }
+        }
+      },
+      take: 50 // fetch more to sort by count, then slice
     })
 
-    return users.map(user => ({
+    // Sort by fact count and take top 10
+    users.sort((a, b) => dir === 'desc'
+      ? b._count.facts - a._count.facts
+      : a._count.facts - b._count.facts
+    )
+
+    return users.slice(0, 10).map(user => ({
       id: user.firebaseUid,
       email: user.email,
       username: user.username,

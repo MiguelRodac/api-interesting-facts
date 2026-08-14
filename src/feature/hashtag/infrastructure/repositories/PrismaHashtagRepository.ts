@@ -2,6 +2,7 @@ import prisma from '@shared/infrastructure/prisma'
 import { type Hashtag } from '../../domain/models/Hashtag'
 import { type HashtagResponse } from '../../application/dto/HashtagResponse'
 import { type HashtagWithUsage } from '../../application/dto/HashtagWithUsage'
+import { type SearchOrderParams } from '@shared/domain/types/query-filters'
 
 export class PrismaHashtagRepository {
   async upsertByTag (tag: string): Promise<Hashtag> {
@@ -70,8 +71,10 @@ export class PrismaHashtagRepository {
     })
   }
 
-  async findByTagUsed (query: string): Promise<HashtagResponse[]> {
+  async findByTagUsed (query: string, orderParams?: SearchOrderParams): Promise<HashtagResponse[]> {
     const normalizedQuery = query.toLowerCase()
+    const orderBy = orderParams?.order_by ?? 'popular'
+    const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
 
     const hashtags = await prisma.hashtag.findMany({
       where: {
@@ -82,7 +85,9 @@ export class PrismaHashtagRepository {
           select: { factHashtags: true }
         }
       },
-      orderBy: { tag: 'asc' },
+      orderBy: orderBy === 'recent'
+        ? { createdAt: dir }
+        : { factHashtags: { _count: dir } },
       take: 10
     })
 

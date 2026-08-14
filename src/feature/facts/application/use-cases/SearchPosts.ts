@@ -1,5 +1,6 @@
 import { type FactRepository } from '../../domain/ports/FactRepository'
 import { type FactResponse } from '../dto/FactResponse'
+import { type SearchOrderParams } from '@shared/domain/types/query-filters'
 
 export class SearchPosts {
   private readonly factRepository: FactRepository
@@ -8,8 +9,8 @@ export class SearchPosts {
     this.factRepository = factRepository
   }
 
-  async execute (query: string, viewerId?: string): Promise<FactResponse[]> {
-    const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page: 1, limit: 10 }, viewerId)
+  async execute (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FactResponse[]> {
+    const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page: 1, limit: 10 }, viewerId, orderParams)
 
     return facts.map(fact => ({
       id: fact.id,
@@ -24,8 +25,8 @@ export class SearchPosts {
     }))
   }
 
-  async executeByAuthorOrMention (query: string, viewerId?: string): Promise<FactResponse[]> {
-    const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page: 1, limit: 10 }, viewerId)
+  async executeByAuthorOrMention (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FactResponse[]> {
+    const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page: 1, limit: 10 }, viewerId, orderParams)
 
     return facts.map(fact => ({
       id: fact.id,
@@ -40,8 +41,8 @@ export class SearchPosts {
     }))
   }
 
-  async executeByHashtag (tag: string, viewerId?: string): Promise<FactResponse[]> {
-    const { results: facts } = await this.factRepository.findByHashtag(tag, { page: 1, limit: 10 }, viewerId)
+  async executeByHashtag (tag: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FactResponse[]> {
+    const { results: facts } = await this.factRepository.findByHashtag(tag, { page: 1, limit: 10 }, viewerId, orderParams)
 
     return facts.map(fact => ({
       id: fact.id,

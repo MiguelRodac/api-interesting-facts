@@ -2,7 +2,7 @@ import prisma from '@shared/infrastructure/prisma'
 import { type Fact, type CreateFactData, type UpdateFactData } from '../../domain/entities/Fact'
 import { type FactRepository } from '../../domain/ports/FactRepository'
 import { type FactView } from '../../domain/models/FactView'
-import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
+import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, type SearchOrderParams, buildPaginatedResult } from '@shared/domain/types/query-filters'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 
 function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, unknown> {
@@ -19,6 +19,18 @@ function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, unkn
   }
 
   throw new ValidationError(`Invalid order_by field: '${orderBy}'. Allowed: createdAt, updatedAt, likesCount`)
+}
+
+function buildSearchOrderBy (orderParams?: SearchOrderParams): Record<string, unknown> {
+  const orderBy = orderParams?.order_by ?? 'popular'
+  const dir: 'asc' | 'desc' = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
+
+  if (orderBy === 'recent') {
+    return { createdAt: dir }
+  }
+
+  // popular: order by likes count
+  return { likes: { _count: dir } }
 }
 
 function buildPagination (params?: BaseQueryParams): { skip: number, take: number } {
@@ -256,7 +268,7 @@ export class PrismaFactRepository implements FactRepository {
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findByTitleOrHashtag (query: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
+  async findByTitleOrHashtag (query: string, params?: BaseQueryParams, viewerId?: string, orderParams?: SearchOrderParams): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? 10
     const { skip, take } = buildPagination(params)
@@ -292,7 +304,7 @@ export class PrismaFactRepository implements FactRepository {
           updatedAt: true,
           author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: buildSearchOrderBy(orderParams),
         skip,
         take
       }),
@@ -312,7 +324,7 @@ export class PrismaFactRepository implements FactRepository {
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findByAuthorOrMention (query: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
+  async findByAuthorOrMention (query: string, params?: BaseQueryParams, viewerId?: string, orderParams?: SearchOrderParams): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? 10
     const { skip, take } = buildPagination(params)
@@ -380,7 +392,7 @@ export class PrismaFactRepository implements FactRepository {
           updatedAt: true,
           author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: buildSearchOrderBy(orderParams),
         skip,
         take
       }),
@@ -400,7 +412,7 @@ export class PrismaFactRepository implements FactRepository {
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
-  async findByHashtag (tag: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
+  async findByHashtag (tag: string, params?: BaseQueryParams, viewerId?: string, orderParams?: SearchOrderParams): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? 10
     const { skip, take } = buildPagination(params)
@@ -440,7 +452,7 @@ export class PrismaFactRepository implements FactRepository {
           updatedAt: true,
           author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: buildSearchOrderBy(orderParams),
         skip,
         take
       }),

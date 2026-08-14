@@ -33,9 +33,20 @@ const PopularQuerySchema = z.object({
   order_dir: z.enum(['asc', 'desc']).optional()
 }).strict()
 
+const SearchOrderSchema = z.enum(['popular', 'recent'])
+const SearchDirSchema = z.enum(['asc', 'desc'])
+
 const SearchQuerySchema = z.object({
-  q: z.string().min(1, 'Search query is required').max(50, 'Search query must be at most 50 characters')
+  q: z.string().min(1, 'Search query is required').max(50, 'Search query must be at most 50 characters'),
+  order_by: SearchOrderSchema.default('popular'),
+  order_dir: SearchDirSchema.default('desc')
 }).strict()
+
+// Cap per category to keep total response under 100 items
+const MAX_SEARCH_USERS = 10
+const MAX_SEARCH_HASHTAGS = 10
+const MAX_SEARCH_FACTS = 80
+const MAX_SEARCH_TOTAL = 100
 
 const router = Router()
 const factRepository = new PrismaFactRepository()
@@ -102,25 +113,31 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
 
 router.get('/search', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { q } = SearchQuerySchema.parse(req.query)
+    const { q, order_by, order_dir } = SearchQuerySchema.parse(req.query)
     const sanitized = q.trim()
     const viewerId = req.user?.uid as string | undefined
+    const orderParams = { order_by, order_dir }
 
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
       const [users, facts] = await Promise.all([
-        userRepository.findBySearch(query),
-        searchPosts.executeByAuthorOrMention(query, viewerId)
+        userRepository.findBySearch(query, orderParams),
+        searchPosts.executeByAuthorOrMention(query, viewerId, orderParams)
       ])
+      const cappedFacts = facts.slice(0, MAX_SEARCH_FACTS)
+      const total = users.length + cappedFacts.length
+      if (total > MAX_SEARCH_TOTAL) {
+        cappedFacts.splice(MAX_SEARCH_TOTAL - users.length)
+      }
       res.status(200).json({
-        users: users.map(u => ({
+        users: users.slice(0, MAX_SEARCH_USERS).map(u => ({
           id: u.id,
           username: u.username,
           displayName: u.displayName,
           avatarUrl: u.avatarUrl,
           avatarColor: u.avatarColor
         })),
-        facts,
+        facts: cappedFacts,
         hashtags: []
       })
       return
@@ -129,18 +146,27 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
       const [hashtags, facts] = await Promise.all([
-        searchHashtags.execute(query),
-        searchPosts.executeByHashtag(query, viewerId)
+        searchHashtags.execute(query, orderParams),
+        searchPosts.executeByHashtag(query, viewerId, orderParams)
       ])
-      res.status(200).json({ users: [], facts, hashtags })
+      const cappedFacts = facts.slice(0, MAX_SEARCH_FACTS)
+      const total = hashtags.length + cappedFacts.length
+      if (total > MAX_SEARCH_TOTAL) {
+        cappedFacts.splice(MAX_SEARCH_TOTAL - hashtags.length)
+      }
+      res.status(200).json({
+        users: [],
+        facts: cappedFacts,
+        hashtags: hashtags.slice(0, MAX_SEARCH_HASHTAGS)
+      })
       return
     }
 
     const [users, factsByTitleOrHashtag, hashtags, factsByAuthorOrMention] = await Promise.all([
-      userRepository.findBySearch(sanitized),
-      searchPosts.execute(sanitized, viewerId),
-      searchHashtags.execute(sanitized),
-      searchPosts.executeByAuthorOrMention(sanitized, viewerId)
+      userRepository.findBySearch(sanitized, orderParams),
+      searchPosts.execute(sanitized, viewerId, orderParams),
+      searchHashtags.execute(sanitized, orderParams),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId, orderParams)
     ])
 
     // Merge facts from both searches, deduplicating by id
@@ -153,18 +179,24 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         factsMap.set(fact.id, fact)
       }
     }
-    const facts = Array.from(factsMap.values())
+    const mergedFacts = Array.from(factsMap.values())
+
+    // Cap each category and ensure total <= 100
+    const cappedUsers = users.slice(0, MAX_SEARCH_USERS)
+    const cappedHashtags = hashtags.slice(0, MAX_SEARCH_HASHTAGS)
+    const remainingForFacts = MAX_SEARCH_TOTAL - cappedUsers.length - cappedHashtags.length
+    const cappedFacts = mergedFacts.slice(0, remainingForFacts)
 
     res.status(200).json({
-      users: users.map(u => ({
+      users: cappedUsers.map(u => ({
         id: u.id,
         username: u.username,
         displayName: u.displayName,
         avatarUrl: u.avatarUrl,
         avatarColor: u.avatarColor
       })),
-      facts,
-      hashtags
+      facts: cappedFacts,
+      hashtags: cappedHashtags
     })
   } catch (err) {
     next(err)

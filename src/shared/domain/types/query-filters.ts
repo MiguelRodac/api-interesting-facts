@@ -5,6 +5,11 @@ export type FilterValue = string | number | string[]
 
 export type QueryFilters = Record<string, FilterValue>
 
+export interface SearchOrderParams {
+  order_by?: 'popular' | 'recent'
+  order_dir?: 'asc' | 'desc'
+}
+
 export interface BaseQueryParams {
   order_by?: string
   order_dir?: string
