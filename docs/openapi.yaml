@@ -1069,19 +1069,22 @@ components:
             required:
               - id
               - tag
-        hasMoreUsers:
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+        limit:
+          type: integer
+          description: Items per page requested
+        hasMore:
           type: boolean
-        hasMoreFacts:
-          type: boolean
-        hasMoreHashtags:
-          type: boolean
+          description: Whether there are more results available beyond this page
       required:
         - users
         - facts
         - hashtags
-        - hasMoreUsers
-        - hasMoreFacts
-        - hasMoreHashtags
+        - page
+        - limit
+        - hasMore
     PingResponse:
       type: object
       properties:
@@ -2256,7 +2259,40 @@ paths:
             type: string
             minLength: 1
           required: true
-          name: username
+          name: q
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - popular
+              - recent
+            default: popular
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
+          required: false
+          name: order_dir
           in: query
       responses:
         '200':
@@ -3099,19 +3135,22 @@ paths:
                       required:
                         - id
                         - tag
-                  hasMoreUsers:
+                  page:
+                    type: integer
+                    description: Current page number (1-indexed)
+                  limit:
+                    type: integer
+                    description: Items per page requested
+                  hasMore:
                     type: boolean
-                  hasMoreFacts:
-                    type: boolean
-                  hasMoreHashtags:
-                    type: boolean
+                    description: Whether there are more results available beyond this page
                 required:
                   - users
                   - facts
                   - hashtags
-                  - hasMoreUsers
-                  - hasMoreFacts
-                  - hasMoreHashtags
+                  - page
+                  - limit
+                  - hasMore
         '400':
           description: Malformed request or validation error
           content:

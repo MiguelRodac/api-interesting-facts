@@ -39,17 +39,10 @@ const SearchDirSchema = z.enum(['asc', 'desc'])
 const SearchQuerySchema = z.object({
   q: z.string().min(1, 'Search query is required').max(50, 'Search query must be at most 50 characters'),
   order_by: SearchOrderSchema.default('popular'),
-  order_dir: SearchDirSchema.default('desc')
+  order_dir: SearchDirSchema.default('desc'),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(100)
 }).strict()
-
-// Cap per category — request +1 to detect "has more" without COUNT query
-const MAX_SEARCH_USERS = 10
-const MAX_SEARCH_HASHTAGS = 10
-const MAX_SEARCH_FACTS = 80
-const MAX_SEARCH_TOTAL = 100
-const SEARCH_FETCH_USERS = MAX_SEARCH_USERS + 1
-const SEARCH_FETCH_HASHTAGS = MAX_SEARCH_HASHTAGS + 1
-const SEARCH_FETCH_FACTS = MAX_SEARCH_FACTS + 1
 
 const router = Router()
 const factRepository = new PrismaFactRepository()
@@ -116,74 +109,82 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
 
 router.get('/search', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { q, order_by, order_dir } = SearchQuerySchema.parse(req.query)
+    const { q, order_by, order_dir, page, limit } = SearchQuerySchema.parse(req.query)
     const sanitized = q.trim()
     const viewerId = req.user?.uid as string | undefined
+    const skip = (page - 1) * limit
+
+    // Fetch enough to cover the page + detect hasMore (request limit+1)
+    const fetchLimit = limit + 1
 
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
-      const orderParams = { order_by, order_dir, limit: SEARCH_FETCH_USERS }
       const [users, facts] = await Promise.all([
-        userRepository.findBySearch(query, orderParams),
-        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS })
+        userRepository.findBySearch(query, { order_by, order_dir, limit: fetchLimit }),
+        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by, order_dir, limit: fetchLimit })
       ])
-      const hasMoreUsers = users.length > MAX_SEARCH_USERS
-      const hasMoreFacts = facts.length > MAX_SEARCH_FACTS
-      const cappedFacts = facts.slice(0, MAX_SEARCH_FACTS)
-      const total = users.length + cappedFacts.length
-      if (total > MAX_SEARCH_TOTAL) {
-        cappedFacts.splice(MAX_SEARCH_TOTAL - users.length)
-      }
+
+      // Paginate merged results
+      const merged = [...users, ...facts]
+      const total = merged.length
+      const hasMore = total > limit
+      const paged = merged.slice(skip, skip + limit)
+
+      const pagedUsers = paged.filter(item => 'username' in item).map(u => ({
+        id: u.id,
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        avatarColor: u.avatarColor
+      }))
+      const pagedFacts = paged.filter(item => 'content' in item)
+
       res.status(200).json({
-        users: users.slice(0, MAX_SEARCH_USERS).map(u => ({
-          id: u.id,
-          username: u.username,
-          displayName: u.displayName,
-          avatarUrl: u.avatarUrl,
-          avatarColor: u.avatarColor
-        })),
-        facts: cappedFacts,
+        users: pagedUsers,
+        facts: pagedFacts,
         hashtags: [],
-        hasMoreUsers,
-        hasMoreFacts,
-        hasMoreHashtags: false
+        page,
+        limit,
+        hasMore
       })
       return
     }
 
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
-      const orderParams = { order_by, order_dir, limit: SEARCH_FETCH_HASHTAGS }
       const [hashtags, facts] = await Promise.all([
-        searchHashtags.execute(query, orderParams),
-        searchPosts.executeByHashtag(query, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS })
+        searchHashtags.execute(query, { order_by, order_dir, limit: fetchLimit }),
+        searchPosts.executeByHashtag(query, viewerId, { order_by, order_dir, limit: fetchLimit })
       ])
-      const hasMoreHashtags = hashtags.length > MAX_SEARCH_HASHTAGS
-      const hasMoreFacts = facts.length > MAX_SEARCH_FACTS
-      const cappedFacts = facts.slice(0, MAX_SEARCH_FACTS)
-      const total = hashtags.length + cappedFacts.length
-      if (total > MAX_SEARCH_TOTAL) {
-        cappedFacts.splice(MAX_SEARCH_TOTAL - hashtags.length)
-      }
+
+      const merged = [...hashtags, ...facts]
+      const total = merged.length
+      const hasMore = total > limit
+      const paged = merged.slice(skip, skip + limit)
+
+      const pagedHashtags = paged.filter(item => 'tag' in item)
+      const pagedFacts = paged.filter(item => 'content' in item)
+
       res.status(200).json({
         users: [],
-        facts: cappedFacts,
-        hashtags: hashtags.slice(0, MAX_SEARCH_HASHTAGS),
-        hasMoreUsers: false,
-        hasMoreFacts,
-        hasMoreHashtags
+        facts: pagedFacts,
+        hashtags: pagedHashtags,
+        page,
+        limit,
+        hasMore
       })
       return
     }
 
+    // Plain query — merge all categories
     const [users, factsByTitleOrHashtag, hashtags, factsByAuthorOrMention] = await Promise.all([
-      userRepository.findBySearch(sanitized, { order_by, order_dir, limit: SEARCH_FETCH_USERS }),
-      searchPosts.execute(sanitized, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS }),
-      searchHashtags.execute(sanitized, { order_by, order_dir, limit: SEARCH_FETCH_HASHTAGS }),
-      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS })
+      userRepository.findBySearch(sanitized, { order_by, order_dir, limit: fetchLimit }),
+      searchPosts.execute(sanitized, viewerId, { order_by, order_dir, limit: fetchLimit }),
+      searchHashtags.execute(sanitized, { order_by, order_dir, limit: fetchLimit }),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by, order_dir, limit: fetchLimit })
     ])
 
-    // Merge facts from both searches, deduplicating by id
+    // Merge facts, deduplicating by id
     const factsMap = new Map<string, typeof factsByTitleOrHashtag[0]>()
     for (const fact of factsByTitleOrHashtag) {
       factsMap.set(fact.id, fact)
@@ -195,29 +196,34 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     }
     const mergedFacts = Array.from(factsMap.values())
 
-    const hasMoreUsers = users.length > MAX_SEARCH_USERS
-    const hasMoreFacts = mergedFacts.length > MAX_SEARCH_FACTS
-    const hasMoreHashtags = hashtags.length > MAX_SEARCH_HASHTAGS
+    // Merge all into one list for pagination: users, hashtags, then facts
+    const allItems: Array<Record<string, unknown>> = [
+      ...users.map(u => ({ ...u, __type: 'user' })),
+      ...hashtags.map(h => ({ ...h, __type: 'hashtag' })),
+      ...mergedFacts.map(f => ({ ...f, __type: 'fact' }))
+    ]
 
-    // Cap each category and ensure total <= 100
-    const cappedUsers = users.slice(0, MAX_SEARCH_USERS)
-    const cappedHashtags = hashtags.slice(0, MAX_SEARCH_HASHTAGS)
-    const remainingForFacts = MAX_SEARCH_TOTAL - cappedUsers.length - cappedHashtags.length
-    const cappedFacts = mergedFacts.slice(0, remainingForFacts)
+    const total = allItems.length
+    const hasMore = total > limit
+    const paged = allItems.slice(skip, skip + limit)
+
+    const pagedUsers = paged.filter(item => item.__type === 'user').map(u => ({
+      id: u.id,
+      username: u.username,
+      displayName: u.displayName,
+      avatarUrl: u.avatarUrl,
+      avatarColor: u.avatarColor
+    }))
+    const pagedHashtags = paged.filter(item => item.__type === 'hashtag')
+    const pagedFacts = paged.filter(item => item.__type === 'fact')
 
     res.status(200).json({
-      users: cappedUsers.map(u => ({
-        id: u.id,
-        username: u.username,
-        displayName: u.displayName,
-        avatarUrl: u.avatarUrl,
-        avatarColor: u.avatarColor
-      })),
-      facts: cappedFacts,
-      hashtags: cappedHashtags,
-      hasMoreUsers,
-      hasMoreFacts,
-      hasMoreHashtags
+      users: pagedUsers,
+      facts: pagedFacts,
+      hashtags: pagedHashtags,
+      page,
+      limit,
+      hasMore
     })
   } catch (err) {
     next(err)
