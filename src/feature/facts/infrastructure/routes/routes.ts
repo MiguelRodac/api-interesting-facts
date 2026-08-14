@@ -123,8 +123,11 @@ router.get('/search', optionalAuth, async (req: Request, res: Response, next: Ne
 
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
-      const hashtags = await searchHashtags.execute(query)
-      res.status(200).json({ users: [], facts: [], hashtags })
+      const [hashtags, facts] = await Promise.all([
+        searchHashtags.execute(query),
+        searchPosts.executeByHashtag(query, viewerId)
+      ])
+      res.status(200).json({ users: [], facts, hashtags })
       return
     }
 

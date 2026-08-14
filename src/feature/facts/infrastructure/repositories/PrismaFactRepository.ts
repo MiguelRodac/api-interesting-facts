@@ -312,6 +312,66 @@ export class PrismaFactRepository implements FactRepository {
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
+  async findByHashtag (tag: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? 10
+    const { skip, take } = buildPagination(params)
+
+    // Find hashtag by exact tag name
+    const hashtag = await prisma.hashtag.findUnique({
+      where: { tag: tag.toLowerCase() },
+      select: { id: true }
+    })
+
+    if (hashtag == null) {
+      return buildPaginatedResult([], 0, page, limit)
+    }
+
+    // Find all fact IDs that use this hashtag
+    const factHashtags = await prisma.factHashtag.findMany({
+      where: { hashtagId: hashtag.id },
+      select: { factId: true }
+    })
+    const factIds = factHashtags.map(fh => fh.factId)
+
+    if (factIds.length === 0) {
+      return buildPaginatedResult([], 0, page, limit)
+    }
+
+    const where = { id: { in: factIds } }
+
+    const [facts, total] = await Promise.all([
+      prisma.fact.findMany({
+        where,
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take
+      }),
+      prisma.fact.count({ where })
+    ])
+
+    if (facts.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const [likeCountMap, hashtagsMap] = await Promise.all([
+      batchLikeCounts(facts.map(f => f.id)),
+      batchHashtags(facts.map(f => f.id))
+    ])
+    const enriched = await enrichFacts(facts, likeCountMap, viewerId ?? null, hashtagsMap)
+
+    return buildPaginatedResult(enriched, total, page, limit)
+  }
+
   async create (data: CreateFactData): Promise<Fact> {
     const fact = await prisma.fact.create({
       data: {

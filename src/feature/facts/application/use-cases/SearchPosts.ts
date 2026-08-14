@@ -23,4 +23,20 @@ export class SearchPosts {
       updatedAt: fact.updatedAt.toISOString()
     }))
   }
+
+  async executeByHashtag (tag: string, viewerId?: string): Promise<FactResponse[]> {
+    const { results: facts } = await this.factRepository.findByHashtag(tag, { page: 1, limit: 10 }, viewerId)
+
+    return facts.map(fact => ({
+      id: fact.id,
+      author: fact.author,
+      title: fact.title,
+      content: fact.content,
+      likes: fact.likes,
+      liked: fact.liked,
+      hashtags: fact.hashtags,
+      createdAt: fact.createdAt.toISOString(),
+      updatedAt: fact.updatedAt.toISOString()
+    }))
+  }
 }
