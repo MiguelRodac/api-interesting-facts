@@ -417,19 +417,21 @@ export class PrismaFactRepository implements FactRepository {
     const limit = params?.limit ?? 10
     const { skip, take } = buildPagination(params)
 
-    // Find hashtag by exact tag name
-    const hashtag = await prisma.hashtag.findUnique({
-      where: { tag: tag.toLowerCase() },
+    // Find all hashtags matching the tag prefix (startsWith for autocomplete feel)
+    const matchingHashtags = await prisma.hashtag.findMany({
+      where: { tag: { startsWith: tag.toLowerCase() } },
       select: { id: true }
     })
 
-    if (hashtag == null) {
+    if (matchingHashtags.length === 0) {
       return buildPaginatedResult([], 0, page, limit)
     }
 
-    // Find all fact IDs that use this hashtag
+    const hashtagIds = matchingHashtags.map(h => h.id)
+
+    // Find all fact IDs that use any of these hashtags
     const factHashtags = await prisma.factHashtag.findMany({
-      where: { hashtagId: hashtag.id },
+      where: { hashtagId: { in: hashtagIds } },
       select: { factId: true }
     })
     const factIds = factHashtags.map(fh => fh.factId)
