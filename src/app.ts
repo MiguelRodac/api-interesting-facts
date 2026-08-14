@@ -19,22 +19,27 @@ const app = express()
 // Trust Vercel's proxy to get real client IP
 app.set('trust proxy', 1)
 
-// Global rate limiter — 100 requests per 15 minutes per IP
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Skip /ping so monitoring tools can always hit it
-  skip: (req) => req.path === '/ping',
-  message: (req: Request) => ({
-    status: 429,
-    error: 'Too Many Requests',
-    message: 'Rate limit exceeded. Try again in 15 minutes.',
-    documentation: `${req.protocol}://${req.get('host') ?? 'localhost'}/api/docs`
+// Global rate limiter — configurable via env, disabled in dev
+const isDev = process.env.NODE_ENV !== 'production'
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? '500', 10)
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? (15 * 60 * 1000).toString(), 10)
+
+if (!isDev) {
+  const limiter = rateLimit({
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => req.path === '/ping',
+    message: (req: Request) => ({
+      status: 429,
+      error: 'Too Many Requests',
+      message: `Rate limit exceeded. Try again in ${Math.round(RATE_LIMIT_WINDOW_MS / 60000)} minutes.`,
+      documentation: `${req.protocol}://${req.get('host') ?? 'localhost'}/api/docs`
+    })
   })
-})
-app.use(limiter)
+  app.use(limiter)
+}
 
 // CORS — allow frontend origin
 const corsOptions: cors.CorsOptions = {
