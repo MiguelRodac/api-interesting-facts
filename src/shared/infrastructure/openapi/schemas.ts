@@ -37,7 +37,8 @@ export const DevLoginResponseSchema = z.object({
 export const UpdateProfileRequestSchema = z.object({
   displayName: z.string().min(1).optional(),
   avatarUrl: z.string().optional(),
-  avatarColor: z.string().nullable().optional()
+  avatarColor: z.string().nullable().optional(),
+  email: z.string().email().optional()
 })
 
 export const UserResponseSchema = z.object({
@@ -54,6 +55,7 @@ export const PublicUserResponseSchema = z.object({
   username: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable(),
   createdAt: z.string().datetime()
 })
 

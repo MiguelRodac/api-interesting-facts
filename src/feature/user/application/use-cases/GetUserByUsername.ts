@@ -16,6 +16,7 @@ export class GetUserByUsername {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt.toISOString()
     }
   }

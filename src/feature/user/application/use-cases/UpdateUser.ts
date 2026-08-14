@@ -9,7 +9,8 @@ export class UpdateUser {
     const user = await this.repository.update(firebaseUid, {
       displayName: data.displayName,
       avatarUrl: data.avatarUrl,
-      avatarColor: data.avatarColor
+      avatarColor: data.avatarColor,
+      email: data.email
     })
 
     return {

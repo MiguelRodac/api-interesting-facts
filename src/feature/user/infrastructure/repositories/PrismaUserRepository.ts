@@ -101,7 +101,8 @@ export class PrismaUserRepository implements UserRepository {
       data: {
         displayName: data.displayName,
         avatarUrl: data.avatarUrl,
-        avatarColor: data.avatarColor
+        avatarColor: data.avatarColor,
+        email: data.email
       }
     })
 

@@ -79,6 +79,9 @@ components:
         avatarColor:
           type: string
           nullable: true
+        email:
+          type: string
+          format: email
     UserResponse:
       type: object
       properties:
@@ -118,6 +121,9 @@ components:
         avatarUrl:
           type: string
           nullable: true
+        avatarColor:
+          type: string
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -125,6 +131,7 @@ components:
         - username
         - displayName
         - avatarUrl
+        - avatarColor
         - createdAt
     UserSearchResult:
       type: object
@@ -857,6 +864,9 @@ paths:
                 avatarColor:
                   type: string
                   nullable: true
+                email:
+                  type: string
+                  format: email
       responses:
         '200':
           description: Profile updated
@@ -1115,6 +1125,9 @@ paths:
                   avatarUrl:
                     type: string
                     nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
                   createdAt:
                     type: string
                     format: date-time
@@ -1122,6 +1135,7 @@ paths:
                   - username
                   - displayName
                   - avatarUrl
+                  - avatarColor
                   - createdAt
         '404':
           description: Resource not found
