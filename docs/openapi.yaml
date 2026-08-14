@@ -1069,19 +1069,23 @@ components:
             required:
               - id
               - tag
-        hasMoreUsers:
-          type: boolean
-        hasMoreFacts:
-          type: boolean
-        hasMoreHashtags:
+        page:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        limit:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        hasMore:
           type: boolean
       required:
         - users
         - facts
         - hashtags
-        - hasMoreUsers
-        - hasMoreFacts
-        - hasMoreHashtags
+        - page
+        - limit
+        - hasMore
     PingResponse:
       type: object
       properties:
@@ -1147,161 +1151,6 @@ paths:
             text/html:
               schema:
                 type: string
-  /auth/dev-login:
-    post:
-      summary: Generate a Firebase token for testing (dev only)
-      operationId: devLogin
-      tags:
-        - Auth
-      description: Development-only endpoint. Disabled in production (returns 404).
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                secret:
-                  type: string
-                  minLength: 1
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                  minLength: 1
-              required:
-                - secret
-                - email
-                - password
-      responses:
-        '200':
-          description: Firebase token generated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                required:
-                  - token
-        '400':
-          description: Malformed request or validation error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  type:
-                    type: string
-                    description: URI reference that identifies the problem type
-                  title:
-                    type: string
-                    description: Short, human-readable summary of the problem
-                  status:
-                    type: integer
-                    description: HTTP status code
-                  detail:
-                    type: string
-                    description: Human-readable explanation specific to this error occurrence
-                  instance:
-                    type: string
-                    description: URI reference of the request that caused the error
-                  trace_id:
-                    type: string
-                    format: uuid
-                    description: Unique trace ID for request tracking
-                  timestamp:
-                    type: string
-                    format: date-time
-                    description: ISO 8601 timestamp when the error occurred
-                  error_code:
-                    type: string
-                    enum:
-                      - BAD_REQUEST
-                    description: Machine-readable error code
-                  category:
-                    type: string
-                    enum:
-                      - validation
-                    description: Error category
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
-                required:
-                  - type
-                  - title
-                  - status
-                  - detail
-                  - instance
-                  - trace_id
-                  - timestamp
-                  - error_code
-                  - category
-        '401':
-          description: Missing or invalid authentication token
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  type:
-                    type: string
-                    description: URI reference that identifies the problem type
-                  title:
-                    type: string
-                    description: Short, human-readable summary of the problem
-                  status:
-                    type: integer
-                    description: HTTP status code
-                  detail:
-                    type: string
-                    description: Human-readable explanation specific to this error occurrence
-                  instance:
-                    type: string
-                    description: URI reference of the request that caused the error
-                  trace_id:
-                    type: string
-                    format: uuid
-                    description: Unique trace ID for request tracking
-                  timestamp:
-                    type: string
-                    format: date-time
-                    description: ISO 8601 timestamp when the error occurred
-                  error_code:
-                    type: string
-                    enum:
-                      - UNAUTHORIZED
-                    description: Machine-readable error code
-                  category:
-                    type: string
-                    enum:
-                      - authentication
-                    description: Error category
-                required:
-                  - type
-                  - title
-                  - status
-                  - detail
-                  - instance
-                  - trace_id
-                  - timestamp
-                  - error_code
-                  - category
-        '404':
-          description: Not available in production
   /auth/profile:
     post:
       summary: Create user profile (onboarding)
@@ -3099,19 +2948,23 @@ paths:
                       required:
                         - id
                         - tag
-                  hasMoreUsers:
-                    type: boolean
-                  hasMoreFacts:
-                    type: boolean
-                  hasMoreHashtags:
+                  page:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  limit:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  hasMore:
                     type: boolean
                 required:
                   - users
                   - facts
                   - hashtags
-                  - hasMoreUsers
-                  - hasMoreFacts
-                  - hasMoreHashtags
+                  - page
+                  - limit
+                  - hasMore
         '400':
           description: Malformed request or validation error
           content:

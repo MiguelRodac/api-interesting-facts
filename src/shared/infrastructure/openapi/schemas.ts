@@ -287,9 +287,9 @@ export const GlobalSearchResponseSchema = z.object({
   users: z.array(UserSearchResultSchema),
   facts: z.array(FactResponseSchema),
   hashtags: z.array(HashtagPreviewSchema),
-  hasMoreUsers: z.boolean(),
-  hasMoreFacts: z.boolean(),
-  hasMoreHashtags: z.boolean()
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  hasMore: z.boolean()
 })
 
 registry.register('GlobalSearchResponse', GlobalSearchResponseSchema)

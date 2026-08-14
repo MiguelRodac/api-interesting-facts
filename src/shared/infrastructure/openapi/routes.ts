@@ -2,8 +2,6 @@ import { z } from 'zod'
 import { registry } from './registry'
 import {
   PingResponseSchema,
-  DevLoginRequestSchema,
-  DevLoginResponseSchema,
   CreateProfileRequestSchema,
   UserResponseSchema,
   UpdateProfileRequestSchema,
@@ -89,29 +87,6 @@ registry.registerPath({
 })
 
 // ── Auth ────────────────────────────────────────────────────────────────────
-
-registry.registerPath({
-  method: 'post',
-  path: '/auth/dev-login',
-  summary: 'Generate a Firebase token for testing (dev only)',
-  operationId: 'devLogin',
-  tags: ['Auth'],
-  description: 'Development-only endpoint. Disabled in production (returns 404).',
-  request: {
-    body: {
-      content: { 'application/json': { schema: DevLoginRequestSchema } }
-    }
-  },
-  responses: {
-    200: {
-      description: 'Firebase token generated',
-      content: { 'application/json': { schema: DevLoginResponseSchema } }
-    },
-    400: badRequestResponse,
-    401: unauthorizedResponse,
-    404: { description: 'Not available in production' }
-  }
-})
 
 registry.registerPath({
   method: 'post',
