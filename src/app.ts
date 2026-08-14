@@ -8,6 +8,7 @@ import userRoutes from '@user/infrastructure/routes/routes'
 import userPublicRoutes from '@user/infrastructure/routes/publicRoutes'
 import factRoutes from '@fact/infrastructure/routes/routes'
 import likeRoutes from '@likes/infrastructure/routes/routes'
+import hashtagRoutes from '@hashtag/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
 import prisma from '@shared/infrastructure/prisma'
@@ -105,6 +106,9 @@ app.use('/users', userPublicRoutes)
 
 // Mount fact routes
 app.use('/facts', factRoutes)
+
+// Mount hashtag routes
+app.use('/hashtags', hashtagRoutes)
 
 // Mount like routes
 app.use('/', likeRoutes)

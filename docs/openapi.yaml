@@ -200,6 +200,19 @@ components:
       required:
         - id
         - tag
+    HashtagWithUsage:
+      type: object
+      properties:
+        id:
+          type: string
+        tag:
+          type: string
+        usageCount:
+          type: integer
+      required:
+        - id
+        - tag
+        - usageCount
     FactResponse:
       type: object
       properties:
@@ -2182,6 +2195,75 @@ paths:
                   - page
                   - limit
                   - nextPage
+  /hashtags:
+    get:
+      summary: Get popular hashtags for autocomplete
+      operationId: getHashtags
+      tags:
+        - Hashtags
+      description: Returns hashtags matching the query, ordered by usage count (most used first).
+      parameters:
+        - schema:
+            type: string
+            description: Search query to filter hashtags
+          required: false
+          description: Search query to filter hashtags
+          name: q
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 20
+            default: 10
+            description: Max results (default 10, max 20)
+          required: false
+          description: Max results (default 10, max 20)
+          name: limit
+          in: query
+      responses:
+        '200':
+          description: List of matching hashtags with usage counts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tag:
+                          type: string
+                        usageCount:
+                          type: integer
+                      required:
+                        - id
+                        - tag
+                        - usageCount
+                required:
+                  - results
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
   /facts/{factId}/likes:
     post:
       summary: Like a fact

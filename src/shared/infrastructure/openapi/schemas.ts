@@ -102,6 +102,12 @@ export const HashtagPreviewSchema = z.object({
   tag: z.string()
 })
 
+export const HashtagWithUsageSchema = z.object({
+  id: z.string(),
+  tag: z.string(),
+  usageCount: z.number().int()
+})
+
 export const FactAuthorPreviewSchema = z.object({
   id: z.string(),
   username: z.string(),
@@ -133,6 +139,7 @@ export const PaginatedFactResponseSchema = z.object({
 registry.register('CreateFactRequest', CreateFactRequestSchema)
 registry.register('UpdateFactRequest', UpdateFactRequestSchema)
 registry.register('HashtagPreview', HashtagPreviewSchema)
+registry.register('HashtagWithUsage', HashtagWithUsageSchema)
 registry.register('FactResponse', FactResponseSchema)
 registry.register('PaginatedFactResponse', PaginatedFactResponseSchema)
 

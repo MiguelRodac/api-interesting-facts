@@ -18,7 +18,8 @@ import {
   GlobalSearchResponseSchema,
   LikeResponseSchema,
   PaginatedLikeResponseSchema,
-  ErrorResponseSchema
+  ErrorResponseSchema,
+  HashtagWithUsageSchema
 } from './schemas'
 
 // ── Security schemes ────────────────────────────────────────────────────────
@@ -402,6 +403,36 @@ registry.registerPath({
       description: 'Paginated list of facts by author',
       content: { 'application/json': { schema: PaginatedFactResponseSchema } }
     }
+  }
+})
+
+// ── Hashtags ────────────────────────────────────────────────────────────────
+
+registry.registerPath({
+  method: 'get',
+  path: '/hashtags',
+  summary: 'Get popular hashtags for autocomplete',
+  operationId: 'getHashtags',
+  tags: ['Hashtags'],
+  description: 'Returns hashtags matching the query, ordered by usage count (most used first).',
+  request: {
+    query: z.object({
+      q: z.string().optional().describe('Search query to filter hashtags'),
+      limit: z.coerce.number().int().positive().max(20).default(10).optional().describe('Max results (default 10, max 20)')
+    })
+  },
+  responses: {
+    200: {
+      description: 'List of matching hashtags with usage counts',
+      content: {
+        'application/json': {
+          schema: z.object({
+            results: z.array(HashtagWithUsageSchema)
+          })
+        }
+      }
+    },
+    400: validationResponse
   }
 })
 

@@ -1,6 +1,7 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type Hashtag } from '../../domain/models/Hashtag'
 import { type HashtagResponse } from '../../application/dto/HashtagResponse'
+import { type HashtagWithUsage } from '../../application/dto/HashtagWithUsage'
 
 export class PrismaHashtagRepository {
   async upsertByTag (tag: string): Promise<Hashtag> {
@@ -88,6 +89,33 @@ export class PrismaHashtagRepository {
     return hashtags
       .filter(h => h._count.factHashtags > 0)
       .map(h => ({ id: h.id, tag: h.tag }))
+  }
+
+  async findPopular (query?: string, limit: number = 10): Promise<HashtagWithUsage[]> {
+    const where = query
+      ? { tag: { contains: query.toLowerCase() } }
+      : {}
+
+    const hashtags = await prisma.hashtag.findMany({
+      where,
+      include: {
+        _count: {
+          select: { factHashtags: true }
+        }
+      },
+      orderBy: {
+        factHashtags: { _count: 'desc' }
+      },
+      take: Math.min(limit, 20)
+    })
+
+    return hashtags
+      .filter(h => h._count.factHashtags > 0)
+      .map(h => ({
+        id: h.id,
+        tag: h.tag,
+        usageCount: h._count.factHashtags
+      }))
   }
 
   async extractHashtags (content: string): Promise<string[]> {
