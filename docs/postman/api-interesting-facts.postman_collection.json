@@ -262,7 +262,7 @@
                 }
               ]
             },
-            "description": "Get all facts sorted by newest first (public, no auth)\n\n**Response includes:** nested `author: { username, email, displayName }` and `likes` count per fact.\n\n`{ results: [{ id, author: { username, email, displayName }, title, content, likes, createdAt, updatedAt }], page, limit, nextPage }`"
+            "description": "Get all facts sorted by newest first (public, no auth)\n\n**Response includes:** nested `author: { id, username, email, displayName }` and `likes` count per fact.\n\n`{ results: [{ id, author: { id, username, email, displayName }, title, content, likes, createdAt, updatedAt }], page, limit, nextPage }`"
           },
           "response": []
         },
@@ -316,7 +316,7 @@
                 }
               ]
             },
-            "description": "Get all facts sorted by likes count (most liked first, public)\n\n**Response now includes:** nested `author: { username, email, displayName }` and `likes` count per fact."
+            "description": "Get all facts sorted by likes count (most liked first, public)\n\n**Response now includes:** nested `author: { id, username, email, displayName }` and `likes` count per fact."
           },
           "response": []
         },
