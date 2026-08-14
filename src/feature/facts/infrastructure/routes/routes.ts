@@ -34,7 +34,7 @@ const PopularQuerySchema = z.object({
 }).strict()
 
 const SearchQuerySchema = z.object({
-  q: z.string().min(1, 'Search query is required')
+  q: z.string().min(1, 'Search query is required').max(50, 'Search query must be at most 50 characters')
 }).strict()
 
 const router = Router()
@@ -103,12 +103,35 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
 router.get('/search', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q } = SearchQuerySchema.parse(req.query)
+    const sanitized = q.trim()
     const viewerId = req.user?.uid as string | undefined
 
+    if (sanitized.startsWith('@')) {
+      const query = sanitized.slice(1)
+      const users = await userRepository.findBySearch(query)
+      res.status(200).json({
+        users: users.map(u => ({
+          username: u.username,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl
+        })),
+        facts: [],
+        hashtags: []
+      })
+      return
+    }
+
+    if (sanitized.startsWith('#')) {
+      const query = sanitized.slice(1)
+      const hashtags = await searchHashtags.execute(query)
+      res.status(200).json({ users: [], facts: [], hashtags })
+      return
+    }
+
     const [users, facts, hashtags] = await Promise.all([
-      userRepository.findBySearch(q),
-      searchPosts.execute(q, viewerId),
-      searchHashtags.execute(q)
+      userRepository.findBySearch(sanitized),
+      searchPosts.execute(sanitized, viewerId),
+      searchHashtags.execute(sanitized)
     ])
 
     res.status(200).json({
