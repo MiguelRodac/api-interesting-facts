@@ -8,10 +8,22 @@ export const PaginationSchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(10)
 })
 
+export const ErrorDetailSchema = z.object({
+  field: z.string(),
+  message: z.string()
+})
+
 export const ErrorResponseSchema = z.object({
-  error: z.string(),
-  code: z.string(),
-  details: z.record(z.unknown()).optional()
+  type: z.string().url().or(z.string()),
+  title: z.string(),
+  status: z.number().int(),
+  detail: z.string(),
+  error_code: z.string(),
+  category: z.string(),
+  instance: z.string(),
+  trace_id: z.string().uuid(),
+  timestamp: z.string().datetime(),
+  details: z.array(ErrorDetailSchema).optional()
 })
 
 registry.register('ErrorResponse', ErrorResponseSchema)

@@ -19,17 +19,51 @@ components:
     ErrorResponse:
       type: object
       properties:
-        error:
+        type:
+          anyOf:
+            - type: string
+              format: uri
+            - type: string
+        title:
           type: string
-        code:
+        status:
+          type: integer
+        detail:
           type: string
+        error_code:
+          type: string
+        category:
+          type: string
+        instance:
+          type: string
+        trace_id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
         details:
-          type: object
-          additionalProperties:
-            nullable: true
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+            required:
+              - field
+              - message
       required:
-        - error
-        - code
+        - type
+        - title
+        - status
+        - detail
+        - error_code
+        - category
+        - instance
+        - trace_id
+        - timestamp
     CreateProfileRequest:
       type: object
       properties:
@@ -659,17 +693,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '401':
           description: Missing or invalid authentication token
           content:
@@ -677,17 +745,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '404':
           description: Not available in production
   /auth/profile:
@@ -757,17 +859,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '401':
           description: Missing or invalid authentication token
           content:
@@ -775,17 +911,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '409':
           description: Resource already exists
           content:
@@ -793,17 +963,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /auth/me:
     get:
       summary: Get current user profile
@@ -853,17 +1057,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -871,17 +1109,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
     patch:
       summary: Update current user profile
       operationId: updateCurrentUser
@@ -947,17 +1219,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '401':
           description: Missing or invalid authentication token
           content:
@@ -965,17 +1271,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -983,17 +1323,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /users/search:
     get:
       summary: Search users for @mention autocomplete
@@ -1044,17 +1418,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '401':
           description: Missing or invalid authentication token
           content:
@@ -1062,17 +1470,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /users/check-username:
     get:
       summary: Check username availability
@@ -1105,17 +1547,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /users/avatar-options:
     get:
       summary: Get all preset avatar options
@@ -1193,17 +1669,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /facts:
     get:
       summary: Get all facts (newest first)
@@ -1434,17 +1944,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '401':
           description: Missing or invalid authentication token
           content:
@@ -1452,17 +1996,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -1470,17 +2048,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /facts/search:
     get:
       summary: Global search (users, facts, hashtags)
@@ -1627,17 +2239,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /facts/popular:
     get:
       summary: Get facts sorted by likes count
@@ -1860,17 +2506,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
     patch:
       summary: Update a fact (author only)
       operationId: updateFact
@@ -1977,17 +2657,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '401':
           description: Missing or invalid authentication token
           content:
@@ -1995,17 +2709,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -2013,17 +2761,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '404':
           description: Resource not found
           content:
@@ -2031,17 +2813,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
     delete:
       summary: Delete a fact (author only)
       operationId: deleteFact
@@ -2066,17 +2882,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -2084,17 +2934,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '404':
           description: Resource not found
           content:
@@ -2102,17 +2986,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /facts/author/{authorId}:
     get:
       summary: Get all facts by an author
@@ -2305,17 +3223,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
   /facts/{factId}/likes:
     post:
       summary: Like a fact
@@ -2362,17 +3314,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -2380,17 +3366,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '404':
           description: Resource not found
           content:
@@ -2398,17 +3418,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '409':
           description: Resource already exists
           content:
@@ -2416,17 +3470,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
     delete:
       summary: Unlike a fact
       operationId: unlikeFact
@@ -2451,17 +3539,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -2469,17 +3591,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
         '404':
           description: Resource not found
           content:
@@ -2487,17 +3643,51 @@ paths:
               schema:
                 type: object
                 properties:
-                  error:
+                  type:
+                    anyOf:
+                      - type: string
+                        format: uri
+                      - type: string
+                  title:
                     type: string
-                  code:
+                  status:
+                    type: integer
+                  detail:
                     type: string
+                  error_code:
+                    type: string
+                  category:
+                    type: string
+                  instance:
+                    type: string
+                  trace_id:
+                    type: string
+                    format: uuid
+                  timestamp:
+                    type: string
+                    format: date-time
                   details:
-                    type: object
-                    additionalProperties:
-                      nullable: true
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+                      required:
+                        - field
+                        - message
                 required:
-                  - error
-                  - code
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - error_code
+                  - category
+                  - instance
+                  - trace_id
+                  - timestamp
     get:
       summary: Get all likes for a fact
       operationId: getFactLikes
