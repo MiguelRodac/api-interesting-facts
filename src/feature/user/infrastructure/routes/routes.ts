@@ -1,4 +1,5 @@
 import { Router, type Request, type Response, type NextFunction } from 'express'
+import { z } from 'zod'
 import { PrismaUserRepository } from '../repositories/PrismaUserRepository'
 import { CreateUser } from '../../application/use-cases/CreateUser'
 import { GetUserByFirebaseUid } from '../../application/use-cases/GetUserByFirebaseUid'
@@ -6,6 +7,11 @@ import { UpdateUser } from '../../application/use-cases/UpdateUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
+
+const MentionQuerySchema = z.object({
+  q: z.string().min(1, 'q is required').max(50),
+  limit: z.coerce.number().int().positive().max(20).default(10)
+}).strict()
 
 const router = Router()
 const userRepository = new PrismaUserRepository()
@@ -80,6 +86,25 @@ router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Respo
 
     const user = await updateUser.execute(uid, { displayName, avatarUrl, avatarColor, email })
     res.status(200).json(user)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /users?q= — Mention autocomplete for composing facts
+router.get('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { q, limit } = MentionQuerySchema.parse(req.query)
+    const users = await userRepository.findBySearch(q.trim(), { order_by: 'popular', order_dir: 'desc', limit })
+    res.status(200).json({
+      results: users.map(u => ({
+        id: u.id,
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        avatarColor: u.avatarColor
+      }))
+    })
   } catch (err) {
     next(err)
   }
