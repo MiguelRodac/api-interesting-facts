@@ -312,6 +312,77 @@ export class PrismaFactRepository implements FactRepository {
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
+  async findByAuthorOrMention (query: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? 10
+    const { skip, take } = buildPagination(params)
+
+    // Find users matching the query to get their firebaseUid
+    const matchingUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { startsWith: query, mode: 'insensitive' } },
+          { displayName: { contains: query, mode: 'insensitive' } }
+        ]
+      },
+      select: { firebaseUid: true, username: true },
+      take: 10
+    })
+
+    const authorIds = matchingUsers.map(u => u.firebaseUid)
+    const usernames = matchingUsers.map(u => u.username)
+
+    // Build OR conditions: authorId matches OR content contains @username
+    const orConditions: Array<Record<string, unknown>> = []
+
+    if (authorIds.length > 0) {
+      orConditions.push({ authorId: { in: authorIds } })
+    }
+
+    // For mentions, we search for @username patterns in content
+    for (const username of usernames) {
+      orConditions.push({ content: { contains: `@${username}`, mode: 'insensitive' } })
+    }
+
+    // If no users matched, also try a direct content mention search with the raw query
+    if (orConditions.length === 0) {
+      orConditions.push({ content: { contains: `@${query}`, mode: 'insensitive' } })
+    }
+
+    const where = { OR: orConditions }
+
+    const [facts, total] = await Promise.all([
+      prisma.fact.findMany({
+        where,
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take
+      }),
+      prisma.fact.count({ where })
+    ])
+
+    if (facts.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const [likeCountMap, hashtagsMap] = await Promise.all([
+      batchLikeCounts(facts.map(f => f.id)),
+      batchHashtags(facts.map(f => f.id))
+    ])
+    const enriched = await enrichFacts(facts, likeCountMap, viewerId ?? null, hashtagsMap)
+
+    return buildPaginatedResult(enriched, total, page, limit)
+  }
+
   async findByHashtag (tag: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? 10

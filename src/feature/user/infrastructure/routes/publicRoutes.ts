@@ -31,9 +31,11 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     const users = await userRepository.findBySearch(q)
 
     const response = users.map(user => ({
+      id: user.id,
       username: user.username,
       displayName: user.displayName,
-      avatarUrl: user.avatarUrl
+      avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor
     }))
 
     res.status(200).json(response)

@@ -108,14 +108,19 @@ router.get('/search', optionalAuth, async (req: Request, res: Response, next: Ne
 
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
-      const users = await userRepository.findBySearch(query)
+      const [users, facts] = await Promise.all([
+        userRepository.findBySearch(query),
+        searchPosts.executeByAuthorOrMention(query, viewerId)
+      ])
       res.status(200).json({
         users: users.map(u => ({
+          id: u.id,
           username: u.username,
           displayName: u.displayName,
-          avatarUrl: u.avatarUrl
+          avatarUrl: u.avatarUrl,
+          avatarColor: u.avatarColor
         })),
-        facts: [],
+        facts,
         hashtags: []
       })
       return
@@ -131,17 +136,32 @@ router.get('/search', optionalAuth, async (req: Request, res: Response, next: Ne
       return
     }
 
-    const [users, facts, hashtags] = await Promise.all([
+    const [users, factsByTitleOrHashtag, hashtags, factsByAuthorOrMention] = await Promise.all([
       userRepository.findBySearch(sanitized),
       searchPosts.execute(sanitized, viewerId),
-      searchHashtags.execute(sanitized)
+      searchHashtags.execute(sanitized),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId)
     ])
+
+    // Merge facts from both searches, deduplicating by id
+    const factsMap = new Map<string, typeof factsByTitleOrHashtag[0]>()
+    for (const fact of factsByTitleOrHashtag) {
+      factsMap.set(fact.id, fact)
+    }
+    for (const fact of factsByAuthorOrMention) {
+      if (!factsMap.has(fact.id)) {
+        factsMap.set(fact.id, fact)
+      }
+    }
+    const facts = Array.from(factsMap.values())
 
     res.status(200).json({
       users: users.map(u => ({
+        id: u.id,
         username: u.username,
         displayName: u.displayName,
-        avatarUrl: u.avatarUrl
+        avatarUrl: u.avatarUrl,
+        avatarColor: u.avatarColor
       })),
       facts,
       hashtags
