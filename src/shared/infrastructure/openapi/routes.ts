@@ -25,7 +25,6 @@ import {
   ForbiddenErrorSchema,
   ResourceNotFoundErrorSchema,
   ResourceConflictErrorSchema,
-  InternalErrorSchema,
 } from './schemas'
 
 // ── Security schemes ────────────────────────────────────────────────────────
@@ -67,11 +66,6 @@ const conflictResponse = {
 const validationResponse = {
   description: 'Request validation failed',
   content: { 'application/json': { schema: ValidationErrorSchema } }
-}
-
-const internalErrorResponse = {
-  description: 'Internal server error',
-  content: { 'application/json': { schema: InternalErrorSchema } }
 }
 
 // ── Health ──────────────────────────────────────────────────────────────────
