@@ -20,28 +20,34 @@ components:
       type: object
       properties:
         type:
-          anyOf:
-            - type: string
-              format: uri
-            - type: string
+          type: string
+          description: URI reference that identifies the problem type
         title:
           type: string
+          description: Short, human-readable summary of the problem
         status:
           type: integer
+          description: HTTP status code
         detail:
           type: string
+          description: Human-readable explanation specific to this error occurrence
         error_code:
           type: string
+          description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
         category:
           type: string
+          description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
         instance:
           type: string
+          description: URI reference of the request that caused the error
         trace_id:
           type: string
           format: uuid
+          description: Unique trace ID for request tracking
         timestamp:
           type: string
           format: date-time
+          description: ISO 8601 timestamp when the error occurred
         details:
           type: array
           items:
@@ -49,11 +55,14 @@ components:
             properties:
               field:
                 type: string
+                description: Field name that caused the error
               message:
                 type: string
+                description: Human-readable error message for this field
             required:
               - field
               - message
+          description: Array of field-level validation errors
       required:
         - type
         - title
@@ -694,28 +703,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -723,11 +738,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -746,28 +764,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -775,11 +799,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -860,28 +887,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -889,11 +922,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -912,28 +948,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -941,11 +983,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -964,28 +1009,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -993,11 +1044,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1058,28 +1112,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1087,11 +1147,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1110,28 +1173,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1139,11 +1208,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1220,28 +1292,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1249,11 +1327,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1272,28 +1353,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1301,11 +1388,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1324,28 +1414,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1353,11 +1449,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1419,28 +1518,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1448,11 +1553,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1471,28 +1579,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1500,11 +1614,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1548,28 +1665,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1577,11 +1700,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1670,28 +1796,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1699,11 +1831,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1945,28 +2080,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -1974,11 +2115,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -1997,28 +2141,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2026,11 +2176,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2049,28 +2202,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2078,11 +2237,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2240,28 +2402,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2269,11 +2437,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2507,28 +2678,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2536,11 +2713,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2658,28 +2838,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2687,11 +2873,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2710,28 +2899,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2739,11 +2934,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2762,28 +2960,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2791,11 +2995,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2814,28 +3021,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2843,11 +3056,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2883,28 +3099,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2912,11 +3134,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2935,28 +3160,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -2964,11 +3195,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -2987,28 +3221,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3016,11 +3256,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3224,28 +3467,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3253,11 +3502,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3315,28 +3567,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3344,11 +3602,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3367,28 +3628,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3396,11 +3663,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3419,28 +3689,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3448,11 +3724,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3471,28 +3750,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3500,11 +3785,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3540,28 +3828,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3569,11 +3863,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3592,28 +3889,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3621,11 +3924,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title
@@ -3644,28 +3950,34 @@ paths:
                 type: object
                 properties:
                   type:
-                    anyOf:
-                      - type: string
-                        format: uri
-                      - type: string
+                    type: string
+                    description: URI reference that identifies the problem type
                   title:
                     type: string
+                    description: Short, human-readable summary of the problem
                   status:
                     type: integer
+                    description: HTTP status code
                   detail:
                     type: string
+                    description: Human-readable explanation specific to this error occurrence
                   error_code:
                     type: string
+                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
                   category:
                     type: string
+                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
+                    description: URI reference of the request that caused the error
                   trace_id:
                     type: string
                     format: uuid
+                    description: Unique trace ID for request tracking
                   timestamp:
                     type: string
                     format: date-time
+                    description: ISO 8601 timestamp when the error occurred
                   details:
                     type: array
                     items:
@@ -3673,11 +3985,14 @@ paths:
                       properties:
                         field:
                           type: string
+                          description: Field name that caused the error
                         message:
                           type: string
+                          description: Human-readable error message for this field
                       required:
                         - field
                         - message
+                    description: Array of field-level validation errors
                 required:
                   - type
                   - title

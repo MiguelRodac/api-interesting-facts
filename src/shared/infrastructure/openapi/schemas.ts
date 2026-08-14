@@ -9,21 +9,21 @@ export const PaginationSchema = z.object({
 })
 
 export const ErrorDetailSchema = z.object({
-  field: z.string(),
-  message: z.string()
+  field: z.string().describe('Field name that caused the error'),
+  message: z.string().describe('Human-readable error message for this field')
 })
 
 export const ErrorResponseSchema = z.object({
-  type: z.string().url().or(z.string()),
-  title: z.string(),
-  status: z.number().int(),
-  detail: z.string(),
-  error_code: z.string(),
-  category: z.string(),
-  instance: z.string(),
-  trace_id: z.string().uuid(),
-  timestamp: z.string().datetime(),
-  details: z.array(ErrorDetailSchema).optional()
+  type: z.string().describe('URI reference that identifies the problem type'),
+  title: z.string().describe('Short, human-readable summary of the problem'),
+  status: z.number().int().describe('HTTP status code'),
+  detail: z.string().describe('Human-readable explanation specific to this error occurrence'),
+  error_code: z.string().describe('Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)'),
+  category: z.string().describe('Error category: validation, not_found, forbidden, conflict, infra, unknown'),
+  instance: z.string().describe('URI reference of the request that caused the error'),
+  trace_id: z.string().uuid().describe('Unique trace ID for request tracking'),
+  timestamp: z.string().datetime().describe('ISO 8601 timestamp when the error occurred'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors')
 })
 
 registry.register('ErrorResponse', ErrorResponseSchema)
