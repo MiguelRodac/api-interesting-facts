@@ -170,7 +170,10 @@ registry.register('PaginatedLikeResponse', PaginatedLikeResponseSchema)
 export const GlobalSearchResponseSchema = z.object({
   users: z.array(UserSearchResultSchema),
   facts: z.array(FactResponseSchema),
-  hashtags: z.array(HashtagPreviewSchema)
+  hashtags: z.array(HashtagPreviewSchema),
+  hasMoreUsers: z.boolean(),
+  hasMoreFacts: z.boolean(),
+  hasMoreHashtags: z.boolean()
 })
 
 registry.register('GlobalSearchResponse', GlobalSearchResponseSchema)

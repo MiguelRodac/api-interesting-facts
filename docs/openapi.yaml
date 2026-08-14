@@ -536,10 +536,19 @@ components:
             required:
               - id
               - tag
+        hasMoreUsers:
+          type: boolean
+        hasMoreFacts:
+          type: boolean
+        hasMoreHashtags:
+          type: boolean
       required:
         - users
         - facts
         - hashtags
+        - hasMoreUsers
+        - hasMoreFacts
+        - hasMoreHashtags
     PingResponse:
       type: object
       properties:
@@ -1598,10 +1607,19 @@ paths:
                       required:
                         - id
                         - tag
+                  hasMoreUsers:
+                    type: boolean
+                  hasMoreFacts:
+                    type: boolean
+                  hasMoreHashtags:
+                    type: boolean
                 required:
                   - users
                   - facts
                   - hashtags
+                  - hasMoreUsers
+                  - hasMoreFacts
+                  - hasMoreHashtags
         '400':
           description: Request validation failed
           content:
