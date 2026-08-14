@@ -1,0 +1,2524 @@
+openapi: 3.0.3
+info:
+  title: Social Facts API
+  description: API for social facts with Firebase Auth, PostgreSQL + Prisma
+  version: 0.0.1
+  contact:
+    name: API Support
+servers:
+  - url: http://localhost:3000
+    description: Local development
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase JWT token
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+      required:
+        - error
+        - code
+    CreateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          pattern: ^[a-zA-Z0-9_]{3,30}$
+        displayName:
+          type: string
+          minLength: 1
+        avatarUrl:
+          type: string
+          format: uri
+      required:
+        - username
+        - displayName
+    DevLoginRequest:
+      type: object
+      properties:
+        secret:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+      required:
+        - secret
+        - email
+        - password
+    DevLoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required:
+        - token
+    UpdateProfileRequest:
+      type: object
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+        avatarUrl:
+          type: string
+        avatarColor:
+          type: string
+          nullable: true
+    UserResponse:
+      type: object
+      properties:
+        firebaseUid:
+          type: string
+        email:
+          type: string
+          format: email
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        avatarColor:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - firebaseUid
+        - email
+        - username
+        - displayName
+        - avatarUrl
+        - avatarColor
+        - createdAt
+    PublicUserResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - username
+        - displayName
+        - avatarUrl
+        - createdAt
+    UserSearchResult:
+      type: object
+      properties:
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+      required:
+        - username
+        - displayName
+        - avatarUrl
+    CheckUsernameResponse:
+      type: object
+      properties:
+        available:
+          type: boolean
+      required:
+        - available
+    AvatarOptionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        url:
+          type: string
+          nullable: true
+        color:
+          type: string
+      required:
+        - id
+        - url
+        - color
+    CreateFactRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        content:
+          type: string
+          minLength: 10
+          maxLength: 200
+      required:
+        - content
+    UpdateFactRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          nullable: true
+        content:
+          type: string
+          minLength: 10
+          maxLength: 200
+    HashtagPreview:
+      type: object
+      properties:
+        id:
+          type: string
+        tag:
+          type: string
+      required:
+        - id
+        - tag
+    FactResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        author:
+          type: object
+          properties:
+            id:
+              type: string
+            username:
+              type: string
+            email:
+              type: string
+              format: email
+            displayName:
+              type: string
+            avatarUrl:
+              type: string
+              nullable: true
+            avatarColor:
+              type: string
+              nullable: true
+          required:
+            - id
+            - username
+            - email
+            - displayName
+            - avatarUrl
+            - avatarColor
+        title:
+          type: string
+          nullable: true
+        content:
+          type: string
+        likes:
+          type: integer
+        liked:
+          type: boolean
+        hashtags:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              tag:
+                type: string
+            required:
+              - id
+              - tag
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - author
+        - title
+        - content
+        - likes
+        - hashtags
+        - createdAt
+        - updatedAt
+    PaginatedFactResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              author:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  username:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
+                required:
+                  - id
+                  - username
+                  - email
+                  - displayName
+                  - avatarUrl
+                  - avatarColor
+              title:
+                type: string
+                nullable: true
+              content:
+                type: string
+              likes:
+                type: integer
+              liked:
+                type: boolean
+              hashtags:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    tag:
+                      type: string
+                  required:
+                    - id
+                    - tag
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - author
+              - title
+              - content
+              - likes
+              - hashtags
+              - createdAt
+              - updatedAt
+        page:
+          type: integer
+        limit:
+          type: integer
+        nextPage:
+          type: integer
+          nullable: true
+      required:
+        - results
+        - page
+        - limit
+        - nextPage
+    LikeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        userId:
+          type: string
+        factId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - factId
+        - createdAt
+    PaginatedLikeResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              userId:
+                type: string
+              factId:
+                type: string
+                format: uuid
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - userId
+              - factId
+              - createdAt
+        page:
+          type: integer
+        limit:
+          type: integer
+        nextPage:
+          type: integer
+          nullable: true
+      required:
+        - results
+        - page
+        - limit
+        - nextPage
+    GlobalSearchResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              username:
+                type: string
+              displayName:
+                type: string
+              avatarUrl:
+                type: string
+                nullable: true
+            required:
+              - username
+              - displayName
+              - avatarUrl
+        facts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              author:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  username:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
+                required:
+                  - id
+                  - username
+                  - email
+                  - displayName
+                  - avatarUrl
+                  - avatarColor
+              title:
+                type: string
+                nullable: true
+              content:
+                type: string
+              likes:
+                type: integer
+              liked:
+                type: boolean
+              hashtags:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    tag:
+                      type: string
+                  required:
+                    - id
+                    - tag
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - author
+              - title
+              - content
+              - likes
+              - hashtags
+              - createdAt
+              - updatedAt
+        hashtags:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              tag:
+                type: string
+            required:
+              - id
+              - tag
+      required:
+        - users
+        - facts
+        - hashtags
+    PingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        uptimeSeconds:
+          type: integer
+        database:
+          type: string
+          enum:
+            - ok
+            - error
+        documentation:
+          type: string
+          format: uri
+      required:
+        - status
+        - timestamp
+        - uptimeSeconds
+        - database
+        - documentation
+  parameters: {}
+paths:
+  /ping:
+    get:
+      summary: Health check
+      operationId: ping
+      tags:
+        - Health
+      description: Returns server status with database health check.
+      responses:
+        '200':
+          description: Server is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptimeSeconds:
+                    type: integer
+                  database:
+                    type: string
+                    enum:
+                      - ok
+                      - error
+                  documentation:
+                    type: string
+                    format: uri
+                required:
+                  - status
+                  - timestamp
+                  - uptimeSeconds
+                  - database
+                  - documentation
+            text/html:
+              schema:
+                type: string
+  /auth/dev-login:
+    post:
+      summary: Generate a Firebase token for testing (dev only)
+      operationId: devLogin
+      tags:
+        - Auth
+      description: Development-only endpoint. Disabled in production (returns 404).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secret:
+                  type: string
+                  minLength: 1
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 1
+              required:
+                - secret
+                - email
+                - password
+      responses:
+        '200':
+          description: Firebase token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                required:
+                  - token
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '404':
+          description: Not available in production
+  /auth/profile:
+    post:
+      summary: Create user profile (onboarding)
+      operationId: createProfile
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  pattern: ^[a-zA-Z0-9_]{3,30}$
+                displayName:
+                  type: string
+                  minLength: 1
+                avatarUrl:
+                  type: string
+                  format: uri
+              required:
+                - username
+                - displayName
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  firebaseUid:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  username:
+                    type: string
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - firebaseUid
+                  - email
+                  - username
+                  - displayName
+                  - avatarUrl
+                  - avatarColor
+                  - createdAt
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '409':
+          description: Resource already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /auth/me:
+    get:
+      summary: Get current user profile
+      operationId: getCurrentUser
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  firebaseUid:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  username:
+                    type: string
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - firebaseUid
+                  - email
+                  - username
+                  - displayName
+                  - avatarUrl
+                  - avatarColor
+                  - createdAt
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+    patch:
+      summary: Update current user profile
+      operationId: updateCurrentUser
+      tags:
+        - Auth
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                displayName:
+                  type: string
+                  minLength: 1
+                avatarUrl:
+                  type: string
+                avatarColor:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  firebaseUid:
+                    type: string
+                  email:
+                    type: string
+                    format: email
+                  username:
+                    type: string
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - firebaseUid
+                  - email
+                  - username
+                  - displayName
+                  - avatarUrl
+                  - avatarColor
+                  - createdAt
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /users/search:
+    get:
+      summary: Search users for @mention autocomplete
+      operationId: searchUsers
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          required: true
+          name: q
+          in: query
+      responses:
+        '200':
+          description: Matching users (max 10 results)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                    displayName:
+                      type: string
+                    avatarUrl:
+                      type: string
+                      nullable: true
+                  required:
+                    - username
+                    - displayName
+                    - avatarUrl
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /users/check-username:
+    get:
+      summary: Check username availability
+      operationId: checkUsername
+      tags:
+        - Users
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          required: true
+          name: username
+          in: query
+      responses:
+        '200':
+          description: Availability result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  available:
+                    type: boolean
+                required:
+                  - available
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /users/avatar-options:
+    get:
+      summary: Get all preset avatar options
+      operationId: getAvatarOptions
+      tags:
+        - Users
+      description: Returns the list of available preset avatars.
+      responses:
+        '200':
+          description: List of avatar options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    url:
+                      type: string
+                      nullable: true
+                    color:
+                      type: string
+                  required:
+                    - id
+                    - url
+                    - color
+  /users/{username}:
+    get:
+      summary: Get public profile by username
+      operationId: getPublicProfile
+      tags:
+        - Users
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: username
+          in: path
+      responses:
+        '200':
+          description: Public profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - username
+                  - displayName
+                  - avatarUrl
+                  - createdAt
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /facts:
+    get:
+      summary: Get all facts (newest first)
+      operationId: getFacts
+      tags:
+        - Facts
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Paginated list of facts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        author:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            email:
+                              type: string
+                              format: email
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - username
+                            - email
+                            - displayName
+                            - avatarUrl
+                            - avatarColor
+                        title:
+                          type: string
+                          nullable: true
+                        content:
+                          type: string
+                        likes:
+                          type: integer
+                        liked:
+                          type: boolean
+                        hashtags:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              tag:
+                                type: string
+                            required:
+                              - id
+                              - tag
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - id
+                        - author
+                        - title
+                        - content
+                        - likes
+                        - hashtags
+                        - createdAt
+                        - updatedAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
+    post:
+      summary: Create a new fact
+      operationId: createFact
+      tags:
+        - Facts
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  nullable: true
+                content:
+                  type: string
+                  minLength: 10
+                  maxLength: 200
+              required:
+                - content
+      responses:
+        '201':
+          description: Fact created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  author:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      avatarColor:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - username
+                      - email
+                      - displayName
+                      - avatarUrl
+                      - avatarColor
+                  title:
+                    type: string
+                    nullable: true
+                  content:
+                    type: string
+                  likes:
+                    type: integer
+                  liked:
+                    type: boolean
+                  hashtags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tag:
+                          type: string
+                      required:
+                        - id
+                        - tag
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - author
+                  - title
+                  - content
+                  - likes
+                  - hashtags
+                  - createdAt
+                  - updatedAt
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /facts/search:
+    get:
+      summary: Global search (users, facts, hashtags)
+      operationId: globalSearch
+      tags:
+        - Facts
+      description: Search across users, facts, and hashtags in a single request.
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+          required: true
+          name: q
+          in: query
+      responses:
+        '200':
+          description: Combined search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        displayName:
+                          type: string
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                      required:
+                        - username
+                        - displayName
+                        - avatarUrl
+                  facts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        author:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            email:
+                              type: string
+                              format: email
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - username
+                            - email
+                            - displayName
+                            - avatarUrl
+                            - avatarColor
+                        title:
+                          type: string
+                          nullable: true
+                        content:
+                          type: string
+                        likes:
+                          type: integer
+                        liked:
+                          type: boolean
+                        hashtags:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              tag:
+                                type: string
+                            required:
+                              - id
+                              - tag
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - id
+                        - author
+                        - title
+                        - content
+                        - likes
+                        - hashtags
+                        - createdAt
+                        - updatedAt
+                  hashtags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tag:
+                          type: string
+                      required:
+                        - id
+                        - tag
+                required:
+                  - users
+                  - facts
+                  - hashtags
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /facts/popular:
+    get:
+      summary: Get facts sorted by likes count
+      operationId: getPopularFacts
+      tags:
+        - Facts
+      parameters:
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+              - likesCount
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Paginated list of facts sorted by popularity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        author:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            email:
+                              type: string
+                              format: email
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - username
+                            - email
+                            - displayName
+                            - avatarUrl
+                            - avatarColor
+                        title:
+                          type: string
+                          nullable: true
+                        content:
+                          type: string
+                        likes:
+                          type: integer
+                        liked:
+                          type: boolean
+                        hashtags:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              tag:
+                                type: string
+                            required:
+                              - id
+                              - tag
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - id
+                        - author
+                        - title
+                        - content
+                        - likes
+                        - hashtags
+                        - createdAt
+                        - updatedAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
+  /facts/{id}:
+    get:
+      summary: Get a fact by ID
+      operationId: getFactById
+      tags:
+        - Facts
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        '200':
+          description: Single fact
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  author:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      avatarColor:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - username
+                      - email
+                      - displayName
+                      - avatarUrl
+                      - avatarColor
+                  title:
+                    type: string
+                    nullable: true
+                  content:
+                    type: string
+                  likes:
+                    type: integer
+                  liked:
+                    type: boolean
+                  hashtags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tag:
+                          type: string
+                      required:
+                        - id
+                        - tag
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - author
+                  - title
+                  - content
+                  - likes
+                  - hashtags
+                  - createdAt
+                  - updatedAt
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+    patch:
+      summary: Update a fact (author only)
+      operationId: updateFact
+      tags:
+        - Facts
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  nullable: true
+                content:
+                  type: string
+                  minLength: 10
+                  maxLength: 200
+      responses:
+        '200':
+          description: Fact updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  author:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      username:
+                        type: string
+                      email:
+                        type: string
+                        format: email
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      avatarColor:
+                        type: string
+                        nullable: true
+                    required:
+                      - id
+                      - username
+                      - email
+                      - displayName
+                      - avatarUrl
+                      - avatarColor
+                  title:
+                    type: string
+                    nullable: true
+                  content:
+                    type: string
+                  likes:
+                    type: integer
+                  liked:
+                    type: boolean
+                  hashtags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tag:
+                          type: string
+                      required:
+                        - id
+                        - tag
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - author
+                  - title
+                  - content
+                  - likes
+                  - hashtags
+                  - createdAt
+                  - updatedAt
+        '400':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+    delete:
+      summary: Delete a fact (author only)
+      operationId: deleteFact
+      tags:
+        - Facts
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        '204':
+          description: Fact deleted
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+  /facts/author/{authorId}:
+    get:
+      summary: Get all facts by an author
+      operationId: getFactsByAuthor
+      tags:
+        - Facts
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: authorId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Paginated list of facts by author
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        author:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            username:
+                              type: string
+                            email:
+                              type: string
+                              format: email
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - id
+                            - username
+                            - email
+                            - displayName
+                            - avatarUrl
+                            - avatarColor
+                        title:
+                          type: string
+                          nullable: true
+                        content:
+                          type: string
+                        likes:
+                          type: integer
+                        liked:
+                          type: boolean
+                        hashtags:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                              tag:
+                                type: string
+                            required:
+                              - id
+                              - tag
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - id
+                        - author
+                        - title
+                        - content
+                        - likes
+                        - hashtags
+                        - createdAt
+                        - updatedAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
+  /facts/{factId}/likes:
+    post:
+      summary: Like a fact
+      operationId: likeFact
+      tags:
+        - Likes
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: factId
+          in: path
+      responses:
+        '201':
+          description: Like created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  userId:
+                    type: string
+                  factId:
+                    type: string
+                    format: uuid
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - userId
+                  - factId
+                  - createdAt
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '409':
+          description: Resource already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+    delete:
+      summary: Unlike a fact
+      operationId: unlikeFact
+      tags:
+        - Likes
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: factId
+          in: path
+      responses:
+        '204':
+          description: Like removed
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
+                  details:
+                    type: object
+                    additionalProperties:
+                      nullable: true
+                required:
+                  - error
+                  - code
+    get:
+      summary: Get all likes for a fact
+      operationId: getFactLikes
+      tags:
+        - Likes
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: factId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Paginated list of likes for a fact
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        userId:
+                          type: string
+                        factId:
+                          type: string
+                          format: uuid
+                        createdAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - id
+                        - userId
+                        - factId
+                        - createdAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
+  /users/{userId}/likes:
+    get:
+      summary: Get all likes by a user
+      operationId: getUserLikes
+      tags:
+        - Likes
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: userId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Paginated list of likes by user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        userId:
+                          type: string
+                        factId:
+                          type: string
+                          format: uuid
+                        createdAt:
+                          type: string
+                          format: date-time
+                      required:
+                        - id
+                        - userId
+                        - factId
+                        - createdAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
