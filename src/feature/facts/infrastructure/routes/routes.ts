@@ -42,11 +42,14 @@ const SearchQuerySchema = z.object({
   order_dir: SearchDirSchema.default('desc')
 }).strict()
 
-// Cap per category to keep total response under 100 items
+// Cap per category — request +1 to detect "has more" without COUNT query
 const MAX_SEARCH_USERS = 10
 const MAX_SEARCH_HASHTAGS = 10
 const MAX_SEARCH_FACTS = 80
 const MAX_SEARCH_TOTAL = 100
+const SEARCH_FETCH_USERS = MAX_SEARCH_USERS + 1
+const SEARCH_FETCH_HASHTAGS = MAX_SEARCH_HASHTAGS + 1
+const SEARCH_FETCH_FACTS = MAX_SEARCH_FACTS + 1
 
 const router = Router()
 const factRepository = new PrismaFactRepository()
@@ -116,14 +119,16 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     const { q, order_by, order_dir } = SearchQuerySchema.parse(req.query)
     const sanitized = q.trim()
     const viewerId = req.user?.uid as string | undefined
-    const orderParams = { order_by, order_dir }
 
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
+      const orderParams = { order_by, order_dir, limit: SEARCH_FETCH_USERS }
       const [users, facts] = await Promise.all([
         userRepository.findBySearch(query, orderParams),
-        searchPosts.executeByAuthorOrMention(query, viewerId, orderParams)
+        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS })
       ])
+      const hasMoreUsers = users.length > MAX_SEARCH_USERS
+      const hasMoreFacts = facts.length > MAX_SEARCH_FACTS
       const cappedFacts = facts.slice(0, MAX_SEARCH_FACTS)
       const total = users.length + cappedFacts.length
       if (total > MAX_SEARCH_TOTAL) {
@@ -138,17 +143,23 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
           avatarColor: u.avatarColor
         })),
         facts: cappedFacts,
-        hashtags: []
+        hashtags: [],
+        hasMoreUsers,
+        hasMoreFacts,
+        hasMoreHashtags: false
       })
       return
     }
 
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
+      const orderParams = { order_by, order_dir, limit: SEARCH_FETCH_HASHTAGS }
       const [hashtags, facts] = await Promise.all([
         searchHashtags.execute(query, orderParams),
-        searchPosts.executeByHashtag(query, viewerId, orderParams)
+        searchPosts.executeByHashtag(query, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS })
       ])
+      const hasMoreHashtags = hashtags.length > MAX_SEARCH_HASHTAGS
+      const hasMoreFacts = facts.length > MAX_SEARCH_FACTS
       const cappedFacts = facts.slice(0, MAX_SEARCH_FACTS)
       const total = hashtags.length + cappedFacts.length
       if (total > MAX_SEARCH_TOTAL) {
@@ -157,16 +168,19 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
       res.status(200).json({
         users: [],
         facts: cappedFacts,
-        hashtags: hashtags.slice(0, MAX_SEARCH_HASHTAGS)
+        hashtags: hashtags.slice(0, MAX_SEARCH_HASHTAGS),
+        hasMoreUsers: false,
+        hasMoreFacts,
+        hasMoreHashtags
       })
       return
     }
 
     const [users, factsByTitleOrHashtag, hashtags, factsByAuthorOrMention] = await Promise.all([
-      userRepository.findBySearch(sanitized, orderParams),
-      searchPosts.execute(sanitized, viewerId, orderParams),
-      searchHashtags.execute(sanitized, orderParams),
-      searchPosts.executeByAuthorOrMention(sanitized, viewerId, orderParams)
+      userRepository.findBySearch(sanitized, { order_by, order_dir, limit: SEARCH_FETCH_USERS }),
+      searchPosts.execute(sanitized, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS }),
+      searchHashtags.execute(sanitized, { order_by, order_dir, limit: SEARCH_FETCH_HASHTAGS }),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by, order_dir, limit: SEARCH_FETCH_FACTS })
     ])
 
     // Merge facts from both searches, deduplicating by id
@@ -180,6 +194,10 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
       }
     }
     const mergedFacts = Array.from(factsMap.values())
+
+    const hasMoreUsers = users.length > MAX_SEARCH_USERS
+    const hasMoreFacts = mergedFacts.length > MAX_SEARCH_FACTS
+    const hasMoreHashtags = hashtags.length > MAX_SEARCH_HASHTAGS
 
     // Cap each category and ensure total <= 100
     const cappedUsers = users.slice(0, MAX_SEARCH_USERS)
@@ -196,7 +214,10 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         avatarColor: u.avatarColor
       })),
       facts: cappedFacts,
-      hashtags: cappedHashtags
+      hashtags: cappedHashtags,
+      hasMoreUsers,
+      hasMoreFacts,
+      hasMoreHashtags
     })
   } catch (err) {
     next(err)

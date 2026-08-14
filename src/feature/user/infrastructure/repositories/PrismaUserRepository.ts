@@ -47,6 +47,7 @@ export class PrismaUserRepository implements UserRepository {
   async findBySearch (query: string, orderParams?: SearchOrderParams): Promise<User[]> {
     const orderBy = orderParams?.order_by ?? 'popular'
     const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
+    const limit = orderParams?.limit ?? 10
 
     // For "popular" ordering by fact count, we fetch with _count and sort in memory
     // For "recent" ordering, we sort by createdAt directly in the query
@@ -58,7 +59,7 @@ export class PrismaUserRepository implements UserRepository {
             { displayName: { contains: query, mode: 'insensitive' } }
           ]
         },
-        take: 10,
+        take: limit,
         orderBy: { createdAt: dir }
       })
 
@@ -74,6 +75,8 @@ export class PrismaUserRepository implements UserRepository {
     }
 
     // Popular: order by fact count
+    // Fetch more than limit to sort by count, then slice
+    const fetchLimit = Math.max(50, limit * 5)
     const users = await prisma.user.findMany({
       where: {
         OR: [
@@ -86,16 +89,16 @@ export class PrismaUserRepository implements UserRepository {
           select: { facts: true }
         }
       },
-      take: 50 // fetch more to sort by count, then slice
+      take: fetchLimit
     })
 
-    // Sort by fact count and take top 10
+    // Sort by fact count and take top `limit`
     users.sort((a, b) => dir === 'desc'
       ? b._count.facts - a._count.facts
       : a._count.facts - b._count.facts
     )
 
-    return users.slice(0, 10).map(user => ({
+    return users.slice(0, limit).map(user => ({
       id: user.firebaseUid,
       email: user.email,
       username: user.username,

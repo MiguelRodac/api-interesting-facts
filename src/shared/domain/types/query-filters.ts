@@ -8,6 +8,7 @@ export type QueryFilters = Record<string, FilterValue>
 export interface SearchOrderParams {
   order_by?: 'popular' | 'recent'
   order_dir?: 'asc' | 'desc'
+  limit?: number
 }
 
 export interface BaseQueryParams {

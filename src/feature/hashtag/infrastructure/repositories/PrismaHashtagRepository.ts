@@ -75,6 +75,7 @@ export class PrismaHashtagRepository {
     const normalizedQuery = query.toLowerCase()
     const orderBy = orderParams?.order_by ?? 'popular'
     const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
+    const limit = orderParams?.limit ?? 10
 
     const hashtags = await prisma.hashtag.findMany({
       where: {
@@ -88,7 +89,7 @@ export class PrismaHashtagRepository {
       orderBy: orderBy === 'recent'
         ? { createdAt: dir }
         : { factHashtags: { _count: dir } },
-      take: 10
+      take: limit
     })
 
     return hashtags

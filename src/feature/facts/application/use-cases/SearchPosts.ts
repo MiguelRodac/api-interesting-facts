@@ -10,7 +10,8 @@ export class SearchPosts {
   }
 
   async execute (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FactResponse[]> {
-    const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page: 1, limit: 10 }, viewerId, orderParams)
+    const limit = orderParams?.limit ?? 10
+    const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page: 1, limit }, viewerId, orderParams)
 
     return facts.map(fact => ({
       id: fact.id,
@@ -26,7 +27,8 @@ export class SearchPosts {
   }
 
   async executeByAuthorOrMention (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FactResponse[]> {
-    const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page: 1, limit: 10 }, viewerId, orderParams)
+    const limit = orderParams?.limit ?? 10
+    const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page: 1, limit }, viewerId, orderParams)
 
     return facts.map(fact => ({
       id: fact.id,
@@ -42,7 +44,8 @@ export class SearchPosts {
   }
 
   async executeByHashtag (tag: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FactResponse[]> {
-    const { results: facts } = await this.factRepository.findByHashtag(tag, { page: 1, limit: 10 }, viewerId, orderParams)
+    const limit = orderParams?.limit ?? 10
+    const { results: facts } = await this.factRepository.findByHashtag(tag, { page: 1, limit }, viewerId, orderParams)
 
     return facts.map(fact => ({
       id: fact.id,
