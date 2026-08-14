@@ -2,6 +2,7 @@ import { Router, type Request, type Response, type NextFunction } from 'express'
 import { z } from 'zod'
 import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
 import { PrismaFactRepository } from '../repositories/PrismaFactRepository'
+import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
 import { CreateFact } from '../../application/use-cases/CreateFact'
 import { GetFactById } from '../../application/use-cases/GetFactById'
 import { UpdateFact } from '../../application/use-cases/UpdateFact'
@@ -9,6 +10,8 @@ import { DeleteFact } from '../../application/use-cases/DeleteFact'
 import { GetFacts } from '../../application/use-cases/GetFacts'
 import { GetFactsByAuthor } from '../../application/use-cases/GetFactsByAuthor'
 import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
+import { SearchPosts } from '../../application/use-cases/SearchPosts'
+import { type FactResponse } from '../../application/dto/FactResponse'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
@@ -29,8 +32,14 @@ const PopularQuerySchema = z.object({
   order_dir: z.enum(['asc', 'desc']).optional()
 }).strict()
 
+const SearchQuerySchema = z.object({
+  q: z.string().min(1, 'Search query is required'),
+  type: z.enum(['all', 'users', 'posts']).default('all')
+}).strict()
+
 const router = Router()
 const factRepository = new PrismaFactRepository()
+const userRepository = new PrismaUserRepository()
 const createFact = new CreateFact(factRepository)
 const getFactById = new GetFactById(factRepository)
 const updateFact = new UpdateFact(factRepository)
@@ -38,6 +47,7 @@ const deleteFact = new DeleteFact(factRepository)
 const getFacts = new GetFacts(factRepository)
 const getFactsByAuthor = new GetFactsByAuthor(factRepository)
 const getPopularFacts = new GetPopularFacts(factRepository)
+const searchPosts = new SearchPosts(factRepository)
 
 router.post('/', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -83,6 +93,42 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
     const viewerId = req.user?.uid as string | undefined
     const result = await getPopularFacts.execute({ page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.get('/search', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { q, type } = SearchQuerySchema.parse(req.query)
+    const viewerId = req.user?.uid as string | undefined
+
+    const response: { users?: Array<{ username: string, displayName: string, avatarUrl: string | null }>, posts?: FactResponse[] } = {}
+
+    if (type === 'all') {
+      const [users, posts] = await Promise.all([
+        userRepository.findBySearch(q),
+        searchPosts.execute(q, viewerId)
+      ])
+      response.users = users.map(u => ({
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl
+      }))
+      response.posts = posts
+    } else if (type === 'users') {
+      const users = await userRepository.findBySearch(q)
+      response.users = users.map(u => ({
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl
+      }))
+    } else {
+      const posts = await searchPosts.execute(q, viewerId)
+      response.posts = posts
+    }
+
+    res.status(200).json(response)
   } catch (err) {
     next(err)
   }

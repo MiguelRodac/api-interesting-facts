@@ -254,6 +254,62 @@ export class PrismaFactRepository implements FactRepository {
     return buildPaginatedResult(enriched, total, page, limit)
   }
 
+  async findByTitleOrHashtag (query: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? 10
+    const { skip, take } = buildPagination(params)
+
+    // Find fact IDs matching hashtag
+    const matchingHashtags = await prisma.factHashtag.findMany({
+      where: {
+        hashtag: {
+          tag: { contains: query, mode: 'insensitive' }
+        }
+      },
+      select: { factId: true },
+      distinct: ['factId']
+    })
+    const hashtagFactIds = matchingHashtags.map(fh => fh.factId)
+
+    const where = {
+      OR: [
+        { title: { contains: query, mode: 'insensitive' as const } },
+        ...(hashtagFactIds.length > 0 ? [{ id: { in: hashtagFactIds } }] : [])
+      ]
+    }
+
+    const [facts, total] = await Promise.all([
+      prisma.fact.findMany({
+        where,
+        select: {
+          id: true,
+          authorId: true,
+          title: true,
+          content: true,
+          createdAt: true,
+          updatedAt: true,
+          author: { select: { firebaseUid: true, username: true, email: true, displayName: true } }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take
+      }),
+      prisma.fact.count({ where })
+    ])
+
+    if (facts.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const [likeCountMap, hashtagsMap] = await Promise.all([
+      batchLikeCounts(facts.map(f => f.id)),
+      batchHashtags(facts.map(f => f.id))
+    ])
+    const enriched = await enrichFacts(facts, likeCountMap, viewerId ?? null, hashtagsMap)
+
+    return buildPaginatedResult(enriched, total, page, limit)
+  }
+
   async create (data: CreateFactData): Promise<Fact> {
     const fact = await prisma.fact.create({
       data: {
