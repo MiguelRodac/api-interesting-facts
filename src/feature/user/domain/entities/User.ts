@@ -4,6 +4,7 @@ export interface User {
   username: string
   displayName: string
   avatarUrl: string | null
+  avatarColor: string | null
   createdAt: Date
 }
 
@@ -18,4 +19,5 @@ export interface CreateUserData {
 export interface UpdateUserData {
   displayName?: string
   avatarUrl?: string
+  avatarColor?: string | null
 }

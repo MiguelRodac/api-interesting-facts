@@ -16,6 +16,7 @@ export class PrismaUserRepository implements UserRepository {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }
   }
@@ -37,8 +38,39 @@ export class PrismaUserRepository implements UserRepository {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }
+  }
+
+  async findBySearch (query: string): Promise<User[]> {
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { startsWith: query, mode: 'insensitive' } },
+          { displayName: { contains: query, mode: 'insensitive' } }
+        ]
+      },
+      take: 10,
+      orderBy: { username: 'asc' }
+    })
+
+    return users.map(user => ({
+      id: user.firebaseUid,
+      email: user.email,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
+      createdAt: user.createdAt
+    }))
+  }
+
+  async existsByUsername (username: string): Promise<boolean> {
+    const count = await prisma.user.count({
+      where: { username }
+    })
+    return count > 0
   }
 
   async create (data: CreateUserData): Promise<User> {
@@ -58,6 +90,7 @@ export class PrismaUserRepository implements UserRepository {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }
   }
@@ -67,7 +100,8 @@ export class PrismaUserRepository implements UserRepository {
       where: { firebaseUid: id },
       data: {
         displayName: data.displayName,
-        avatarUrl: data.avatarUrl
+        avatarUrl: data.avatarUrl,
+        avatarColor: data.avatarColor
       }
     })
 
@@ -77,6 +111,7 @@ export class PrismaUserRepository implements UserRepository {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }
   }

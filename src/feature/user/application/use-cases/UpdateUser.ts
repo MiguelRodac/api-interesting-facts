@@ -8,7 +8,8 @@ export class UpdateUser {
   async execute (firebaseUid: string, data: UpdateUserInput): Promise<UserResponse> {
     const user = await this.repository.update(firebaseUid, {
       displayName: data.displayName,
-      avatarUrl: data.avatarUrl
+      avatarUrl: data.avatarUrl,
+      avatarColor: data.avatarColor
     })
 
     return {
@@ -17,6 +18,7 @@ export class UpdateUser {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }
   }

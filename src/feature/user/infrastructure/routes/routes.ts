@@ -137,9 +137,9 @@ router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Respo
       throw new ValidationError('Authentication required', [{ field: 'auth', message: 'Authentication required' }])
     }
 
-    const { displayName, avatarUrl } = req.body
+    const { displayName, avatarUrl, avatarColor } = req.body
 
-    const user = await updateUser.execute(uid, { displayName, avatarUrl })
+    const user = await updateUser.execute(uid, { displayName, avatarUrl, avatarColor })
     res.status(200).json(user)
   } catch (err) {
     next(err)

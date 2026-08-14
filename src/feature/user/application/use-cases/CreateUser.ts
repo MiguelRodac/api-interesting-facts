@@ -40,6 +40,7 @@ export class CreateUser {
       username: user.username,
       displayName: user.displayName,
       avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }
   }

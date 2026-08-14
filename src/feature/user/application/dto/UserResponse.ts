@@ -4,5 +4,6 @@ export interface UserResponse {
   username: string
   displayName: string
   avatarUrl: string | null
+  avatarColor: string | null
   createdAt: Date
 }

@@ -10,6 +10,7 @@ export interface FactView {
   content: string
   likes: number
   liked?: boolean
+  hashtags: Array<{ id: string, tag: string }>
   createdAt: Date
   updatedAt: Date
 }

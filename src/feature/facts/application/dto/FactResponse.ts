@@ -5,6 +5,11 @@ export interface FactAuthorPreview {
   displayName: string
 }
 
+export interface HashtagPreview {
+  id: string
+  tag: string
+}
+
 export interface FactResponse {
   id: string
   author: FactAuthorPreview
@@ -12,6 +17,7 @@ export interface FactResponse {
   content: string
   likes: number
   liked?: boolean
+  hashtags: HashtagPreview[]
   createdAt: string
   updatedAt: string
 }
