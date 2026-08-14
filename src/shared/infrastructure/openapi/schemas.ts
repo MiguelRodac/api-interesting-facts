@@ -13,20 +13,124 @@ export const ErrorDetailSchema = z.object({
   message: z.string().describe('Human-readable error message for this field')
 })
 
-export const ErrorResponseSchema = z.object({
+// ── Base fields for all error responses ──────────────────────────────────────
+
+const baseErrorFields = {
   type: z.string().describe('URI reference that identifies the problem type'),
   title: z.string().describe('Short, human-readable summary of the problem'),
   status: z.number().int().describe('HTTP status code'),
   detail: z.string().describe('Human-readable explanation specific to this error occurrence'),
-  error_code: z.string().describe('Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)'),
-  category: z.string().describe('Error category: validation, not_found, forbidden, conflict, infra, unknown'),
   instance: z.string().describe('URI reference of the request that caused the error'),
   trace_id: z.string().uuid().describe('Unique trace ID for request tracking'),
   timestamp: z.string().datetime().describe('ISO 8601 timestamp when the error occurred'),
-  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors')
+}
+
+// ── Generic ErrorResponse (backward compatible) ──────────────────────────────
+
+export const ErrorResponseSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.string().describe('Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)'),
+  category: z.string().describe('Error category: validation, not_found, forbidden, conflict, infra, unknown'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors'),
 })
 
 registry.register('ErrorResponse', ErrorResponseSchema)
+
+// ── Validation Errors (422) ─────────────────────────────────────────────────
+
+export const ValidationErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('VALIDATION_ERROR').describe('Machine-readable error code'),
+  category: z.literal('validation').describe('Error category'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors'),
+})
+
+registry.register('ValidationError', ValidationErrorSchema)
+
+// ── Bad Request (400) ───────────────────────────────────────────────────────
+
+export const BadRequestErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('BAD_REQUEST').describe('Machine-readable error code'),
+  category: z.literal('validation').describe('Error category'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors'),
+})
+
+registry.register('BadRequestError', BadRequestErrorSchema)
+
+// ── Authentication Errors (401) ─────────────────────────────────────────────
+
+export const UnauthorizedErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('UNAUTHORIZED').describe('Machine-readable error code'),
+  category: z.literal('authentication').describe('Error category'),
+})
+
+registry.register('UnauthorizedError', UnauthorizedErrorSchema)
+
+export const InvalidCredentialsErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('INVALID_CREDENTIALS').describe('Machine-readable error code'),
+  category: z.literal('authentication').describe('Error category'),
+})
+
+registry.register('InvalidCredentialsError', InvalidCredentialsErrorSchema)
+
+export const TokenExpiredErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('TOKEN_EXPIRED').describe('Machine-readable error code'),
+  category: z.literal('authentication').describe('Error category'),
+})
+
+registry.register('TokenExpiredError', TokenExpiredErrorSchema)
+
+// ── Authorization Errors (403) ──────────────────────────────────────────────
+
+export const ForbiddenErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('FORBIDDEN').describe('Machine-readable error code'),
+  category: z.literal('authorization').describe('Error category'),
+})
+
+registry.register('ForbiddenError', ForbiddenErrorSchema)
+
+// ── Not Found Errors (404) ──────────────────────────────────────────────────
+
+export const ResourceNotFoundErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('RESOURCE_NOT_FOUND').describe('Machine-readable error code'),
+  category: z.literal('not_found').describe('Error category'),
+})
+
+registry.register('ResourceNotFoundError', ResourceNotFoundErrorSchema)
+
+// ── Conflict Errors (409) ───────────────────────────────────────────────────
+
+export const ResourceConflictErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('RESOURCE_CONFLICT').describe('Machine-readable error code'),
+  category: z.literal('conflict').describe('Error category'),
+})
+
+registry.register('ResourceConflictError', ResourceConflictErrorSchema)
+
+export const ResourceAlreadyExistsErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('RESOURCE_ALREADY_EXISTS').describe('Machine-readable error code'),
+  category: z.literal('conflict').describe('Error category'),
+})
+
+registry.register('ResourceAlreadyExistsError', ResourceAlreadyExistsErrorSchema)
+
+// ── Infrastructure Errors (500) ─────────────────────────────────────────────
+
+export const InternalErrorSchema = z.object({
+  ...baseErrorFields,
+  error_code: z.literal('INTERNAL_ERROR').describe('Machine-readable error code'),
+  category: z.literal('infrastructure').describe('Error category'),
+})
+
+registry.register('InternalError', InternalErrorSchema)
 
 // ── User ────────────────────────────────────────────────────────────────────
 

@@ -18,8 +18,14 @@ import {
   GlobalSearchResponseSchema,
   LikeResponseSchema,
   PaginatedLikeResponseSchema,
-  ErrorResponseSchema,
-  HashtagWithUsageSchema
+  HashtagWithUsageSchema,
+  ValidationErrorSchema,
+  BadRequestErrorSchema,
+  UnauthorizedErrorSchema,
+  ForbiddenErrorSchema,
+  ResourceNotFoundErrorSchema,
+  ResourceConflictErrorSchema,
+  InternalErrorSchema,
 } from './schemas'
 
 // ── Security schemes ────────────────────────────────────────────────────────
@@ -33,29 +39,39 @@ registry.registerComponent('securitySchemes', 'bearerAuth', {
 
 // ── Error responses ─────────────────────────────────────────────────────────
 
+const badRequestResponse = {
+  description: 'Malformed request or validation error',
+  content: { 'application/json': { schema: BadRequestErrorSchema } }
+}
+
 const unauthorizedResponse = {
   description: 'Missing or invalid authentication token',
-  content: { 'application/json': { schema: ErrorResponseSchema } }
+  content: { 'application/json': { schema: UnauthorizedErrorSchema } }
 }
 
 const forbiddenResponse = {
   description: 'Access denied or onboarding incomplete',
-  content: { 'application/json': { schema: ErrorResponseSchema } }
+  content: { 'application/json': { schema: ForbiddenErrorSchema } }
 }
 
 const notFoundResponse = {
   description: 'Resource not found',
-  content: { 'application/json': { schema: ErrorResponseSchema } }
+  content: { 'application/json': { schema: ResourceNotFoundErrorSchema } }
 }
 
 const conflictResponse = {
   description: 'Resource already exists',
-  content: { 'application/json': { schema: ErrorResponseSchema } }
+  content: { 'application/json': { schema: ResourceConflictErrorSchema } }
 }
 
 const validationResponse = {
   description: 'Request validation failed',
-  content: { 'application/json': { schema: ErrorResponseSchema } }
+  content: { 'application/json': { schema: ValidationErrorSchema } }
+}
+
+const internalErrorResponse = {
+  description: 'Internal server error',
+  content: { 'application/json': { schema: InternalErrorSchema } }
 }
 
 // ── Health ──────────────────────────────────────────────────────────────────
@@ -97,7 +113,7 @@ registry.registerPath({
       description: 'Firebase token generated',
       content: { 'application/json': { schema: DevLoginResponseSchema } }
     },
-    400: validationResponse,
+    400: badRequestResponse,
     401: unauthorizedResponse,
     404: { description: 'Not available in production' }
   }
@@ -120,9 +136,10 @@ registry.registerPath({
       description: 'Profile created',
       content: { 'application/json': { schema: UserResponseSchema } }
     },
-    400: validationResponse,
+    400: badRequestResponse,
     401: unauthorizedResponse,
-    409: conflictResponse
+    409: conflictResponse,
+    422: validationResponse
   }
 })
 
@@ -160,9 +177,10 @@ registry.registerPath({
       description: 'Profile updated',
       content: { 'application/json': { schema: UserResponseSchema } }
     },
-    400: validationResponse,
+    400: badRequestResponse,
     401: unauthorizedResponse,
-    403: forbiddenResponse
+    403: forbiddenResponse,
+    422: validationResponse
   }
 })
 
@@ -183,8 +201,9 @@ registry.registerPath({
       description: 'Matching users (max 10 results)',
       content: { 'application/json': { schema: z.array(UserSearchResultSchema) } }
     },
-    400: validationResponse,
-    401: unauthorizedResponse
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    422: validationResponse
   }
 })
 
@@ -202,7 +221,8 @@ registry.registerPath({
       description: 'Availability result',
       content: { 'application/json': { schema: CheckUsernameResponseSchema } }
     },
-    400: validationResponse
+    400: badRequestResponse,
+    422: validationResponse
   }
 })
 
@@ -287,9 +307,10 @@ registry.registerPath({
       description: 'Fact created',
       content: { 'application/json': { schema: FactResponseSchema } }
     },
-    400: validationResponse,
+    400: badRequestResponse,
     401: unauthorizedResponse,
-    403: forbiddenResponse
+    403: forbiddenResponse,
+    422: validationResponse
   }
 })
 
@@ -308,7 +329,8 @@ registry.registerPath({
       description: 'Combined search results',
       content: { 'application/json': { schema: GlobalSearchResponseSchema } }
     },
-    400: validationResponse
+    400: badRequestResponse,
+    422: validationResponse
   }
 })
 
@@ -363,10 +385,11 @@ registry.registerPath({
       description: 'Fact updated',
       content: { 'application/json': { schema: FactResponseSchema } }
     },
-    400: validationResponse,
+    400: badRequestResponse,
     401: unauthorizedResponse,
     403: forbiddenResponse,
-    404: notFoundResponse
+    404: notFoundResponse,
+    422: validationResponse
   }
 })
 
@@ -432,7 +455,8 @@ registry.registerPath({
         }
       }
     },
-    400: validationResponse
+    400: badRequestResponse,
+    422: validationResponse
   }
 })
 

@@ -31,12 +31,6 @@ components:
         detail:
           type: string
           description: Human-readable explanation specific to this error occurrence
-        error_code:
-          type: string
-          description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-        category:
-          type: string
-          description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
         instance:
           type: string
           description: URI reference of the request that caused the error
@@ -48,6 +42,12 @@ components:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
+        category:
+          type: string
+          description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
         details:
           type: array
           items:
@@ -68,11 +68,501 @@ components:
         - title
         - status
         - detail
-        - error_code
-        - category
         - instance
         - trace_id
         - timestamp
+        - error_code
+        - category
+    ValidationError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - validation
+          description: Error category
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name that caused the error
+              message:
+                type: string
+                description: Human-readable error message for this field
+            required:
+              - field
+              - message
+          description: Array of field-level validation errors
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    BadRequestError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - BAD_REQUEST
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - validation
+          description: Error category
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name that caused the error
+              message:
+                type: string
+                description: Human-readable error message for this field
+            required:
+              - field
+              - message
+          description: Array of field-level validation errors
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    UnauthorizedError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - UNAUTHORIZED
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - authentication
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    InvalidCredentialsError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - INVALID_CREDENTIALS
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - authentication
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    TokenExpiredError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - TOKEN_EXPIRED
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - authentication
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    ForbiddenError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - FORBIDDEN
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - authorization
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    ResourceNotFoundError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - RESOURCE_NOT_FOUND
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - not_found
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    ResourceConflictError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - RESOURCE_CONFLICT
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - conflict
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    ResourceAlreadyExistsError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - RESOURCE_ALREADY_EXISTS
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - conflict
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
+    InternalError:
+      type: object
+      properties:
+        type:
+          type: string
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Human-readable explanation specific to this error occurrence
+        instance:
+          type: string
+          description: URI reference of the request that caused the error
+        trace_id:
+          type: string
+          format: uuid
+          description: Unique trace ID for request tracking
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the error occurred
+        error_code:
+          type: string
+          enum:
+            - INTERNAL_ERROR
+          description: Machine-readable error code
+        category:
+          type: string
+          enum:
+            - infrastructure
+          description: Error category
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+        - trace_id
+        - timestamp
+        - error_code
+        - category
     CreateProfileRequest:
       type: object
       properties:
@@ -696,7 +1186,7 @@ paths:
                 required:
                   - token
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -714,12 +1204,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -731,6 +1215,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -751,11 +1245,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '401':
           description: Missing or invalid authentication token
           content:
@@ -775,12 +1269,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -792,31 +1280,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '404':
           description: Not available in production
   /auth/profile:
@@ -880,7 +1363,7 @@ paths:
                   - avatarColor
                   - createdAt
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -898,12 +1381,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -915,6 +1392,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -935,11 +1422,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '401':
           description: Missing or invalid authentication token
           content:
@@ -959,12 +1446,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -976,31 +1457,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '409':
           description: Resource already exists
           content:
@@ -1020,12 +1496,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1037,6 +1507,66 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_CONFLICT
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - conflict
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -1057,11 +1587,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
   /auth/me:
     get:
       summary: Get current user profile
@@ -1123,12 +1653,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1140,31 +1664,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -1184,12 +1703,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1201,31 +1714,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
     patch:
       summary: Update current user profile
       operationId: updateCurrentUser
@@ -1285,7 +1793,7 @@ paths:
                   - avatarColor
                   - createdAt
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -1303,12 +1811,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1320,6 +1822,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -1340,11 +1852,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '401':
           description: Missing or invalid authentication token
           content:
@@ -1364,12 +1876,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1381,31 +1887,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -1425,12 +1926,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1442,6 +1937,66 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -1462,11 +2017,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
   /users/search:
     get:
       summary: Search users for @mention autocomplete
@@ -1511,7 +2066,7 @@ paths:
                     - avatarUrl
                     - avatarColor
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -1529,12 +2084,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1546,6 +2095,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -1566,11 +2125,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '401':
           description: Missing or invalid authentication token
           content:
@@ -1590,12 +2149,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1607,6 +2160,66 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -1627,11 +2240,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
   /users/check-username:
     get:
       summary: Check username availability
@@ -1658,7 +2271,7 @@ paths:
                 required:
                   - available
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -1676,12 +2289,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1693,6 +2300,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -1713,11 +2330,76 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          description: Field name that caused the error
+                        message:
+                          type: string
+                          description: Human-readable error message for this field
+                      required:
+                        - field
+                        - message
+                    description: Array of field-level validation errors
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
   /users/avatar-options:
     get:
       summary: Get all preset avatar options
@@ -1807,12 +2489,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -1824,31 +2500,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
   /facts:
     get:
       summary: Get all facts (newest first)
@@ -2073,7 +2744,7 @@ paths:
                   - createdAt
                   - updatedAt
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -2091,12 +2762,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2108,6 +2773,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -2128,11 +2803,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '401':
           description: Missing or invalid authentication token
           content:
@@ -2152,12 +2827,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2169,31 +2838,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -2213,12 +2877,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2230,6 +2888,66 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -2250,11 +2968,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
   /facts/search:
     get:
       summary: Global search (users, facts, hashtags)
@@ -2395,7 +3113,7 @@ paths:
                   - hasMoreFacts
                   - hasMoreHashtags
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -2413,12 +3131,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2430,6 +3142,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -2450,11 +3172,76 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          description: Field name that caused the error
+                        message:
+                          type: string
+                          description: Human-readable error message for this field
+                      required:
+                        - field
+                        - message
+                    description: Array of field-level validation errors
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
   /facts/popular:
     get:
       summary: Get facts sorted by likes count
@@ -2689,12 +3476,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2706,31 +3487,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
     patch:
       summary: Update a fact (author only)
       operationId: updateFact
@@ -2831,7 +3607,7 @@ paths:
                   - createdAt
                   - updatedAt
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -2849,12 +3625,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2866,6 +3636,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -2886,11 +3666,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '401':
           description: Missing or invalid authentication token
           content:
@@ -2910,12 +3690,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2927,31 +3701,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -2971,12 +3740,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -2988,31 +3751,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '404':
           description: Resource not found
           content:
@@ -3032,12 +3790,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3049,6 +3801,66 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -3069,11 +3881,11 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
     delete:
       summary: Delete a fact (author only)
       operationId: deleteFact
@@ -3110,12 +3922,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3127,31 +3933,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -3171,12 +3972,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3188,31 +3983,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '404':
           description: Resource not found
           content:
@@ -3232,12 +4022,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3249,31 +4033,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
   /facts/author/{authorId}:
     get:
       summary: Get all facts by an author
@@ -3460,7 +4239,7 @@ paths:
                 required:
                   - results
         '400':
-          description: Request validation failed
+          description: Malformed request or validation error
           content:
             application/json:
               schema:
@@ -3478,12 +4257,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3495,6 +4268,16 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
                   details:
                     type: array
                     items:
@@ -3515,11 +4298,76 @@ paths:
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - VALIDATION_ERROR
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          description: Field name that caused the error
+                        message:
+                          type: string
+                          description: Human-readable error message for this field
+                      required:
+                        - field
+                        - message
+                    description: Array of field-level validation errors
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
   /facts/{factId}/likes:
     post:
       summary: Like a fact
@@ -3578,12 +4426,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3595,31 +4437,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -3639,12 +4476,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3656,31 +4487,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '404':
           description: Resource not found
           content:
@@ -3700,12 +4526,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3717,31 +4537,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '409':
           description: Resource already exists
           content:
@@ -3761,12 +4576,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3778,31 +4587,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_CONFLICT
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - conflict
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
     delete:
       summary: Unlike a fact
       operationId: unlikeFact
@@ -3839,12 +4643,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3856,31 +4654,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '403':
           description: Access denied or onboarding incomplete
           content:
@@ -3900,12 +4693,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3917,31 +4704,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
         '404':
           description: Resource not found
           content:
@@ -3961,12 +4743,6 @@ paths:
                   detail:
                     type: string
                     description: Human-readable explanation specific to this error occurrence
-                  error_code:
-                    type: string
-                    description: Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)
-                  category:
-                    type: string
-                    description: 'Error category: validation, not_found, forbidden, conflict, infra, unknown'
                   instance:
                     type: string
                     description: URI reference of the request that caused the error
@@ -3978,31 +4754,26 @@ paths:
                     type: string
                     format: date-time
                     description: ISO 8601 timestamp when the error occurred
-                  details:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                          description: Field name that caused the error
-                        message:
-                          type: string
-                          description: Human-readable error message for this field
-                      required:
-                        - field
-                        - message
-                    description: Array of field-level validation errors
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
                 required:
                   - type
                   - title
                   - status
                   - detail
-                  - error_code
-                  - category
                   - instance
                   - trace_id
                   - timestamp
+                  - error_code
+                  - category
     get:
       summary: Get all likes for a fact
       operationId: getFactLikes
