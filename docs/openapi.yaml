@@ -114,6 +114,8 @@ components:
     PublicUserResponse:
       type: object
       properties:
+        id:
+          type: string
         username:
           type: string
         displayName:
@@ -128,6 +130,7 @@ components:
           type: string
           format: date-time
       required:
+        - id
         - username
         - displayName
         - avatarUrl
@@ -1152,6 +1155,8 @@ paths:
               schema:
                 type: object
                 properties:
+                  id:
+                    type: string
                   username:
                     type: string
                   displayName:
@@ -1166,6 +1171,7 @@ paths:
                     type: string
                     format: date-time
                 required:
+                  - id
                   - username
                   - displayName
                   - avatarUrl

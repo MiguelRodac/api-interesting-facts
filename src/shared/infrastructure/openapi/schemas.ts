@@ -52,6 +52,7 @@ export const UserResponseSchema = z.object({
 })
 
 export const PublicUserResponseSchema = z.object({
+  id: z.string(),
   username: z.string(),
   displayName: z.string(),
   avatarUrl: z.string().nullable(),
