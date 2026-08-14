@@ -36,5 +36,8 @@ logs/
 specs/
 openspec/
 
+# Generated OpenAPI spec (run: pnpm openapi:generate)
+docs/openapi.yaml
+
 # Postman local overrides
 docs/postman/*.local.json
