@@ -17,9 +17,8 @@ COPY prisma ./prisma
 COPY tsconfig.json .
 COPY src ./src
 
-# Generate Prisma client (cached until schema changes)
-RUN --mount=type=cache,target=/app/node_modules/.pnpm \
-  npx prisma generate
+# Generate Prisma client
+RUN npx prisma generate
 
 # Build TypeScript (cached until source changes)
 RUN pnpm run tsc
