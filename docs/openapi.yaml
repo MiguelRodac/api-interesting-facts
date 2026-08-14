@@ -146,6 +146,74 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
 
   # Public user routes
+  /users/search:
+    get:
+      summary: Search users for @mention autocomplete
+      operationId: searchUsers
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search query (matches username and displayName)
+      responses:
+        '200':
+          description: Matching users (max 10 results)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserSearchResult'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /users/check-username:
+    get:
+      summary: Check username availability
+      operationId: checkUsername
+      tags: [Users]
+      parameters:
+        - name: username
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Username to check
+      responses:
+        '200':
+          description: Availability result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckUsernameResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /users/avatar-options:
+    get:
+      summary: Get all preset avatar options
+      operationId: getAvatarOptions
+      tags: [Users]
+      description: Returns the list of available preset avatars (color or URL-based).
+      responses:
+        '200':
+          description: List of avatar options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AvatarOptionResponse'
+
   /users/{username}:
     get:
       summary: Get public profile by username
@@ -236,6 +304,34 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '403':
           $ref: '#/components/responses/ForbiddenError'
+
+  /facts/search:
+    get:
+      summary: Global search (users, facts, hashtags)
+      operationId: globalSearch
+      tags: [Facts]
+      description: |
+        Searches across users, facts, and hashtags in a single request.
+        - **users**: matching users by username/displayName
+        - **facts**: matching facts by title or hashtag
+        - **hashtags**: matching hashtags by tag name
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search query
+      responses:
+        '200':
+          description: Combined search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobalSearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /facts/popular:
     get:
@@ -594,6 +690,11 @@ components:
         avatarUrl:
           type: string
           example: https://example.com/new-avatar.png
+        avatarColor:
+          type: string
+          nullable: true
+          example: '#6366f1'
+          description: Hex color for avatar background (use null to clear)
 
     UserResponse:
       type: object
@@ -615,6 +716,10 @@ components:
           type: string
           nullable: true
           example: https://example.com/avatar.png
+        avatarColor:
+          type: string
+          nullable: true
+          example: '#6366f1'
         createdAt:
           type: string
           format: date-time
@@ -708,6 +813,11 @@ components:
           type: boolean
           description: Whether the authenticated viewer has liked this fact. Omitted if unauthenticated.
           example: true
+        hashtags:
+          type: array
+          description: Hashtags associated with this fact
+          items:
+            $ref: '#/components/schemas/HashtagPreview'
         createdAt:
           type: string
           format: date-time
@@ -716,7 +826,7 @@ components:
           type: string
           format: date-time
           example: '2026-08-07T20:00:00.000Z'
-      required: [id, author, content, likes, createdAt, updatedAt]
+      required: [id, author, content, likes, hashtags, createdAt, updatedAt]
 
     PaginatedFactResponse:
       type: object
@@ -800,6 +910,76 @@ components:
           format: uri
           example: https://api.example.com/api/docs
       required: [status, timestamp, uptimeSeconds, database, documentation]
+
+    # Search and discovery schemas
+    UserSearchResult:
+      type: object
+      properties:
+        username:
+          type: string
+          example: johndoe
+        displayName:
+          type: string
+          example: John Doe
+        avatarUrl:
+          type: string
+          nullable: true
+          example: https://example.com/avatar.png
+      required: [username, displayName]
+
+    CheckUsernameResponse:
+      type: object
+      properties:
+        available:
+          type: boolean
+          example: true
+          description: Whether the username is available
+      required: [available]
+
+    AvatarOptionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          example: avatar-001
+        url:
+          type: string
+          nullable: true
+          example: https://example.com/avatar.png
+          description: Avatar image URL (null if color-only avatar)
+        color:
+          type: string
+          example: '#6366f1'
+          description: Avatar background color hex
+      required: [id, color]
+
+    HashtagPreview:
+      type: object
+      properties:
+        id:
+          type: string
+          example: hashtag-001
+        tag:
+          type: string
+          example: science
+      required: [id, tag]
+
+    GlobalSearchResponse:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserSearchResult'
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactResponse'
+        hashtags:
+          type: array
+          items:
+            $ref: '#/components/schemas/HashtagPreview'
+      required: [users, facts, hashtags]
 
     # Error schemas
     ErrorResponse:

@@ -159,14 +159,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"displayName\": \"John Updated\",\n  \"avatarUrl\": \"https://example.com/new-avatar.png\"\n}"
+              "raw": "{\n  \"displayName\": \"John Updated\",\n  \"avatarUrl\": \"https://example.com/new-avatar.png\",\n  \"avatarColor\": \"#6366f1\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/auth/me",
               "host": ["{{baseUrl}}"],
               "path": ["auth", "me"]
             },
-            "description": "Update current user profile (displayName, avatarUrl). Cannot change username or email."
+            "description": "Update current user profile (displayName, avatarUrl, avatarColor). Cannot change username or email."
           },
           "response": []
         }
@@ -175,6 +175,68 @@
     {
       "name": "Users",
       "item": [
+        {
+          "name": "GET /users/search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/search?q=john",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "john",
+                  "description": "Search query (matches username and displayName)"
+                }
+              ]
+            },
+            "description": "Search users for @mention autocomplete. Requires auth. Returns `[{ username, displayName, avatarUrl }]`."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users/check-username",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/check-username?username=johndoe",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "check-username"],
+              "query": [
+                {
+                  "key": "username",
+                  "value": "johndoe",
+                  "description": "Username to check availability"
+                }
+              ]
+            },
+            "description": "Check if a username is available. Public, no auth required. Returns `{ available: true }` or `{ available: false }`."
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users/avatar-options",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/avatar-options",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "avatar-options"]
+            },
+            "description": "Get all preset avatar options. Public, no auth required. Returns `[{ id, url, color }]`."
+          },
+          "response": []
+        },
         {
           "name": "GET /users/:username",
           "request": {
@@ -263,6 +325,27 @@
               ]
             },
             "description": "Get all facts sorted by newest first (public, no auth)\n\n**Response includes:** nested `author: { id, username, email, displayName }` and `likes` count per fact.\n\n`{ results: [{ id, author: { id, username, email, displayName }, title, content, likes, createdAt, updatedAt }], page, limit, nextPage }`"
+          },
+          "response": []
+        },
+        {
+          "name": "GET /facts/search",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/facts/search?q=science",
+              "host": ["{{baseUrl}}"],
+              "path": ["facts", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "science",
+                  "description": "Search query (matches users, facts by title/hashtag, and hashtags)"
+                }
+              ]
+            },
+            "description": "Global search — returns `{ users, facts, hashtags }` in a single request. Optional auth (adds `liked` to facts if authenticated)."
           },
           "response": []
         },
