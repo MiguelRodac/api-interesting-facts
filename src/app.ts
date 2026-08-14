@@ -19,12 +19,19 @@ const app = express()
 // Trust Vercel's proxy to get real client IP
 app.set('trust proxy', 1)
 
-// Global rate limiter — configurable via env, disabled in dev
+// Rate limiters — disabled in dev
 const isDev = process.env.NODE_ENV !== 'production'
-const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? '500', 10)
+
+// Global rate limiter for all endpoints
+const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? '100', 10)
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? (15 * 60 * 1000).toString(), 10)
 
+// Higher rate limit for autocomplete/search endpoints (called on every keystroke)
+const SEARCH_RATE_LIMIT_MAX = parseInt(process.env.SEARCH_RATE_LIMIT_MAX ?? '1000', 10)
+const SEARCH_RATE_LIMIT_WINDOW_MS = parseInt(process.env.SEARCH_RATE_LIMIT_WINDOW_MS ?? (15 * 60 * 1000).toString(), 10)
+
 if (!isDev) {
+  // Global limiter
   const limiter = rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS,
     max: RATE_LIMIT_MAX,
@@ -39,6 +46,25 @@ if (!isDev) {
     })
   })
   app.use(limiter)
+
+  // Separate higher limiter for search/autocomplete endpoints
+  const searchLimiter = rateLimit({
+    windowMs: SEARCH_RATE_LIMIT_WINDOW_MS,
+    max: SEARCH_RATE_LIMIT_MAX,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: (req: Request) => ({
+      status: 429,
+      error: 'Too Many Requests',
+      message: `Search rate limit exceeded. Try again in ${Math.round(SEARCH_RATE_LIMIT_WINDOW_MS / 60000)} minutes.`,
+      documentation: `${req.protocol}://${req.get('host') ?? 'localhost'}/api/docs`
+    })
+  })
+
+  // Apply higher limit to search/autocomplete routes
+  app.use('/hashtags', searchLimiter)
+  app.use('/users/search', searchLimiter)
+  app.use('/facts/search', searchLimiter)
 }
 
 // CORS — allow frontend origin
