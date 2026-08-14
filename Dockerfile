@@ -20,6 +20,9 @@ COPY src ./src
 # Generate Prisma client
 RUN npx prisma generate
 
+# Generate OpenAPI spec (always fresh at deploy time)
+RUN npx tsx src/generate-openapi.ts
+
 # Build TypeScript (cached until source changes)
 RUN pnpm run tsc
 
@@ -46,7 +49,8 @@ RUN sed -i 's|"baseUrl": "./src"|"baseUrl": "./build"|' /app/tsconfig.json
 COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY prisma/schema.prisma ./prisma/schema.prisma
-COPY docs ./docs
+# OpenAPI spec generated during build (not copied from source)
+COPY --from=builder /app/docs ./docs
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
