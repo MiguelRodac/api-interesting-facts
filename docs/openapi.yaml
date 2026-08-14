@@ -434,6 +434,8 @@ components:
           items:
             type: object
             properties:
+              id:
+                type: string
               username:
                 type: string
               displayName:
@@ -441,10 +443,15 @@ components:
               avatarUrl:
                 type: string
                 nullable: true
+              avatarColor:
+                type: string
+                nullable: true
             required:
+              - id
               - username
               - displayName
               - avatarUrl
+              - avatarColor
         facts:
           type: array
           items:

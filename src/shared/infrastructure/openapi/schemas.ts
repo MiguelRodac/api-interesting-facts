@@ -60,9 +60,11 @@ export const PublicUserResponseSchema = z.object({
 })
 
 export const UserSearchResultSchema = z.object({
+  id: z.string(),
   username: z.string(),
   displayName: z.string(),
-  avatarUrl: z.string().nullable()
+  avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable()
 })
 
 export const CheckUsernameResponseSchema = z.object({

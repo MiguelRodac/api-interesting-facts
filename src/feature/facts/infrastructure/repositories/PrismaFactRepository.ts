@@ -332,7 +332,19 @@ export class PrismaFactRepository implements FactRepository {
     const authorIds = matchingUsers.map(u => u.firebaseUid)
     const usernames = matchingUsers.map(u => u.username)
 
-    // Build OR conditions: authorId matches OR content contains @username
+    // Find fact IDs matching hashtag via junction table
+    const matchingHashtags = await prisma.factHashtag.findMany({
+      where: {
+        hashtag: {
+          tag: { contains: query, mode: 'insensitive' }
+        }
+      },
+      select: { factId: true },
+      distinct: ['factId']
+    })
+    const hashtagFactIds = matchingHashtags.map(fh => fh.factId)
+
+    // Build OR conditions: authorId matches OR content contains @username OR hashtag matches
     const orConditions: Array<Record<string, unknown>> = []
 
     if (authorIds.length > 0) {
@@ -347,6 +359,11 @@ export class PrismaFactRepository implements FactRepository {
     // If no users matched, also try a direct content mention search with the raw query
     if (orConditions.length === 0) {
       orConditions.push({ content: { contains: `@${query}`, mode: 'insensitive' } })
+    }
+
+    // Add hashtag cross-reference: facts linked to hashtags matching the query
+    if (hashtagFactIds.length > 0) {
+      orConditions.push({ id: { in: hashtagFactIds } })
     }
 
     const where = { OR: orConditions }

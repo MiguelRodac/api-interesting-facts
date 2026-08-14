@@ -12,7 +12,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "openapi:generate": "npx ts-node --transpile-only -r tsconfig-paths/register src/generate-openapi.ts"
+    "openapi:generate": "npx ts-node --transpile-only -r tsconfig-paths/register src/generate-openapi.ts",
+    "prepack": "tsx src/generate-openapi.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

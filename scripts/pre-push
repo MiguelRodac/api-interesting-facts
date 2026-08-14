@@ -1,0 +1,24 @@
+#!/bin/bash
+# Pre-push hook: regenerate OpenAPI spec before push.
+# Copy this file to .git/hooks/pre-push and make it executable:
+#   cp scripts/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+echo "Regenerating OpenAPI spec..."
+
+# Run the generator; capture exit code but don't block push on failure
+if npx tsx src/generate-openapi.ts; then
+  # Check if the generated file differs from what's committed
+  if ! git diff --quiet docs/openapi.yaml 2>/dev/null; then
+    echo "docs/openapi.yaml has changed. Staging and amending last commit..."
+    git add docs/openapi.yaml
+    git commit --amend --no-edit --no-verify
+    echo "Commit amended with updated OpenAPI spec."
+  else
+    echo "OpenAPI spec is up-to-date."
+  fi
+else
+  echo "Warning: OpenAPI generation failed. Continuing push anyway."
+fi
+
+# Always exit 0 — never block the push
+exit 0
