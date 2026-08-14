@@ -100,7 +100,7 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
   }
 })
 
-router.get('/search', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/search', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q } = SearchQuerySchema.parse(req.query)
     const sanitized = q.trim()

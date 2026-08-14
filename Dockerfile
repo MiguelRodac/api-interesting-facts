@@ -3,22 +3,25 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install pnpm globally
+# Install pnpm globally (layer cached unless base image changes)
 RUN npm install -g pnpm
 
-# Copy package files
+# Copy only dependency files first — this layer is cached until package files change
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies (ignore scripts to avoid pnpm build restrictions)
-RUN pnpm install --ignore-scripts
+# Install dependencies (cached until package.json or lock changes)
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Copy source code
+# Copy source code — this layer changes often, invalidating only what follows
 COPY prisma ./prisma
 COPY tsconfig.json .
 COPY src ./src
 
-# Generate Prisma client and build TypeScript
-RUN npx prisma generate
+# Generate Prisma client (cached until schema changes)
+RUN --mount=type=cache,target=/app/node_modules/.pnpm \
+  npx prisma generate
+
+# Build TypeScript (cached until source changes)
 RUN pnpm run tsc
 
 # Production stage
@@ -29,21 +32,22 @@ WORKDIR /app
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Copy only what's needed for production
+# Copy dependency files first
 COPY package.json pnpm-lock.yaml ./
-# Install without running any build scripts (Prisma already generated in builder)
-RUN pnpm install --prod --ignore-scripts
 
-  # Copy built artifacts from builder
-  COPY --from=builder /app/build ./build
-  # tsconfig.json with baseUrl rewritten to ./build (so tsconfig-paths resolves to .js files)
-  COPY --from=builder /app/tsconfig.json ./tsconfig.json
-  RUN sed -i 's|"baseUrl": "./src"|"baseUrl": "./build"|' /app/tsconfig.json
-  # Prisma generated client (pnpm stores it inside .pnpm virtual store)
-  COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
-  COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-  COPY prisma/schema.prisma ./prisma/schema.prisma
-  COPY docs ./docs
+# Install production dependencies (cached until deps change)
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts
+
+# Copy built artifacts from builder (invalidated only if builder image changes)
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+RUN sed -i 's|"baseUrl": "./src"|"baseUrl": "./build"|' /app/tsconfig.json
+
+# Prisma generated client (pnpm virtual store)
+COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY prisma/schema.prisma ./prisma/schema.prisma
+COPY docs ./docs
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
