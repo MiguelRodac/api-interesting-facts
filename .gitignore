@@ -12,15 +12,6 @@ node_modules/
 npm-debug.log*
 yarn-error.log*
 
-# Package managers lock files (use only ONE)
-# Comment/uncomment the one you use
-# npm
-# package-lock.json
-# yarn
-# yarn.lock
-# pnpm
-# pnpm-lock.yaml  ← committed for reproducible Docker/Vercel builds
-
 # Environment variables (NEVER commit these)
 .env
 
@@ -38,3 +29,4 @@ openspec/
 
 # Postman local overrides
 docs/postman/*.local.json
+docs/API_GUIDE.md
