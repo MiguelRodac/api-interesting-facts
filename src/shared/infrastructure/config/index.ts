@@ -6,7 +6,15 @@ const REQUIRED: Array<{ key: string; label: string }> = [
   { key: 'FIREBASE_PROJECT_ID', label: 'FIREBASE_PROJECT_ID' },
   { key: 'FIREBASE_CLIENT_EMAIL', label: 'FIREBASE_CLIENT_EMAIL' },
   { key: 'FIREBASE_PRIVATE_KEY', label: 'FIREBASE_PRIVATE_KEY' },
-  { key: 'FIREBASE_API_KEY', label: 'FIREBASE_API_KEY' }
+  { key: 'FIREBASE_API_KEY', label: 'FIREBASE_API_KEY' },
+  { key: 'PORT', label: 'PORT' },
+  { key: 'NODE_ENV', label: 'NODE_ENV' },
+  { key: 'PINO_LOG_LEVEL', label: 'PINO_LOG_LEVEL' },
+  { key: 'DOTENV_TIPS', label: 'DOTENV_TIPS' },
+  { key: 'TRACE_ID_HEADER', label: 'TRACE_ID_HEADER' },
+  { key: 'CORS_ORIGIN', label: 'CORS_ORIGIN' },
+  { key: 'KEEP_ALIVE_IDLE_THRESHOLD_MS', label: 'KEEP_ALIVE_IDLE_THRESHOLD_MS' },
+  { key: 'AUTOCOMPLETE_RATE_LIMIT', label: 'AUTOCOMPLETE_RATE_LIMIT' }
 ]
 
 const missing: string[] = []
