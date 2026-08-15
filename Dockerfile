@@ -3,6 +3,10 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# Build-time database URL — set via --build-arg at docker build
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 # Install pnpm globally (layer cached unless base image changes)
 RUN npm install -g pnpm
 
@@ -19,6 +23,9 @@ COPY src ./src
 
 # Generate Prisma client
 RUN npx prisma generate
+
+# Apply database migrations at build time (before app starts)
+RUN npx prisma migrate deploy
 
 # Generate OpenAPI spec (always fresh at deploy time)
 RUN npx tsx src/generate-openapi.ts

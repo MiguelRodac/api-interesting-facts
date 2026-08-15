@@ -1,22 +1,10 @@
--- Seed: Avatar options + Color palette
--- Run: npx prisma db seed or psql $DATABASE_URL -f prisma/seeds/001_avatar_options_and_colors.sql
-
-BEGIN;
-
--- Clear existing data
-TRUNCATE avatar_options RESTART IDENTITY CASCADE;
-
--- =============================================
--- COLOR PALETTE (for users to choose from)
--- Colors represent accent/background options
--- =============================================
+-- Seed: Avatar options + Color palette (run manually after migration)
 
 -- =============================================
 -- ALOHE/AVATARS CATALOG (built-in options)
--- Each collection has a representative color
 -- =============================================
 
--- vibrent (1-27) - Purple/Indigo theme
+-- vibrent (1-27)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_2.png', null, NOW()),
@@ -46,7 +34,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_26.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_27.png', null, NOW());
 
--- 3d (1-5) - Violet theme
+-- 3d (1-5)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_2.png', null, NOW()),
@@ -54,7 +42,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_4.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_5.png', null, NOW());
 
--- bluey (1-10) - Blue theme
+-- bluey (1-10)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/bluey_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/bluey_2.png', null, NOW()),
@@ -67,7 +55,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/bluey_9.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/bluey_10.png', null, NOW());
 
--- memo (1-35) - Amber/Orange theme
+-- memo (1-35)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_2.png', null, NOW()),
@@ -105,7 +93,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_34.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_35.png', null, NOW());
 
--- notion (1-15) - Dark/Gray theme
+-- notion (1-15)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/notion_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/notion_2.png', null, NOW()),
@@ -123,7 +111,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/notion_14.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/notion_15.png', null, NOW());
 
--- teams (1-9) - Steel/Blue-gray theme
+-- teams (1-9)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/teams_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/teams_2.png', null, NOW()),
@@ -135,7 +123,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/teams_8.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/teams_9.png', null, NOW());
 
--- toon (1-10) - Pink theme
+-- toon (1-10)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_2.png', null, NOW()),
@@ -148,7 +136,7 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_9.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_10.png', null, NOW());
 
--- upstream (1-22) - Emerald/Green theme
+-- upstream (1-22)
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/upstream_1.png', null, NOW()),
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/upstream_2.png', null, NOW()),
@@ -174,40 +162,31 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), 'https://cdn.jsdelivr.net/gh/alohe/avatars/png/upstream_22.png', null, NOW());
 
 -- =============================================
--- STANDALONE COLOR PALETTE ENTRIES
--- These are NOT external URLs - just color swatches
--- Users can pick a color-only avatar
+-- STANDALONE COLOR PALETTE (url NULL, color set)
 -- =============================================
 
 INSERT INTO avatar_options (id, url, color, created_at) VALUES
-(gen_random_uuid(), NULL, '#ef4444', NOW()), -- Red
-(gen_random_uuid(), NULL, '#f97316', NOW()), -- Orange
-(gen_random_uuid(), NULL, '#f59e0b', NOW()), -- Amber
-(gen_random_uuid(), NULL, '#eab308', NOW()), -- Yellow
-(gen_random_uuid(), NULL, '#84cc16', NOW()), -- Lime
-(gen_random_uuid(), NULL, '#22c55e', NOW()), -- Green
-(gen_random_uuid(), NULL, '#10b981', NOW()), -- Emerald
-(gen_random_uuid(), NULL, '#14b8a6', NOW()), -- Teal
-(gen_random_uuid(), NULL, '#06b6d4', NOW()), -- Cyan
-(gen_random_uuid(), NULL, '#0ea5e9', NOW()), -- Sky
-(gen_random_uuid(), NULL, '#3b82f6', NOW()), -- Blue
-(gen_random_uuid(), NULL, '#6366f1', NOW()), -- Indigo
-(gen_random_uuid(), NULL, '#8b5cf6', NOW()), -- Violet
-(gen_random_uuid(), NULL, '#a855f7', NOW()), -- Purple
-(gen_random_uuid(), NULL, '#d946ef', NOW()), -- Fuchsia
-(gen_random_uuid(), NULL, '#ec4899', NOW()), -- Pink
-(gen_random_uuid(), NULL, '#f43f5e', NOW()), -- Rose
-(gen_random_uuid(), NULL, '#78716c', NOW()), -- Stone
-(gen_random_uuid(), NULL, '#71717a', NOW()), -- Zinc
-(gen_random_uuid(), NULL, '#64748b', NOW()), -- Slate
-(gen_random_uuid(), NULL, '#1f2937', NOW()), -- Gray 800
-(gen_random_uuid(), NULL, '#111827', NOW()), -- Gray 900
-(gen_random_uuid(), NULL, '#506e89', NOW()), -- Blue Gray
-(gen_random_uuid(), NULL, '#f59e0b', NOW()); -- Amber
-
-COMMIT;
-
--- Summary:
--- - 133 avatars from alohe/avatars catalog (url set, color NULL)
--- - 24 standalone color swatches (url NULL, color set)
--- - Total: 157 avatar options
+(gen_random_uuid(), NULL, '#ef4444', NOW()),
+(gen_random_uuid(), NULL, '#f97316', NOW()),
+(gen_random_uuid(), NULL, '#f59e0b', NOW()),
+(gen_random_uuid(), NULL, '#eab308', NOW()),
+(gen_random_uuid(), NULL, '#84cc16', NOW()),
+(gen_random_uuid(), NULL, '#22c55e', NOW()),
+(gen_random_uuid(), NULL, '#10b981', NOW()),
+(gen_random_uuid(), NULL, '#14b8a6', NOW()),
+(gen_random_uuid(), NULL, '#06b6d4', NOW()),
+(gen_random_uuid(), NULL, '#0ea5e9', NOW()),
+(gen_random_uuid(), NULL, '#3b82f6', NOW()),
+(gen_random_uuid(), NULL, '#6366f1', NOW()),
+(gen_random_uuid(), NULL, '#8b5cf6', NOW()),
+(gen_random_uuid(), NULL, '#a855f7', NOW()),
+(gen_random_uuid(), NULL, '#d946ef', NOW()),
+(gen_random_uuid(), NULL, '#ec4899', NOW()),
+(gen_random_uuid(), NULL, '#f43f5e', NOW()),
+(gen_random_uuid(), NULL, '#78716c', NOW()),
+(gen_random_uuid(), NULL, '#71717a', NOW()),
+(gen_random_uuid(), NULL, '#64748b', NOW()),
+(gen_random_uuid(), NULL, '#1f2937', NOW()),
+(gen_random_uuid(), NULL, '#111827', NOW()),
+(gen_random_uuid(), NULL, '#506e89', NOW()),
+(gen_random_uuid(), NULL, '#f59e0b', NOW());
