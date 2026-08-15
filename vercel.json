@@ -1,6 +1,15 @@
 {
-  "buildCommand": "tsc --skipLibCheck --noEmit false",
-  "outputDirectory": "build",
-  "framework": null,
-  "installCommand": "npm install --include=dev"
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/index.ts"
+    }
+  ]
 }
