@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { registry } from './registry'
+import { USERNAME_PATTERN } from '@shared/domain/validation'
 import {
   PingResponseSchema,
   CreateProfileRequestSchema,
@@ -183,7 +184,7 @@ registry.registerPath({
   operationId: 'checkUsername',
   tags: ['Users'],
   request: {
-    query: z.object({ username: z.string().min(1) })
+    query: z.object({ username: z.string().min(1).regex(USERNAME_PATTERN) })
   },
   responses: {
     200: {
@@ -217,7 +218,7 @@ registry.registerPath({
   operationId: 'getPublicProfile',
   tags: ['Users'],
   request: {
-    params: z.object({ username: z.string() })
+    params: z.object({ username: z.string().regex(USERNAME_PATTERN) })
   },
   responses: {
     200: {

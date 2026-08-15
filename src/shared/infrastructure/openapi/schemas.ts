@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { registry } from './registry'
+import { USERNAME_PATTERN } from '@shared/domain/validation'
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 
@@ -135,7 +136,7 @@ registry.register('InternalError', InternalErrorSchema)
 // ── User ────────────────────────────────────────────────────────────────────
 
 export const CreateProfileRequestSchema = z.object({
-  username: z.string().regex(/^[a-zA-Z0-9_]{3,30}$/),
+  username: z.string().regex(USERNAME_PATTERN, 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots'),
   displayName: z.string().min(1),
   avatarUrl: z.string().url().optional()
 })

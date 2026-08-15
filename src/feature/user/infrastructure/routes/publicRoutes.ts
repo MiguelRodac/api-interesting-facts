@@ -5,6 +5,7 @@ import { GetUserByUsername } from '../../application/use-cases/GetUserByUsername
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { PrismaAvatarOptionRepository } from '@avatar/infrastructure/repositories/PrismaAvatarOptionRepository'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
+import { USERNAME_PATTERN } from '@shared/domain/validation'
 
 const router = Router()
 const userRepository = new PrismaUserRepository()
@@ -16,7 +17,10 @@ const SearchQuerySchema = z.object({
 }).strict()
 
 const CheckUsernameQuerySchema = z.object({
-  username: z.string().min(1, 'username parameter is required')
+  username: z
+    .string()
+    .min(1, 'username parameter is required')
+    .regex(USERNAME_PATTERN, 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots')
 }).strict()
 
 // GET /users/search?q={query} — Search users for @mention autocomplete (auth required)
@@ -75,6 +79,13 @@ router.get('/avatar-options', async (_req: Request, res: Response, next: NextFun
 router.get('/:username', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const username = req.params.username as string
+
+    if (!USERNAME_PATTERN.test(username)) {
+      throw new ValidationError('Username must be 3-30 characters and only contain letters, numbers, underscores or dots', [
+        { field: 'username', message: 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots' }
+      ])
+    }
+
     const user = await getUserByUsername.execute(username)
     res.status(200).json(user)
   } catch (err) {

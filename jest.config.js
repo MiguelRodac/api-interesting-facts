@@ -14,6 +14,8 @@ module.exports = {
     '@shared/(.*)': '<rootDir>/src/shared/$1',
     '@fact/(.*)': '<rootDir>/src/feature/facts/$1',
     '@likes/(.*)': '<rootDir>/src/feature/likes/$1',
-    '@user/(.*)': '<rootDir>/src/feature/user/$1'
+    '@user/(.*)': '<rootDir>/src/feature/user/$1',
+    '@avatar/(.*)': '<rootDir>/src/feature/avatar/$1',
+    '@hashtag/(.*)': '<rootDir>/src/feature/hashtag/$1'
   }
 }

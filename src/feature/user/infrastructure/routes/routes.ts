@@ -7,6 +7,7 @@ import { UpdateUser } from '../../application/use-cases/UpdateUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
+import { USERNAME_PATTERN } from '@shared/domain/validation'
 
 const MentionQuerySchema = z.object({
   q: z.string().min(1, 'q is required').max(50),
@@ -32,9 +33,9 @@ router.post('/profile', requireAuth, async (req: Request, res: Response, next: N
       throw new ValidationError('Display name is required', [{ field: 'displayName', message: 'Display name is required' }])
     }
 
-    if (!/^[a-zA-Z0-9_]{3,30}$/.test(username)) {
-      throw new ValidationError('Username must be 3-30 characters, alphanumeric and underscores only', [
-        { field: 'username', message: 'Username must be 3-30 characters, alphanumeric and underscores only' }
+    if (!USERNAME_PATTERN.test(username)) {
+      throw new ValidationError('Username must be 3-30 characters and only contain letters, numbers, underscores or dots', [
+        { field: 'username', message: 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots' }
       ])
     }
 
