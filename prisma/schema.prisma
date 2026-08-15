@@ -25,7 +25,7 @@ model User {
 model AvatarOption {
   id        String   @id @default(uuid())
   url       String?  @unique
-  color     String
+  color     String?
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("avatar_options")

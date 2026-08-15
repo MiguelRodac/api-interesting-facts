@@ -201,13 +201,13 @@ INSERT INTO avatar_options (id, url, color, created_at) VALUES
 (gen_random_uuid(), NULL, '#71717a', NOW()), -- Zinc
 (gen_random_uuid(), NULL, '#64748b', NOW()), -- Slate
 (gen_random_uuid(), NULL, '#1f2937', NOW()), -- Gray 800
-(gen_random_uuid(), NULL, '#111827', NOW()); -- Gray 900
-(gen_random_uuid(), NULL, '#506e89', NOW()); -- Blue Gray
+(gen_random_uuid(), NULL, '#111827', NOW()), -- Gray 900
+(gen_random_uuid(), NULL, '#506e89', NOW()), -- Blue Gray
 (gen_random_uuid(), NULL, '#f59e0b', NOW()); -- Amber
 
 COMMIT;
 
 -- Summary:
--- - 133 avatars from alohe/avatars catalog (each with its collection color)
--- - 22 standalone color swatches (NULL url, only color)
--- - Total: 155 avatar options
+-- - 133 avatars from alohe/avatars catalog (url set, color NULL)
+-- - 24 standalone color swatches (url NULL, color set)
+-- - Total: 157 avatar options
