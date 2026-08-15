@@ -191,7 +191,7 @@ export const CheckUsernameResponseSchema = z.object({
 export const AvatarOptionResponseSchema = z.object({
   id: z.string(),
   url: z.string().nullable(),
-  color: z.string()
+  color: z.string().nullable()
 })
 
 registry.register('CreateProfileRequest', CreateProfileRequestSchema)
