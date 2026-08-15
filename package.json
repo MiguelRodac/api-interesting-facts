@@ -11,6 +11,7 @@
     "test": "jest",
     "seed": "npx ts-node --transpile-only scripts/seed-firestore.ts --env-file=.env",
     "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "openapi:generate": "npx ts-node --transpile-only -r tsconfig-paths/register src/generate-openapi.ts",
     "prepack": "tsx src/generate-openapi.ts"

@@ -25,7 +25,7 @@ COPY src ./src
 RUN npx prisma generate
 
 # Apply database migrations at build time (before app starts)
-# RUN npx prisma migrate deploy
+RUN npx prisma migrate deploy
 
 # Generate OpenAPI spec (always fresh at deploy time)
 RUN npx tsx src/generate-openapi.ts
