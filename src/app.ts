@@ -4,6 +4,7 @@ import express, { type Request } from 'express'
 import cors from 'cors'
 import rateLimit from 'express-rate-limit'
 import { apiReference } from '@scalar/express-api-reference'
+import '@shared/infrastructure/config' // validates env vars on import
 import userRoutes from '@user/infrastructure/routes/routes'
 import userPublicRoutes from '@user/infrastructure/routes/publicRoutes'
 import factRoutes from '@fact/infrastructure/routes/routes'
