@@ -1,46 +1,96 @@
 import { PrismaClient } from '@prisma/client'
-import { randomUUID } from 'crypto'
 import dotenv from 'dotenv'
 dotenv.config()
 
 const prisma = new PrismaClient()
 
-const AVATAR_COLORS = [
-  '#E57373', '#F06292', '#BA68C8', '#7986CB',
-  '#64B5F6', '#4DD0E1', '#4DB6AC', '#81C784',
-  '#AED581', '#DCE775', '#FFD54F', '#FFB74D',
-  '#A1887F', '#90A4AE', '#F48FB1', '#CE93D8'
+const avatarOptions = [
+  // vibrent (1-27) - Purple/Indigo
+  ...Array.from({ length: 27 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/vibrent_${i + 1}.png`,
+    color: '#6366f1'
+  })),
+  // 3d (1-5) - Violet
+  ...Array.from({ length: 5 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/3d_${i + 1}.png`,
+    color: '#8b5cf6'
+  })),
+  // bluey (1-10) - Blue
+  ...Array.from({ length: 10 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/bluey_${i + 1}.png`,
+    color: '#3b82f6'
+  })),
+  // memo (1-35) - Amber
+  ...Array.from({ length: 35 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/memo_${i + 1}.png`,
+    color: '#f59e0b'
+  })),
+  // notion (1-15) - Dark/Gray
+  ...Array.from({ length: 15 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/notion_${i + 1}.png`,
+    color: '#1f2937'
+  })),
+  // teams (1-9) - Steel
+  ...Array.from({ length: 9 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/teams_${i + 1}.png`,
+    color: '#506e89'
+  })),
+  // toon (1-10) - Pink
+  ...Array.from({ length: 10 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/toon_${i + 1}.png`,
+    color: '#ec4899'
+  })),
+  // upstream (1-22) - Emerald
+  ...Array.from({ length: 22 }, (_, i) => ({
+    url: `https://cdn.jsdelivr.net/gh/alohe/avatars/png/upstream_${i + 1}.png`,
+    color: '#10b981'
+  })),
+  // Standalone color swatches (no url)
+  { url: null, color: '#ef4444' }, // Red
+  { url: null, color: '#f97316' }, // Orange
+  { url: null, color: '#f59e0b' }, // Amber
+  { url: null, color: '#eab308' }, // Yellow
+  { url: null, color: '#84cc16' }, // Lime
+  { url: null, color: '#22c55e' }, // Green
+  { url: null, color: '#10b981' }, // Emerald
+  { url: null, color: '#14b8a6' }, // Teal
+  { url: null, color: '#06b6d4' }, // Cyan
+  { url: null, color: '#0ea5e9' }, // Sky
+  { url: null, color: '#3b82f6' }, // Blue
+  { url: null, color: '#6366f1' }, // Indigo
+  { url: null, color: '#8b5cf6' }, // Violet
+  { url: null, color: '#a855f7' }, // Purple
+  { url: null, color: '#d946ef' }, // Fuchsia
+  { url: null, color: '#ec4899' }, // Pink
+  { url: null, color: '#f43f5e' }, // Rose
+  { url: null, color: '#78716c' }, // Stone
+  { url: null, color: '#71717a' }, // Zinc
+  { url: null, color: '#64748b' }, // Slate
+  { url: null, color: '#1f2937' }, // Gray 800
+  { url: null, color: '#111827' }  // Gray 900
 ]
 
 async function seed (): Promise<void> {
-  console.log('🌱 Seeding avatar_options...')
+  console.log('🗑️  Clearing existing avatar options...')
+  await prisma.avatarOption.deleteMany()
 
-  // Check if table already has data
-  const existing = await prisma.avatarOption.count()
-  if (existing > 0) {
-    console.log(`⏭️  Table already has ${existing} rows — skipping insert`)
-    return
-  }
+  console.log('🌱 Seeding avatar options...')
+  const created = await prisma.avatarOption.createMany({
+    data: avatarOptions.map((opt) => ({
+      url: opt.url,
+      color: opt.color
+    }))
+  })
 
-  // Build VALUES with explicit UUIDs — DB id column is text NOT NULL with no default
-  const values = AVATAR_COLORS
-    .map((color) => `('${randomUUID()}', NULL, '${color}', NOW())`)
-    .join(',\n    ')
+  console.log(`✅ Created ${created.count} avatar options`)
+  console.log(`   - 133 avatars from alohe/avatars catalog`)
+  console.log(`   - 22 standalone color swatches`)
 
-  await prisma.$executeRawUnsafe(`
-    INSERT INTO "avatar_options" ("id", "url", "color", "created_at") VALUES
-    ${values}
-  `)
-
-  const count = await prisma.avatarOption.count()
-  console.log(`\n✅ Seed complete: ${count} avatar color presets inserted`)
+  await prisma.$disconnect()
+  process.exit(0)
 }
 
-seed()
-  .catch((err) => {
-    console.error('❌ Seed failed:', err.message)
-    process.exit(1)
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+seed().catch((err) => {
+  console.error('❌ Seed failed:', err.message)
+  process.exit(1)
+})
