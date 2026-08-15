@@ -7,7 +7,8 @@ import { UpdateUser } from '../../application/use-cases/UpdateUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
-import { USERNAME_PATTERN } from '@shared/domain/validation'
+import { ConflictError } from '@shared/domain/errors/ConflictError'
+import { USERNAME_PATTERN, EMAIL_PATTERN } from '@shared/domain/validation'
 
 const MentionQuerySchema = z.object({
   q: z.string().min(1, 'q is required').max(50),
@@ -40,10 +41,14 @@ router.post('/profile', requireAuth, async (req: Request, res: Response, next: N
     }
 
     const uid = req.user?.uid
-    const email = req.user?.email ?? ''
+    const email = req.user?.email
 
     if (uid == null) {
       throw new ValidationError('Authentication required', [{ field: 'auth', message: 'Authentication required' }])
+    }
+
+    if (email == null || email.trim() === '' || !EMAIL_PATTERN.test(email)) {
+      throw new ValidationError('A valid email address is required', [{ field: 'email', message: 'A valid email address is required' }])
     }
 
     const user = await createUser.execute(
@@ -84,6 +89,18 @@ router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Respo
     }
 
     const { displayName, avatarUrl, avatarColor, email } = req.body
+
+    if (email != null) {
+      if (typeof email !== 'string' || email.trim() === '' || !EMAIL_PATTERN.test(email)) {
+        throw new ValidationError('A valid email address is required', [{ field: 'email', message: 'A valid email address is required' }])
+      }
+
+      const existingByEmail = await userRepository.findByEmail(email)
+
+      if (existingByEmail != null && existingByEmail.id !== uid) {
+        throw new ConflictError('Email is already taken')
+      }
+    }
 
     const user = await updateUser.execute(uid, { displayName, avatarUrl, avatarColor, email })
     res.status(200).json(user)

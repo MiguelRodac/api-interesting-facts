@@ -50,7 +50,8 @@ function convertPrismaError (error: Error & PrismaError): DomainError | null {
   }
 
   switch (code) {
-    case PG_ERROR_CODES.UNIQUE_VIOLATION: {
+    case PG_ERROR_CODES.UNIQUE_VIOLATION:
+    case 'P2002': {
       return new ConflictError('Value already exists')
     }
 

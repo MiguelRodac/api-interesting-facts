@@ -116,6 +116,31 @@ export class PrismaUserRepository implements UserRepository {
     return count > 0
   }
 
+  async findByEmail (email: string): Promise<User | null> {
+    const user = await prisma.user.findUnique({
+      where: { email }
+    })
+
+    if (user == null) return null
+
+    return {
+      id: user.firebaseUid,
+      email: user.email,
+      username: user.username,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      avatarColor: user.avatarColor,
+      createdAt: user.createdAt
+    }
+  }
+
+  async existsByEmail (email: string): Promise<boolean> {
+    const count = await prisma.user.count({
+      where: { email }
+    })
+    return count > 0
+  }
+
   async create (data: CreateUserData): Promise<User> {
     const user = await prisma.user.create({
       data: {
