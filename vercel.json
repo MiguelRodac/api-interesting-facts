@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "tsc --skipLibCheck --noEmit false",
   "outputDirectory": "build",
-  "installCommand": "npm install",
-  "framework": null
+  "framework": null,
+  "installCommand": "npm install --include=dev"
 }
