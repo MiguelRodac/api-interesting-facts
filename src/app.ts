@@ -58,6 +58,7 @@ if (!isDev) {
   })
   app.use('/hashtags', autocompleteLimiter)
   app.use('/users/search', autocompleteLimiter)
+  app.use('/facts/search', autocompleteLimiter)
 }
 
 // CORS — allow frontend origin
