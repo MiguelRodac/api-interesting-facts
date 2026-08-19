@@ -36,7 +36,7 @@ describe('Likes Endpoints', () => {
 
   // Helper that narrows type after explicit null check
   const getTestFactId = async (): Promise<string> => {
-    const fact = await prisma.fact.findFirst()
+    const fact = await prisma.fact.findFirst({ where: { authorId: 'test-uid' } })
     if (fact === null) throw new Error('Test setup failed: no fact found')
     return fact.id
   }
