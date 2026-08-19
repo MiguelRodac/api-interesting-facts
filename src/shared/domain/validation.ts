@@ -11,6 +11,9 @@ export const FACT_TITLE_MAX_LENGTH = 100
 export const FACT_CONTENT_MIN_LENGTH = 10
 export const FACT_CONTENT_MAX_LENGTH = 1000
 
+export const COMMENT_CONTENT_MIN_LENGTH = 10
+export const COMMENT_CONTENT_MAX_LENGTH = 500
+
 export function validateMentions (content: string): void {
   const mentions = content.match(/@([a-zA-Z0-9_.]+)/g) ?? []
   for (const mention of mentions) {
