@@ -24,12 +24,16 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+// Only UIDs that tests are allowed to create/cleanup.
+// Never delete real user data — filter by these test fixtures.
+const TEST_UIDS = ['test-uid', 'other-uid', 'no-profile-uid']
+
 afterEach(async () => {
-  // Cleanup test data after each test
-  // Order matters due to foreign key constraints
-  await prisma.like.deleteMany()
-  await prisma.fact.deleteMany()
-  await prisma.user.deleteMany()
+  // Cleanup ONLY data created by tests (filtered by test UIDs).
+  // Never touch rows belonging to real users.
+  await prisma.like.deleteMany({ where: { userId: { in: TEST_UIDS } } })
+  await prisma.fact.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
+  await prisma.user.deleteMany({ where: { firebaseUid: { in: TEST_UIDS } } })
 })
 
 afterAll(async () => {
