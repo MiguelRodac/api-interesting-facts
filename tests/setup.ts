@@ -26,7 +26,13 @@ const prisma = new PrismaClient()
 
 // Only UIDs that tests are allowed to create/cleanup.
 // Never delete real user data — filter by these test fixtures.
-const TEST_UIDS = ['test-uid', 'other-uid', 'no-profile-uid']
+const TEST_UIDS = [
+  'test-uid',
+  'other-uid',
+  'no-profile-uid',
+  'public-user-uid',
+  'another-user-uid'
+]
 
 afterEach(async () => {
   // Cleanup ONLY data created by tests (filtered by test UIDs).
