@@ -9,6 +9,7 @@ import userRoutes from '@user/infrastructure/routes/routes'
 import userPublicRoutes from '@user/infrastructure/routes/publicRoutes'
 import factRoutes from '@fact/infrastructure/routes/routes'
 import likeRoutes from '@likes/infrastructure/routes/routes'
+import commentRoutes from '@comments/infrastructure/routes/routes'
 import hashtagRoutes from '@hashtag/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
@@ -138,6 +139,9 @@ app.use('/hashtags', hashtagRoutes)
 
 // Mount like routes
 app.use('/', likeRoutes)
+
+// Mount comment routes
+app.use('/', commentRoutes)
 
 app.use((_req, res) => {
   res.status(404).json({

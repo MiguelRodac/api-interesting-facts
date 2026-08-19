@@ -33,6 +33,7 @@
       "@shared/*": ["shared/*"],
       "@fact/*": ["feature/facts/*"],
       "@likes/*": ["feature/likes/*"],
+      "@comments/*": ["feature/comments/*"],
       "@user/*": ["feature/user/*"],
       "@avatar/*": ["feature/avatar/*"],
       "@hashtag/*": ["feature/hashtag/*"]
