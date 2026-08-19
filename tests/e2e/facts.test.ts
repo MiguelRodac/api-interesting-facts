@@ -79,7 +79,7 @@ describe('Facts Endpoints', () => {
       const res = await request(app)
         .post('/facts')
         .set('Authorization', `Bearer ${validToken}`)
-        .send({ content: 'x'.repeat(201) })
+        .send({ content: 'x'.repeat(1001) })
 
       expect(res.status).toBe(400)
       expect(res.body.error_code).toBe('BAD_REQUEST')

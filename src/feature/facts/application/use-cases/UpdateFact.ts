@@ -5,10 +5,9 @@ import { FactNotFoundError } from '../../domain/errors/FactNotFoundError'
 import { FactForbiddenError } from '../../domain/errors/FactForbiddenError'
 import { ContentTooShortError } from '../../domain/errors/ContentTooShortError'
 import { ContentTooLongError } from '../../domain/errors/ContentTooLongError'
+import { TitleTooLongError } from '../../domain/errors/TitleTooLongError'
 import { PrismaHashtagRepository } from '@hashtag/infrastructure/repositories/PrismaHashtagRepository'
-
-const MIN_CONTENT_LENGTH = 10
-const MAX_CONTENT_LENGTH = 200
+import { FACT_TITLE_MAX_LENGTH, FACT_CONTENT_MIN_LENGTH, FACT_CONTENT_MAX_LENGTH, validateMentions } from '@shared/domain/validation'
 
 export class UpdateFact {
   private readonly factRepository: FactRepository
@@ -30,25 +29,34 @@ export class UpdateFact {
       throw new FactForbiddenError()
     }
 
+    if (data.title != null && data.title.length > FACT_TITLE_MAX_LENGTH) {
+      throw new TitleTooLongError(FACT_TITLE_MAX_LENGTH)
+    }
+
+    let normalizedContent: string | undefined
     if (data.content !== undefined) {
-      if (data.content.length < MIN_CONTENT_LENGTH) {
-        throw new ContentTooShortError(MIN_CONTENT_LENGTH)
+      normalizedContent = data.content.trim()
+
+      if (normalizedContent.length < FACT_CONTENT_MIN_LENGTH) {
+        throw new ContentTooShortError(FACT_CONTENT_MIN_LENGTH)
       }
 
-      if (data.content.length > MAX_CONTENT_LENGTH) {
-        throw new ContentTooLongError(MAX_CONTENT_LENGTH)
+      if (normalizedContent.length > FACT_CONTENT_MAX_LENGTH) {
+        throw new ContentTooLongError(FACT_CONTENT_MAX_LENGTH)
       }
+
+      validateMentions(normalizedContent)
     }
 
     await this.factRepository.update(id, {
       title: data.title,
-      content: data.content
+      content: normalizedContent
     })
 
     // Re-extract and replace hashtags if content changed
     let hashtags = existingFact.hashtags
-    if (data.content !== undefined) {
-      const tagNames = await this.hashtagRepository.extractHashtags(data.content)
+    if (normalizedContent !== undefined) {
+      const tagNames = await this.hashtagRepository.extractHashtags(normalizedContent)
       hashtags = await this.hashtagRepository.replaceFactHashtags(id, tagNames)
     }
 

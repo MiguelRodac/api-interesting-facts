@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { registry } from './registry'
-import { USERNAME_PATTERN } from '@shared/domain/validation'
+import { USERNAME_PATTERN, DISPLAY_NAME_MAX_LENGTH, FACT_TITLE_MAX_LENGTH, FACT_CONTENT_MAX_LENGTH } from '@shared/domain/validation'
 
 // ── Shared ──────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ const baseErrorFields = {
   detail: z.string().describe('Human-readable explanation specific to this error occurrence'),
   instance: z.string().describe('URI reference of the request that caused the error'),
   trace_id: z.string().uuid().describe('Unique trace ID for request tracking'),
-  timestamp: z.string().datetime().describe('ISO 8601 timestamp when the error occurred'),
+  timestamp: z.string().datetime().describe('ISO 8601 timestamp when the error occurred')
 }
 
 // ── Generic ErrorResponse (backward compatible) ──────────────────────────────
@@ -32,7 +32,7 @@ export const ErrorResponseSchema = z.object({
   ...baseErrorFields,
   error_code: z.string().describe('Machine-readable error code (e.g. VALIDATION_ERROR, USER_NOT_FOUND)'),
   category: z.string().describe('Error category: validation, not_found, forbidden, conflict, infra, unknown'),
-  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors')
 })
 
 registry.register('ErrorResponse', ErrorResponseSchema)
@@ -43,7 +43,7 @@ export const ValidationErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('VALIDATION_ERROR').describe('Machine-readable error code'),
   category: z.literal('validation').describe('Error category'),
-  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors')
 })
 
 registry.register('ValidationError', ValidationErrorSchema)
@@ -54,7 +54,7 @@ export const BadRequestErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('BAD_REQUEST').describe('Machine-readable error code'),
   category: z.literal('validation').describe('Error category'),
-  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors'),
+  details: z.array(ErrorDetailSchema).optional().describe('Array of field-level validation errors')
 })
 
 registry.register('BadRequestError', BadRequestErrorSchema)
@@ -64,7 +64,7 @@ registry.register('BadRequestError', BadRequestErrorSchema)
 export const UnauthorizedErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('UNAUTHORIZED').describe('Machine-readable error code'),
-  category: z.literal('authentication').describe('Error category'),
+  category: z.literal('authentication').describe('Error category')
 })
 
 registry.register('UnauthorizedError', UnauthorizedErrorSchema)
@@ -72,7 +72,7 @@ registry.register('UnauthorizedError', UnauthorizedErrorSchema)
 export const InvalidCredentialsErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('INVALID_CREDENTIALS').describe('Machine-readable error code'),
-  category: z.literal('authentication').describe('Error category'),
+  category: z.literal('authentication').describe('Error category')
 })
 
 registry.register('InvalidCredentialsError', InvalidCredentialsErrorSchema)
@@ -80,7 +80,7 @@ registry.register('InvalidCredentialsError', InvalidCredentialsErrorSchema)
 export const TokenExpiredErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('TOKEN_EXPIRED').describe('Machine-readable error code'),
-  category: z.literal('authentication').describe('Error category'),
+  category: z.literal('authentication').describe('Error category')
 })
 
 registry.register('TokenExpiredError', TokenExpiredErrorSchema)
@@ -90,7 +90,7 @@ registry.register('TokenExpiredError', TokenExpiredErrorSchema)
 export const ForbiddenErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('FORBIDDEN').describe('Machine-readable error code'),
-  category: z.literal('authorization').describe('Error category'),
+  category: z.literal('authorization').describe('Error category')
 })
 
 registry.register('ForbiddenError', ForbiddenErrorSchema)
@@ -100,7 +100,7 @@ registry.register('ForbiddenError', ForbiddenErrorSchema)
 export const ResourceNotFoundErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('RESOURCE_NOT_FOUND').describe('Machine-readable error code'),
-  category: z.literal('not_found').describe('Error category'),
+  category: z.literal('not_found').describe('Error category')
 })
 
 registry.register('ResourceNotFoundError', ResourceNotFoundErrorSchema)
@@ -110,7 +110,7 @@ registry.register('ResourceNotFoundError', ResourceNotFoundErrorSchema)
 export const ResourceConflictErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('RESOURCE_CONFLICT').describe('Machine-readable error code'),
-  category: z.literal('conflict').describe('Error category'),
+  category: z.literal('conflict').describe('Error category')
 })
 
 registry.register('ResourceConflictError', ResourceConflictErrorSchema)
@@ -118,7 +118,7 @@ registry.register('ResourceConflictError', ResourceConflictErrorSchema)
 export const ResourceAlreadyExistsErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('RESOURCE_ALREADY_EXISTS').describe('Machine-readable error code'),
-  category: z.literal('conflict').describe('Error category'),
+  category: z.literal('conflict').describe('Error category')
 })
 
 registry.register('ResourceAlreadyExistsError', ResourceAlreadyExistsErrorSchema)
@@ -128,7 +128,7 @@ registry.register('ResourceAlreadyExistsError', ResourceAlreadyExistsErrorSchema
 export const InternalErrorSchema = z.object({
   ...baseErrorFields,
   error_code: z.literal('INTERNAL_ERROR').describe('Machine-readable error code'),
-  category: z.literal('infrastructure').describe('Error category'),
+  category: z.literal('infrastructure').describe('Error category')
 })
 
 registry.register('InternalError', InternalErrorSchema)
@@ -137,14 +137,15 @@ registry.register('InternalError', InternalErrorSchema)
 
 export const CreateProfileRequestSchema = z.object({
   username: z.string().regex(USERNAME_PATTERN, 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots'),
-  displayName: z.string().min(1),
+  displayName: z.string().min(1).max(DISPLAY_NAME_MAX_LENGTH, `Display name must be at most ${DISPLAY_NAME_MAX_LENGTH} characters`),
   avatarUrl: z.string().url().optional()
 })
 
 export const DevLoginRequestSchema = z.object({
   secret: z.string().min(1),
   email: z.string().email(),
-  password: z.string().min(1)
+  // Firebase owns auth. Dev-only docs schema. bcrypt truncates passwords at ~72 bytes.
+  password: z.string().min(6)
 })
 
 export const DevLoginResponseSchema = z.object({
@@ -152,7 +153,7 @@ export const DevLoginResponseSchema = z.object({
 })
 
 export const UpdateProfileRequestSchema = z.object({
-  displayName: z.string().min(1).optional(),
+  displayName: z.string().min(1).max(DISPLAY_NAME_MAX_LENGTH, `Display name must be at most ${DISPLAY_NAME_MAX_LENGTH} characters`).optional(),
   avatarUrl: z.string().optional(),
   avatarColor: z.string().nullable().optional(),
   email: z.string().email().optional()
@@ -208,13 +209,13 @@ registry.register('AvatarOptionResponse', AvatarOptionResponseSchema)
 // ── Fact ────────────────────────────────────────────────────────────────────
 
 export const CreateFactRequestSchema = z.object({
-  title: z.string().nullable().optional(),
-  content: z.string().min(10).max(200)
+  title: z.string().max(FACT_TITLE_MAX_LENGTH, `Title must be at most ${FACT_TITLE_MAX_LENGTH} characters`).nullable().optional(),
+  content: z.string().min(10).max(FACT_CONTENT_MAX_LENGTH, `Content must be at most ${FACT_CONTENT_MAX_LENGTH} characters`)
 })
 
 export const UpdateFactRequestSchema = z.object({
-  title: z.string().nullable().optional(),
-  content: z.string().min(10).max(200).optional()
+  title: z.string().max(FACT_TITLE_MAX_LENGTH, `Title must be at most ${FACT_TITLE_MAX_LENGTH} characters`).nullable().optional(),
+  content: z.string().min(10).max(FACT_CONTENT_MAX_LENGTH, `Content must be at most ${FACT_CONTENT_MAX_LENGTH} characters`).optional()
 })
 
 export const HashtagPreviewSchema = z.object({
