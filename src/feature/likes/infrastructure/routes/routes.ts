@@ -8,7 +8,6 @@ import { DeleteLike } from '../../application/use-cases/DeleteLike'
 import { GetLikesByFact } from '../../application/use-cases/GetLikesByFact'
 import { GetLikesByUser } from '../../application/use-cases/GetLikesByUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
-import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 const ListQuerySchema = z.object({
