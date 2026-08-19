@@ -42,7 +42,7 @@ describe('Facts Endpoints', () => {
       expect(res.status).toBe(201)
       expect(res.body).toMatchObject({
         content: 'This is a valid fact with more than 10 characters',
-        authorId: 'test-uid'
+        author: { id: 'test-uid' }
       })
       expect(res.body.id).toBeDefined()
       expect(res.body.createdAt).toBeDefined()
@@ -61,7 +61,7 @@ describe('Facts Endpoints', () => {
       expect(res.body).toMatchObject({
         title: 'Test Title',
         content: 'This is a valid fact with more than 10 characters',
-        authorId: 'test-uid'
+        author: { id: 'test-uid' }
       })
     })
 
@@ -122,8 +122,9 @@ describe('Facts Endpoints', () => {
       expect(res.body.limit).toBe(20)
     })
 
-    it('should return empty array when no facts', async () => {
-      const res = await request(app).get('/facts')
+    it('should return empty array beyond last page', async () => {
+      // A page beyond any data guarantees empty results without assuming the DB is clean
+      const res = await request(app).get('/facts?page=999')
 
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
@@ -157,15 +158,20 @@ describe('Facts Endpoints', () => {
 
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
-      expect(res.body.results.length).toBe(3)
-      // Most liked first
-      expect(res.body.results[0].id).toBe(fact2.id)
-      expect(res.body.results[1].id).toBe(fact3.id)
-      expect(res.body.results[2].id).toBe(fact1.id)
+
+      // Locate own test facts in the full result set (other real facts may exist)
+      const results = res.body.results as Array<{ id: string }>
+      const idxOf = (id: string): number => results.findIndex(r => r.id === id)
+      expect(idxOf(fact2.id)).toBeGreaterThanOrEqual(0)
+      expect(idxOf(fact3.id)).toBeGreaterThanOrEqual(0)
+      expect(idxOf(fact1.id)).toBeGreaterThanOrEqual(0)
+      // Most liked first among own facts
+      expect(idxOf(fact2.id)).toBeLessThan(idxOf(fact3.id))
+      expect(idxOf(fact3.id)).toBeLessThan(idxOf(fact1.id))
     })
 
-    it('should return empty array when no facts', async () => {
-      const res = await request(app).get('/facts/popular')
+    it('should return empty array beyond last page', async () => {
+      const res = await request(app).get('/facts/popular?page=999')
 
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
@@ -186,7 +192,7 @@ describe('Facts Endpoints', () => {
 
       expect(res.status).toBe(200)
       expect(res.body.content).toBe('A specific fact')
-      expect(res.body.authorId).toBe('test-uid')
+      expect(res.body.author.id).toBe('test-uid')
     })
 
     it('should return 404 for non-existent fact', async () => {
