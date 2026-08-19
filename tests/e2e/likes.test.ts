@@ -171,7 +171,9 @@ describe('Likes Endpoints', () => {
         .post(`/facts/${factId}/likes`)
         .set('Authorization', `Bearer ${validToken}`)
 
-      const res = await request(app).get('/users/test-uid/likes')
+      const res = await request(app)
+        .get('/users/test-uid/likes')
+        .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
@@ -179,11 +181,19 @@ describe('Likes Endpoints', () => {
     })
 
     it('should return empty array for user with no likes', async () => {
-      const res = await request(app).get('/users/test-uid/likes')
+      const res = await request(app)
+        .get('/users/test-uid/likes')
+        .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
       expect(res.body.results.length).toBe(0)
+    })
+
+    it('should return 401 when not authenticated', async () => {
+      const res = await request(app).get('/users/test-uid/likes')
+
+      expect(res.status).toBe(401)
     })
   })
 })

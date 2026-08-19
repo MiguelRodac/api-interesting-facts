@@ -4811,6 +4811,8 @@ paths:
       operationId: getUserLikes
       tags:
         - Likes
+      security:
+        - bearerAuth: []
       parameters:
         - schema:
             type: string
@@ -4891,3 +4893,5 @@ paths:
                   - page
                   - limit
                   - nextPage
+        '401':
+          description: Authentication required

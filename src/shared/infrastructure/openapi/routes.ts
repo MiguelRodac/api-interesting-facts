@@ -499,6 +499,7 @@ registry.registerPath({
   summary: 'Get all likes by a user',
   operationId: 'getUserLikes',
   tags: ['Likes'],
+  security: [{ bearerAuth: [] }],
   request: {
     params: z.object({ userId: z.string() }),
     query: ListQuerySchema
@@ -507,6 +508,7 @@ registry.registerPath({
     200: {
       description: 'Paginated list of likes by user',
       content: { 'application/json': { schema: PaginatedLikeResponseSchema } }
-    }
+    },
+    401: { description: 'Authentication required' }
   }
 })
