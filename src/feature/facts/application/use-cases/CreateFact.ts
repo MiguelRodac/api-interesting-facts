@@ -58,6 +58,9 @@ export class CreateFact {
       title: enrichedFact.title,
       content: enrichedFact.content,
       likes: enrichedFact.likes,
+      likeBy: enrichedFact.likeBy,
+      comments: enrichedFact.comments,
+      commentsDetails: enrichedFact.commentsDetails,
       hashtags,
       createdAt: enrichedFact.createdAt.toISOString(),
       updatedAt: enrichedFact.updatedAt.toISOString()

@@ -1,3 +1,6 @@
+import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
+import { type CommentPreview } from '@comments/application/dto/CommentPreview'
+
 export interface FactAuthorPreview {
   id: string
   username: string
@@ -19,6 +22,9 @@ export interface FactResponse {
   content: string
   likes: number
   liked?: boolean
+  likeBy: UserAvatarPreview[]
+  comments: number
+  commentsDetails: CommentPreview | null
   hashtags: HashtagPreview[]
   createdAt: string
   updatedAt: string

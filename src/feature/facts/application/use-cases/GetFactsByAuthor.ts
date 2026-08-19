@@ -20,6 +20,9 @@ export class GetFactsByAuthor {
         content: fact.content,
         likes: fact.likes,
         liked: fact.liked,
+        likeBy: fact.likeBy,
+        comments: fact.comments,
+        commentsDetails: fact.commentsDetails,
         hashtags: fact.hashtags,
         createdAt: fact.createdAt.toISOString(),
         updatedAt: fact.updatedAt.toISOString()
