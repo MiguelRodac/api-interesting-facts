@@ -238,6 +238,23 @@ export const FactAuthorPreviewSchema = z.object({
   avatarColor: z.string().nullable()
 })
 
+// ── Comment previews (used by FactResponse enrichment) ──────────────────────
+
+export const UserAvatarPreviewSchema = z.object({
+  username: z.string(),
+  avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable()
+})
+
+export const CommentPreviewSchema = z.object({
+  id: z.string().uuid(),
+  content: z.string(),
+  author: UserAvatarPreviewSchema,
+  parentCommentId: z.string().uuid().nullable(),
+  replies: z.number().int(),
+  createdAt: z.string().datetime()
+})
+
 export const FactResponseSchema = z.object({
   id: z.string().uuid(),
   author: FactAuthorPreviewSchema,
@@ -245,6 +262,9 @@ export const FactResponseSchema = z.object({
   content: z.string(),
   likes: z.number().int(),
   liked: z.boolean().optional(),
+  likeBy: z.array(UserAvatarPreviewSchema).max(2),
+  comments: z.number().int(),
+  commentsDetails: CommentPreviewSchema.nullable(),
   hashtags: z.array(HashtagPreviewSchema),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime()
@@ -300,6 +320,58 @@ registry.register('LikeResponse', LikeResponseSchema)
 registry.register('LikePreview', LikePreviewSchema)
 registry.register('PaginatedLikeResponse', PaginatedLikeResponseSchema)
 registry.register('PaginatedLikePreviewResponse', PaginatedLikePreviewResponseSchema)
+
+// ── Comment ────────────────────────────────────────────────────────────────
+
+export const CommentAuthorPreviewSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable()
+})
+
+export const CommentResponseSchema: z.ZodType<{
+  id: string
+  content: string
+  author: z.infer<typeof CommentAuthorPreviewSchema>
+  parentCommentId: string | null
+  factId?: string
+  createdAt: string
+  updatedAt: string
+  replies?: unknown[]
+}> = z.object({
+  id: z.string().uuid(),
+  content: z.string(),
+  author: CommentAuthorPreviewSchema,
+  parentCommentId: z.string().uuid().nullable(),
+  factId: z.string().uuid().optional(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  // Self-reference via explicit $ref (the installed zod-to-openapi lacks a ZodLazy transformer).
+  replies: z.array(z.any()).optional().openapi({
+    type: 'array',
+    items: { $ref: '#/components/schemas/CommentResponse' }
+  })
+})
+
+export const CreateCommentRequestSchema = z.object({
+  content: z.string().min(10).max(500),
+  parentCommentId: z.string().uuid().optional()
+})
+
+export const PaginatedCommentResponseSchema = z.object({
+  results: z.array(CommentResponseSchema),
+  page: z.number().int(),
+  limit: z.number().int(),
+  nextPage: z.number().int().nullable()
+})
+
+registry.register('UserAvatarPreview', UserAvatarPreviewSchema)
+registry.register('CommentPreview', CommentPreviewSchema)
+registry.register('CommentAuthorPreview', CommentAuthorPreviewSchema)
+registry.register('CommentResponse', CommentResponseSchema)
+registry.register('CreateCommentRequest', CreateCommentRequestSchema)
+registry.register('PaginatedCommentResponse', PaginatedCommentResponseSchema)
 
 // ── Search ──────────────────────────────────────────────────────────────────
 

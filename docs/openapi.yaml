@@ -801,6 +801,66 @@ components:
           type: integer
         liked:
           type: boolean
+        likeBy:
+          type: array
+          items:
+            type: object
+            properties:
+              username:
+                type: string
+              avatarUrl:
+                type: string
+                nullable: true
+              avatarColor:
+                type: string
+                nullable: true
+            required:
+              - username
+              - avatarUrl
+              - avatarColor
+          maxItems: 2
+        comments:
+          type: integer
+        commentsDetails:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: string
+              format: uuid
+            content:
+              type: string
+            author:
+              type: object
+              properties:
+                username:
+                  type: string
+                avatarUrl:
+                  type: string
+                  nullable: true
+                avatarColor:
+                  type: string
+                  nullable: true
+              required:
+                - username
+                - avatarUrl
+                - avatarColor
+            parentCommentId:
+              type: string
+              nullable: true
+              format: uuid
+            replies:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+          required:
+            - id
+            - content
+            - author
+            - parentCommentId
+            - replies
+            - createdAt
         hashtags:
           type: array
           items:
@@ -825,6 +885,9 @@ components:
         - title
         - content
         - likes
+        - likeBy
+        - comments
+        - commentsDetails
         - hashtags
         - createdAt
         - updatedAt
@@ -873,6 +936,66 @@ components:
                 type: integer
               liked:
                 type: boolean
+              likeBy:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                    avatarUrl:
+                      type: string
+                      nullable: true
+                    avatarColor:
+                      type: string
+                      nullable: true
+                  required:
+                    - username
+                    - avatarUrl
+                    - avatarColor
+                maxItems: 2
+              comments:
+                type: integer
+              commentsDetails:
+                type: object
+                nullable: true
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  content:
+                    type: string
+                  author:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      avatarColor:
+                        type: string
+                        nullable: true
+                    required:
+                      - username
+                      - avatarUrl
+                      - avatarColor
+                  parentCommentId:
+                    type: string
+                    nullable: true
+                    format: uuid
+                  replies:
+                    type: integer
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - content
+                  - author
+                  - parentCommentId
+                  - replies
+                  - createdAt
               hashtags:
                 type: array
                 items:
@@ -897,6 +1020,9 @@ components:
               - title
               - content
               - likes
+              - likeBy
+              - comments
+              - commentsDetails
               - hashtags
               - createdAt
               - updatedAt
@@ -1036,6 +1162,207 @@ components:
         - page
         - limit
         - nextPage
+    UserAvatarPreview:
+      type: object
+      properties:
+        username:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        avatarColor:
+          type: string
+          nullable: true
+      required:
+        - username
+        - avatarUrl
+        - avatarColor
+    CommentPreview:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        author:
+          type: object
+          properties:
+            username:
+              type: string
+            avatarUrl:
+              type: string
+              nullable: true
+            avatarColor:
+              type: string
+              nullable: true
+          required:
+            - username
+            - avatarUrl
+            - avatarColor
+        parentCommentId:
+          type: string
+          nullable: true
+          format: uuid
+        replies:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - content
+        - author
+        - parentCommentId
+        - replies
+        - createdAt
+    CommentAuthorPreview:
+      type: object
+      properties:
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        avatarColor:
+          type: string
+          nullable: true
+      required:
+        - username
+        - displayName
+        - avatarUrl
+        - avatarColor
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        author:
+          type: object
+          properties:
+            username:
+              type: string
+            displayName:
+              type: string
+            avatarUrl:
+              type: string
+              nullable: true
+            avatarColor:
+              type: string
+              nullable: true
+          required:
+            - username
+            - displayName
+            - avatarUrl
+            - avatarColor
+        parentCommentId:
+          type: string
+          nullable: true
+          format: uuid
+        factId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        replies:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentResponse'
+      required:
+        - id
+        - content
+        - author
+        - parentCommentId
+        - createdAt
+        - updatedAt
+    CreateCommentRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          minLength: 10
+          maxLength: 500
+        parentCommentId:
+          type: string
+          format: uuid
+      required:
+        - content
+    PaginatedCommentResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              content:
+                type: string
+              author:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  displayName:
+                    type: string
+                  avatarUrl:
+                    type: string
+                    nullable: true
+                  avatarColor:
+                    type: string
+                    nullable: true
+                required:
+                  - username
+                  - displayName
+                  - avatarUrl
+                  - avatarColor
+              parentCommentId:
+                type: string
+                nullable: true
+                format: uuid
+              factId:
+                type: string
+                format: uuid
+              createdAt:
+                type: string
+                format: date-time
+              updatedAt:
+                type: string
+                format: date-time
+              replies:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentResponse'
+            required:
+              - id
+              - content
+              - author
+              - parentCommentId
+              - createdAt
+              - updatedAt
+        page:
+          type: integer
+        limit:
+          type: integer
+        nextPage:
+          type: integer
+          nullable: true
+      required:
+        - results
+        - page
+        - limit
+        - nextPage
     GlobalSearchResponse:
       type: object
       properties:
@@ -1104,6 +1431,66 @@ components:
                 type: integer
               liked:
                 type: boolean
+              likeBy:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                    avatarUrl:
+                      type: string
+                      nullable: true
+                    avatarColor:
+                      type: string
+                      nullable: true
+                  required:
+                    - username
+                    - avatarUrl
+                    - avatarColor
+                maxItems: 2
+              comments:
+                type: integer
+              commentsDetails:
+                type: object
+                nullable: true
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  content:
+                    type: string
+                  author:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      avatarColor:
+                        type: string
+                        nullable: true
+                    required:
+                      - username
+                      - avatarUrl
+                      - avatarColor
+                  parentCommentId:
+                    type: string
+                    nullable: true
+                    format: uuid
+                  replies:
+                    type: integer
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - id
+                  - content
+                  - author
+                  - parentCommentId
+                  - replies
+                  - createdAt
               hashtags:
                 type: array
                 items:
@@ -1128,6 +1515,9 @@ components:
               - title
               - content
               - likes
+              - likeBy
+              - comments
+              - commentsDetails
               - hashtags
               - createdAt
               - updatedAt
@@ -2538,6 +2928,66 @@ paths:
                           type: integer
                         liked:
                           type: boolean
+                        likeBy:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                              avatarUrl:
+                                type: string
+                                nullable: true
+                              avatarColor:
+                                type: string
+                                nullable: true
+                            required:
+                              - username
+                              - avatarUrl
+                              - avatarColor
+                          maxItems: 2
+                        comments:
+                          type: integer
+                        commentsDetails:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            content:
+                              type: string
+                            author:
+                              type: object
+                              properties:
+                                username:
+                                  type: string
+                                avatarUrl:
+                                  type: string
+                                  nullable: true
+                                avatarColor:
+                                  type: string
+                                  nullable: true
+                              required:
+                                - username
+                                - avatarUrl
+                                - avatarColor
+                            parentCommentId:
+                              type: string
+                              nullable: true
+                              format: uuid
+                            replies:
+                              type: integer
+                            createdAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - content
+                            - author
+                            - parentCommentId
+                            - replies
+                            - createdAt
                         hashtags:
                           type: array
                           items:
@@ -2562,6 +3012,9 @@ paths:
                         - title
                         - content
                         - likes
+                        - likeBy
+                        - comments
+                        - commentsDetails
                         - hashtags
                         - createdAt
                         - updatedAt
@@ -2645,6 +3098,66 @@ paths:
                     type: integer
                   liked:
                     type: boolean
+                  likeBy:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
+                      required:
+                        - username
+                        - avatarUrl
+                        - avatarColor
+                    maxItems: 2
+                  comments:
+                    type: integer
+                  commentsDetails:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      content:
+                        type: string
+                      author:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                          avatarColor:
+                            type: string
+                            nullable: true
+                        required:
+                          - username
+                          - avatarUrl
+                          - avatarColor
+                      parentCommentId:
+                        type: string
+                        nullable: true
+                        format: uuid
+                      replies:
+                        type: integer
+                      createdAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - content
+                      - author
+                      - parentCommentId
+                      - replies
+                      - createdAt
                   hashtags:
                     type: array
                     items:
@@ -2669,6 +3182,9 @@ paths:
                   - title
                   - content
                   - likes
+                  - likeBy
+                  - comments
+                  - commentsDetails
                   - hashtags
                   - createdAt
                   - updatedAt
@@ -2989,6 +3505,66 @@ paths:
                           type: integer
                         liked:
                           type: boolean
+                        likeBy:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                              avatarUrl:
+                                type: string
+                                nullable: true
+                              avatarColor:
+                                type: string
+                                nullable: true
+                            required:
+                              - username
+                              - avatarUrl
+                              - avatarColor
+                          maxItems: 2
+                        comments:
+                          type: integer
+                        commentsDetails:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            content:
+                              type: string
+                            author:
+                              type: object
+                              properties:
+                                username:
+                                  type: string
+                                avatarUrl:
+                                  type: string
+                                  nullable: true
+                                avatarColor:
+                                  type: string
+                                  nullable: true
+                              required:
+                                - username
+                                - avatarUrl
+                                - avatarColor
+                            parentCommentId:
+                              type: string
+                              nullable: true
+                              format: uuid
+                            replies:
+                              type: integer
+                            createdAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - content
+                            - author
+                            - parentCommentId
+                            - replies
+                            - createdAt
                         hashtags:
                           type: array
                           items:
@@ -3013,6 +3589,9 @@ paths:
                         - title
                         - content
                         - likes
+                        - likeBy
+                        - comments
+                        - commentsDetails
                         - hashtags
                         - createdAt
                         - updatedAt
@@ -3266,6 +3845,66 @@ paths:
                           type: integer
                         liked:
                           type: boolean
+                        likeBy:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                              avatarUrl:
+                                type: string
+                                nullable: true
+                              avatarColor:
+                                type: string
+                                nullable: true
+                            required:
+                              - username
+                              - avatarUrl
+                              - avatarColor
+                          maxItems: 2
+                        comments:
+                          type: integer
+                        commentsDetails:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            content:
+                              type: string
+                            author:
+                              type: object
+                              properties:
+                                username:
+                                  type: string
+                                avatarUrl:
+                                  type: string
+                                  nullable: true
+                                avatarColor:
+                                  type: string
+                                  nullable: true
+                              required:
+                                - username
+                                - avatarUrl
+                                - avatarColor
+                            parentCommentId:
+                              type: string
+                              nullable: true
+                              format: uuid
+                            replies:
+                              type: integer
+                            createdAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - content
+                            - author
+                            - parentCommentId
+                            - replies
+                            - createdAt
                         hashtags:
                           type: array
                           items:
@@ -3290,6 +3929,9 @@ paths:
                         - title
                         - content
                         - likes
+                        - likeBy
+                        - comments
+                        - commentsDetails
                         - hashtags
                         - createdAt
                         - updatedAt
@@ -3363,6 +4005,66 @@ paths:
                     type: integer
                   liked:
                     type: boolean
+                  likeBy:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
+                      required:
+                        - username
+                        - avatarUrl
+                        - avatarColor
+                    maxItems: 2
+                  comments:
+                    type: integer
+                  commentsDetails:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      content:
+                        type: string
+                      author:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                          avatarColor:
+                            type: string
+                            nullable: true
+                        required:
+                          - username
+                          - avatarUrl
+                          - avatarColor
+                      parentCommentId:
+                        type: string
+                        nullable: true
+                        format: uuid
+                      replies:
+                        type: integer
+                      createdAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - content
+                      - author
+                      - parentCommentId
+                      - replies
+                      - createdAt
                   hashtags:
                     type: array
                     items:
@@ -3387,6 +4089,9 @@ paths:
                   - title
                   - content
                   - likes
+                  - likeBy
+                  - comments
+                  - commentsDetails
                   - hashtags
                   - createdAt
                   - updatedAt
@@ -3513,6 +4218,66 @@ paths:
                     type: integer
                   liked:
                     type: boolean
+                  likeBy:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
+                      required:
+                        - username
+                        - avatarUrl
+                        - avatarColor
+                    maxItems: 2
+                  comments:
+                    type: integer
+                  commentsDetails:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      content:
+                        type: string
+                      author:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                          avatarColor:
+                            type: string
+                            nullable: true
+                        required:
+                          - username
+                          - avatarUrl
+                          - avatarColor
+                      parentCommentId:
+                        type: string
+                        nullable: true
+                        format: uuid
+                      replies:
+                        type: integer
+                      createdAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - content
+                      - author
+                      - parentCommentId
+                      - replies
+                      - createdAt
                   hashtags:
                     type: array
                     items:
@@ -3537,6 +4302,9 @@ paths:
                   - title
                   - content
                   - likes
+                  - likeBy
+                  - comments
+                  - commentsDetails
                   - hashtags
                   - createdAt
                   - updatedAt
@@ -4082,6 +4850,66 @@ paths:
                           type: integer
                         liked:
                           type: boolean
+                        likeBy:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                              avatarUrl:
+                                type: string
+                                nullable: true
+                              avatarColor:
+                                type: string
+                                nullable: true
+                            required:
+                              - username
+                              - avatarUrl
+                              - avatarColor
+                          maxItems: 2
+                        comments:
+                          type: integer
+                        commentsDetails:
+                          type: object
+                          nullable: true
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                            content:
+                              type: string
+                            author:
+                              type: object
+                              properties:
+                                username:
+                                  type: string
+                                avatarUrl:
+                                  type: string
+                                  nullable: true
+                                avatarColor:
+                                  type: string
+                                  nullable: true
+                              required:
+                                - username
+                                - avatarUrl
+                                - avatarColor
+                            parentCommentId:
+                              type: string
+                              nullable: true
+                              format: uuid
+                            replies:
+                              type: integer
+                            createdAt:
+                              type: string
+                              format: date-time
+                          required:
+                            - id
+                            - content
+                            - author
+                            - parentCommentId
+                            - replies
+                            - createdAt
                         hashtags:
                           type: array
                           items:
@@ -4106,6 +4934,9 @@ paths:
                         - title
                         - content
                         - likes
+                        - likeBy
+                        - comments
+                        - commentsDetails
                         - hashtags
                         - createdAt
                         - updatedAt
@@ -4895,3 +5726,807 @@ paths:
                   - nextPage
         '401':
           description: Authentication required
+  /facts/{factId}/comments:
+    post:
+      summary: Create a comment on a fact
+      operationId: createComment
+      tags:
+        - Comments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: factId
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                parentCommentId:
+                  type: string
+                  format: uuid
+              required:
+                - content
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  content:
+                    type: string
+                  author:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                      displayName:
+                        type: string
+                      avatarUrl:
+                        type: string
+                        nullable: true
+                      avatarColor:
+                        type: string
+                        nullable: true
+                    required:
+                      - username
+                      - displayName
+                      - avatarUrl
+                      - avatarColor
+                  parentCommentId:
+                    type: string
+                    nullable: true
+                    format: uuid
+                  factId:
+                    type: string
+                    format: uuid
+                  createdAt:
+                    type: string
+                    format: date-time
+                  updatedAt:
+                    type: string
+                    format: date-time
+                  replies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CommentResponse'
+                required:
+                  - id
+                  - content
+                  - author
+                  - parentCommentId
+                  - createdAt
+                  - updatedAt
+        '400':
+          description: Malformed request or validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - BAD_REQUEST
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - validation
+                    description: Error category
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          description: Field name that caused the error
+                        message:
+                          type: string
+                          description: Human-readable error message for this field
+                      required:
+                        - field
+                        - message
+                    description: Array of field-level validation errors
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+    get:
+      summary: Get threaded comments for a fact
+      operationId: getFactComments
+      tags:
+        - Comments
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: factId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Threaded comments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        content:
+                          type: string
+                        author:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - username
+                            - displayName
+                            - avatarUrl
+                            - avatarColor
+                        parentCommentId:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        factId:
+                          type: string
+                          format: uuid
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                        replies:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/CommentResponse'
+                      required:
+                        - id
+                        - content
+                        - author
+                        - parentCommentId
+                        - createdAt
+                        - updatedAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+  /comments/{id}:
+    delete:
+      summary: Delete own comment
+      operationId: deleteComment
+      tags:
+        - Comments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          required: true
+          name: id
+          in: path
+      responses:
+        '204':
+          description: Comment deleted
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '403':
+          description: Access denied or onboarding incomplete
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - FORBIDDEN
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authorization
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - RESOURCE_NOT_FOUND
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - not_found
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
+  /users/{userId}/comments:
+    get:
+      summary: Get comments by a user
+      operationId: getUserComments
+      tags:
+        - Comments
+      security:
+        - bearerAuth: []
+      parameters:
+        - schema:
+            type: string
+          required: true
+          name: userId
+          in: path
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+          required: false
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 100
+            default: 10
+          required: false
+          name: limit
+          in: query
+        - schema:
+            type: string
+            enum:
+              - createdAt
+              - updatedAt
+          required: false
+          name: order_by
+          in: query
+        - schema:
+            type: string
+            enum:
+              - asc
+              - desc
+          required: false
+          name: order_dir
+          in: query
+      responses:
+        '200':
+          description: Flat comments list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        content:
+                          type: string
+                        author:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            displayName:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - username
+                            - displayName
+                            - avatarUrl
+                            - avatarColor
+                        parentCommentId:
+                          type: string
+                          nullable: true
+                          format: uuid
+                        factId:
+                          type: string
+                          format: uuid
+                        createdAt:
+                          type: string
+                          format: date-time
+                        updatedAt:
+                          type: string
+                          format: date-time
+                        replies:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/CommentResponse'
+                      required:
+                        - id
+                        - content
+                        - author
+                        - parentCommentId
+                        - createdAt
+                        - updatedAt
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  nextPage:
+                    type: integer
+                    nullable: true
+                required:
+                  - results
+                  - page
+                  - limit
+                  - nextPage
+        '401':
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category

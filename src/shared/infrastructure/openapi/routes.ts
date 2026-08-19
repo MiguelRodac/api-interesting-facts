@@ -18,6 +18,9 @@ import {
   LikeResponseSchema,
   PaginatedLikeResponseSchema,
   PaginatedLikePreviewResponseSchema,
+  CommentResponseSchema,
+  CreateCommentRequestSchema,
+  PaginatedCommentResponseSchema,
   HashtagWithUsageSchema,
   ValidationErrorSchema,
   BadRequestErrorSchema,
@@ -510,5 +513,89 @@ registry.registerPath({
       content: { 'application/json': { schema: PaginatedLikeResponseSchema } }
     },
     401: { description: 'Authentication required' }
+  }
+})
+
+// ── Comments ────────────────────────────────────────────────────────────────
+
+registry.registerPath({
+  method: 'post',
+  path: '/facts/{factId}/comments',
+  summary: 'Create a comment on a fact',
+  operationId: 'createComment',
+  tags: ['Comments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ factId: z.string().uuid() }),
+    body: {
+      content: { 'application/json': { schema: CreateCommentRequestSchema } }
+    }
+  },
+  responses: {
+    201: {
+      description: 'Comment created',
+      content: { 'application/json': { schema: CommentResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'delete',
+  path: '/comments/{id}',
+  summary: 'Delete own comment',
+  operationId: 'deleteComment',
+  tags: ['Comments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ id: z.string().uuid() })
+  },
+  responses: {
+    204: { description: 'Comment deleted' },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/facts/{factId}/comments',
+  summary: 'Get threaded comments for a fact',
+  operationId: 'getFactComments',
+  tags: ['Comments'],
+  request: {
+    params: z.object({ factId: z.string().uuid() }),
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Threaded comments',
+      content: { 'application/json': { schema: PaginatedCommentResponseSchema } }
+    },
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/users/{userId}/comments',
+  summary: 'Get comments by a user',
+  operationId: 'getUserComments',
+  tags: ['Comments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ userId: z.string() }),
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Flat comments list',
+      content: { 'application/json': { schema: PaginatedCommentResponseSchema } }
+    },
+    401: unauthorizedResponse
   }
 })
