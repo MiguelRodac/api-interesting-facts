@@ -19,7 +19,7 @@ const ListQuerySchema = z.object({
 })
 
 const CreateCommentBodySchema = z.object({
-  content: z.string().min(10).max(500),
+  content: z.string(),
   parentCommentId: z.string().uuid().optional()
 })
 

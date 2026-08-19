@@ -300,4 +300,142 @@ describe('Facts Endpoints', () => {
       expect(res.status).toBe(401)
     })
   })
+
+  describe('FactResponse enrichment — comments + likeBy', () => {
+    // Creates a fact with 2 likes and 1 top-level comment + 1 reply,
+    // then asserts the enrichment fields across every read path.
+    const seedFact = async (): Promise<{ id: string }> => {
+      const fact = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Per path enrichment fact body' }
+      })
+
+      await prisma.like.createMany({
+        data: [
+          { userId: 'test-uid', factId: fact.id },
+          { userId: 'other-uid', factId: fact.id }
+        ]
+      })
+
+      const topLevel = await prisma.comment.create({
+        data: { content: 'Per path top-level comment', factId: fact.id, authorId: 'test-uid' }
+      })
+      await prisma.comment.create({
+        data: { content: 'Per path reply comment', factId: fact.id, authorId: 'test-uid', parentCommentId: topLevel.id }
+      })
+
+      return fact
+    }
+
+    const assertEnrichment = (fact: { likeBy: unknown[], comments: number, commentsDetails: { replies: number } | null }): void => {
+      expect(fact.likeBy).toHaveLength(2)
+      expect(fact.comments).toBe(2)
+      expect(fact.commentsDetails).not.toBeNull()
+      expect(fact.commentsDetails?.replies).toBe(1)
+    }
+
+    it('findById — GET /facts/:id', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get(`/facts/${fact.id}`)
+
+      expect(res.status).toBe(200)
+      assertEnrichment(res.body)
+    })
+
+    it('findByAuthorId — GET /facts/author/:authorId', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get(`/facts/author/test-uid`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertEnrichment(found)
+    })
+
+    it('findAll — GET /facts', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get('/facts')
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertEnrichment(found)
+    })
+
+    it('findPopular — GET /facts/popular', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get('/facts/popular')
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertEnrichment(found)
+    })
+
+    it('findByTitleOrHashtag — GET /facts/search (plain query)', async () => {
+      const fact = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Enrichment title search body', title: 'Per Path Title' }
+      })
+      await prisma.like.createMany({
+        data: [
+          { userId: 'test-uid', factId: fact.id },
+          { userId: 'other-uid', factId: fact.id }
+        ]
+      })
+      const topLevel = await prisma.comment.create({
+        data: { content: 'Per path top-level comment', factId: fact.id, authorId: 'test-uid' }
+      })
+      await prisma.comment.create({
+        data: { content: 'Per path reply comment', factId: fact.id, authorId: 'test-uid', parentCommentId: topLevel.id }
+      })
+
+      const res = await request(app)
+        .get('/facts/search?q=Per%20Path%20Title&limit=100')
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertEnrichment(found)
+    })
+
+    it('findByAuthorOrMention — GET /facts/search (mention)', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app)
+        .get('/facts/search?q=%40testauthor&limit=100')
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertEnrichment(found)
+    })
+
+    it('findByHashtag — GET /facts/search (hashtag)', async () => {
+      const fact = await seedFact()
+      const hashtag = await prisma.hashtag.upsert({
+        where: { tag: 'enrichmenttag' },
+        update: {},
+        create: { tag: 'enrichmenttag' }
+      })
+      await prisma.factHashtag.create({ data: { factId: fact.id, hashtagId: hashtag.id } })
+
+      const res = await request(app)
+        .get('/facts/search?q=%23enrichmenttag&limit=100')
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertEnrichment(found)
+
+      // Clean up the test-created hashtag fixture so it doesn't persist in the DB.
+      await prisma.factHashtag.deleteMany({ where: { hashtagId: hashtag.id } })
+      await prisma.hashtag.deleteMany({ where: { tag: 'enrichmenttag' } })
+    })
+  })
 })
