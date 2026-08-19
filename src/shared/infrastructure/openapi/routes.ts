@@ -17,6 +17,7 @@ import {
   GlobalSearchResponseSchema,
   LikeResponseSchema,
   PaginatedLikeResponseSchema,
+  PaginatedLikePreviewResponseSchema,
   HashtagWithUsageSchema,
   ValidationErrorSchema,
   BadRequestErrorSchema,
@@ -484,8 +485,8 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Paginated list of likes for a fact',
-      content: { 'application/json': { schema: PaginatedLikeResponseSchema } }
+      description: 'Paginated list of likes for a fact, enriched with the user preview',
+      content: { 'application/json': { schema: PaginatedLikePreviewResponseSchema } }
     }
   }
 })

@@ -273,6 +273,15 @@ export const LikeResponseSchema = z.object({
   createdAt: z.string().datetime()
 })
 
+export const LikePreviewSchema = z.object({
+  id: z.string().uuid(),
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable(),
+  createdAt: z.string().datetime()
+})
+
 export const PaginatedLikeResponseSchema = z.object({
   results: z.array(LikeResponseSchema),
   page: z.number().int(),
@@ -280,8 +289,17 @@ export const PaginatedLikeResponseSchema = z.object({
   nextPage: z.number().int().nullable()
 })
 
+export const PaginatedLikePreviewResponseSchema = z.object({
+  results: z.array(LikePreviewSchema),
+  page: z.number().int(),
+  limit: z.number().int(),
+  nextPage: z.number().int().nullable()
+})
+
 registry.register('LikeResponse', LikeResponseSchema)
+registry.register('LikePreview', LikePreviewSchema)
 registry.register('PaginatedLikeResponse', PaginatedLikeResponseSchema)
+registry.register('PaginatedLikePreviewResponse', PaginatedLikePreviewResponseSchema)
 
 // ── Search ──────────────────────────────────────────────────────────────────
 

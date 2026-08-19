@@ -1,5 +1,6 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type Like } from '../../domain/entities/Like'
+import { type LikeWithUser } from '../../domain/models/LikeWithUser'
 import { type LikeRepository } from '../../domain/ports/LikeRepository'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
@@ -32,6 +33,25 @@ function mapLike (like: { id: string, userId: string, factId: string, createdAt:
   }
 }
 
+function mapLikeWithUser (like: {
+  id: string
+  userId: string
+  factId: string
+  createdAt: Date
+  user: { username: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }
+}): LikeWithUser {
+  return {
+    id: like.id,
+    userId: like.userId,
+    factId: like.factId,
+    createdAt: like.createdAt,
+    username: like.user.username,
+    displayName: like.user.displayName,
+    avatarUrl: like.user.avatarUrl,
+    avatarColor: like.user.avatarColor
+  }
+}
+
 export class PrismaLikeRepository implements LikeRepository {
   async findByUserAndFact (userId: string, factId: string): Promise<Like | null> {
     const like = await prisma.like.findUnique({
@@ -44,7 +64,7 @@ export class PrismaLikeRepository implements LikeRepository {
     return mapLike(like)
   }
 
-  async findByFactId (factId: string, params?: BaseQueryParams): Promise<ResultWithPagination<Like>> {
+  async findByFactId (factId: string, params?: BaseQueryParams): Promise<ResultWithPagination<LikeWithUser>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
@@ -53,12 +73,15 @@ export class PrismaLikeRepository implements LikeRepository {
         where: { factId },
         orderBy: buildOrderBy(params?.order_by, params?.order_dir),
         skip,
-        take
+        take,
+        include: {
+          user: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
       }),
       prisma.like.count({ where: { factId } })
     ])
 
-    return buildPaginatedResult(likes.map(mapLike), total, page, limit)
+    return buildPaginatedResult(likes.map(mapLikeWithUser), total, page, limit)
   }
 
   async findByUserId (userId: string, params?: BaseQueryParams): Promise<ResultWithPagination<Like>> {
