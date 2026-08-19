@@ -4713,6 +4713,8 @@ paths:
       operationId: getFactLikes
       tags:
         - Likes
+      security:
+        - bearerAuth: []
       parameters:
         - schema:
             type: string
@@ -4801,6 +4803,8 @@ paths:
                   - page
                   - limit
                   - nextPage
+        '401':
+          description: Authentication required
   /users/{userId}/likes:
     get:
       summary: Get all likes by a user

@@ -479,6 +479,7 @@ registry.registerPath({
   summary: 'Get all likes for a fact',
   operationId: 'getFactLikes',
   tags: ['Likes'],
+  security: [{ bearerAuth: [] }],
   request: {
     params: z.object({ factId: z.string().uuid() }),
     query: ListQuerySchema
@@ -487,7 +488,8 @@ registry.registerPath({
     200: {
       description: 'Paginated list of likes for a fact, enriched with the user preview',
       content: { 'application/json': { schema: PaginatedLikePreviewResponseSchema } }
-    }
+    },
+    401: { description: 'Authentication required' }
   }
 })
 
