@@ -568,10 +568,11 @@ components:
       properties:
         username:
           type: string
-          pattern: ^[a-zA-Z0-9_]{3,30}$
+          pattern: ^[a-zA-Z0-9_.]{3,30}$
         displayName:
           type: string
           minLength: 1
+          maxLength: 50
         avatarUrl:
           type: string
           format: uri
@@ -589,7 +590,7 @@ components:
           format: email
         password:
           type: string
-          minLength: 1
+          minLength: 6
       required:
         - secret
         - email
@@ -607,6 +608,7 @@ components:
         displayName:
           type: string
           minLength: 1
+          maxLength: 50
         avatarUrl:
           type: string
         avatarColor:
@@ -707,6 +709,7 @@ components:
           nullable: true
         color:
           type: string
+          nullable: true
       required:
         - id
         - url
@@ -717,10 +720,11 @@ components:
         title:
           type: string
           nullable: true
+          maxLength: 100
         content:
           type: string
           minLength: 10
-          maxLength: 200
+          maxLength: 1000
       required:
         - content
     UpdateFactRequest:
@@ -729,10 +733,11 @@ components:
         title:
           type: string
           nullable: true
+          maxLength: 100
         content:
           type: string
           minLength: 10
-          maxLength: 200
+          maxLength: 1000
     HashtagPreview:
       type: object
       properties:
@@ -926,6 +931,32 @@ components:
         - userId
         - factId
         - createdAt
+    LikePreview:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        displayName:
+          type: string
+        avatarUrl:
+          type: string
+          nullable: true
+        avatarColor:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - displayName
+        - avatarUrl
+        - avatarColor
+        - createdAt
     PaginatedLikeResponse:
       type: object
       properties:
@@ -949,6 +980,49 @@ components:
               - id
               - userId
               - factId
+              - createdAt
+        page:
+          type: integer
+        limit:
+          type: integer
+        nextPage:
+          type: integer
+          nullable: true
+      required:
+        - results
+        - page
+        - limit
+        - nextPage
+    PaginatedLikePreviewResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              username:
+                type: string
+              displayName:
+                type: string
+              avatarUrl:
+                type: string
+                nullable: true
+              avatarColor:
+                type: string
+                nullable: true
+              createdAt:
+                type: string
+                format: date-time
+            required:
+              - id
+              - username
+              - displayName
+              - avatarUrl
+              - avatarColor
               - createdAt
         page:
           type: integer
@@ -1167,10 +1241,11 @@ paths:
               properties:
                 username:
                   type: string
-                  pattern: ^[a-zA-Z0-9_]{3,30}$
+                  pattern: ^[a-zA-Z0-9_.]{3,30}$
                 displayName:
                   type: string
                   minLength: 1
+                  maxLength: 50
                 avatarUrl:
                   type: string
                   format: uri
@@ -1599,6 +1674,7 @@ paths:
                 displayName:
                   type: string
                   minLength: 1
+                  maxLength: 50
                 avatarUrl:
                   type: string
                 avatarColor:
@@ -2104,6 +2180,7 @@ paths:
         - schema:
             type: string
             minLength: 1
+            pattern: ^[a-zA-Z0-9_.]{3,30}$
           required: true
           name: username
           in: query
@@ -2273,6 +2350,7 @@ paths:
                       nullable: true
                     color:
                       type: string
+                      nullable: true
                   required:
                     - id
                     - url
@@ -2286,6 +2364,7 @@ paths:
       parameters:
         - schema:
             type: string
+            pattern: ^[a-zA-Z0-9_.]{3,30}$
           required: true
           name: username
           in: path
@@ -2514,10 +2593,11 @@ paths:
                 title:
                   type: string
                   nullable: true
+                  maxLength: 100
                 content:
                   type: string
                   minLength: 10
-                  maxLength: 200
+                  maxLength: 1000
               required:
                 - content
       responses:
@@ -3383,10 +3463,11 @@ paths:
                 title:
                   type: string
                   nullable: true
+                  maxLength: 100
                 content:
                   type: string
                   minLength: 10
-                  maxLength: 200
+                  maxLength: 1000
       responses:
         '200':
           description: Fact updated
@@ -4674,7 +4755,7 @@ paths:
           in: query
       responses:
         '200':
-          description: Paginated list of likes for a fact
+          description: Paginated list of likes for a fact, enriched with the user preview
           content:
             application/json:
               schema:
@@ -4688,18 +4769,25 @@ paths:
                         id:
                           type: string
                           format: uuid
-                        userId:
+                        username:
                           type: string
-                        factId:
+                        displayName:
                           type: string
-                          format: uuid
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
                         createdAt:
                           type: string
                           format: date-time
                       required:
                         - id
-                        - userId
-                        - factId
+                        - username
+                        - displayName
+                        - avatarUrl
+                        - avatarColor
                         - createdAt
                   page:
                     type: integer
