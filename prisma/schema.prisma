@@ -18,6 +18,7 @@ model User {
 
   facts Fact[]
   likes Like[]
+  comments Comment[]
 
   @@map("users")
 }
@@ -42,6 +43,7 @@ model Fact {
 
   likes         Like[]
   factHashtags FactHashtag[]
+  comments     Comment[]
 
   @@map("facts")
 }
@@ -76,4 +78,23 @@ model Like {
 
   @@unique([userId, factId])
   @@map("likes")
+}
+
+model Comment {
+  id              String    @id @default(uuid())
+  content         String
+  factId          String    @map("fact_id")
+  authorId        String    @map("author_id")
+  parentCommentId String?   @map("parent_comment_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  fact    Fact      @relation(fields: [factId], references: [id], onDelete: Cascade)
+  author  User      @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([factId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("comments")
 }
