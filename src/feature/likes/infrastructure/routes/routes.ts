@@ -50,7 +50,7 @@ router.delete('/facts/:factId/likes', requireAuth, requireProfile, async (req: R
   }
 })
 
-router.get('/facts/:factId/likes', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/facts/:factId/likes', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
