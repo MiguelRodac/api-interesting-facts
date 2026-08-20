@@ -5,6 +5,7 @@ import { PrismaCommentRepository } from '../repositories/PrismaCommentRepository
 import { PrismaFactRepository } from '../../../facts/infrastructure/repositories/PrismaFactRepository'
 import { CreateComment } from '../../application/use-cases/CreateComment'
 import { DeleteComment } from '../../application/use-cases/DeleteComment'
+import { UpdateComment } from '../../application/use-cases/UpdateComment'
 import { GetCommentsByFact } from '../../application/use-cases/GetCommentsByFact'
 import { GetCommentsByUser } from '../../application/use-cases/GetCommentsByUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
@@ -23,11 +24,16 @@ const CreateCommentBodySchema = z.object({
   parentCommentId: z.string().uuid().optional()
 })
 
+const UpdateCommentBodySchema = z.object({
+  content: z.string()
+})
+
 const router = Router()
 const commentRepository = new PrismaCommentRepository()
 const factRepository = new PrismaFactRepository()
 const createComment = new CreateComment(commentRepository, factRepository)
 const deleteComment = new DeleteComment(commentRepository)
+const updateComment = new UpdateComment(commentRepository)
 const getCommentsByFact = new GetCommentsByFact(commentRepository, factRepository)
 const getCommentsByUser = new GetCommentsByUser(commentRepository)
 
@@ -51,6 +57,19 @@ router.delete('/comments/:id', requireAuth, requireProfile, async (req: Request,
 
     await deleteComment.execute(id, authorId)
     res.status(204).send()
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.patch('/comments/:id', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { content } = UpdateCommentBodySchema.parse(req.body)
+    const id = req.params.id as string
+    const authorId = req.user?.uid as string
+
+    const updated = await updateComment.execute(id, authorId, content)
+    res.status(200).json(updated)
   } catch (err) {
     next(err)
   }

@@ -18,5 +18,6 @@ export interface CommentResponse {
   factId?: string
   createdAt: string
   updatedAt: string
+  edited: boolean
   replies?: CommentResponse[]
 }

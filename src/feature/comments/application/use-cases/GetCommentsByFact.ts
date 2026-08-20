@@ -18,6 +18,7 @@ function mapCommentWithAuthor (comment: CommentWithAuthor, includeFactId: boolea
     ...(includeFactId && { factId: comment.factId }),
     createdAt: comment.createdAt.toISOString(),
     updatedAt: comment.updatedAt.toISOString(),
+    edited: comment.updatedAt.getTime() !== comment.createdAt.getTime(),
     ...(comment.replies != null && { replies: comment.replies.map(r => mapCommentWithAuthor(r, includeFactId)) })
   }
 }
