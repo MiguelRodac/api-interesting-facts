@@ -16,6 +16,7 @@ module.exports = {
     '@likes/(.*)': '<rootDir>/src/feature/likes/$1',
     '@comments/(.*)': '<rootDir>/src/feature/comments/$1',
     '@reposts/(.*)': '<rootDir>/src/feature/reposts/$1',
+    '@commentLikes/(.*)': '<rootDir>/src/feature/commentLikes/$1',
     '@user/(.*)': '<rootDir>/src/feature/user/$1',
     '@avatar/(.*)': '<rootDir>/src/feature/avatar/$1',
     '@hashtag/(.*)': '<rootDir>/src/feature/hashtag/$1'

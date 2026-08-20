@@ -35,6 +35,7 @@
       "@likes/*": ["feature/likes/*"],
       "@comments/*": ["feature/comments/*"],
       "@reposts/*": ["feature/reposts/*"],
+      "@commentLikes/*": ["feature/commentLikes/*"],
       "@user/*": ["feature/user/*"],
       "@avatar/*": ["feature/avatar/*"],
       "@hashtag/*": ["feature/hashtag/*"]

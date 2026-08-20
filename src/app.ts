@@ -10,6 +10,7 @@ import userPublicRoutes from '@user/infrastructure/routes/publicRoutes'
 import factRoutes from '@fact/infrastructure/routes/routes'
 import likeRoutes from '@likes/infrastructure/routes/routes'
 import commentRoutes from '@comments/infrastructure/routes/routes'
+import commentLikeRoutes from '@commentLikes/infrastructure/routes/routes'
 import repostRoutes from '@reposts/infrastructure/routes/routes'
 import hashtagRoutes from '@hashtag/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
@@ -161,6 +162,9 @@ app.use('/', likeRoutes)
 
 // Mount comment routes
 app.use('/', commentRoutes)
+
+// Mount comment-like routes
+app.use('/', commentLikeRoutes)
 
 // Mount repost routes
 app.use('/', repostRoutes)
