@@ -222,6 +222,132 @@ describe('Comments Endpoints', () => {
 
       expect(res.status).toBe(401)
     })
+
+    it('should block deletion when another user has replied', async () => {
+      const factId = await getTestFactId()
+      const topLevel = await createComment(factId)
+      const otherReply = await prisma.comment.create({
+        data: { content: 'Reply from another user', factId, authorId: 'other-uid', parentCommentId: topLevel.id }
+      })
+
+      const res = await request(app)
+        .delete(`/comments/${topLevel.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(403)
+      expect(res.body.error_code).toBe('DELETE_BLOCKED_HAS_REPLIES')
+
+      const keptTopLevel = await prisma.comment.findUnique({ where: { id: topLevel.id } })
+      expect(keptTopLevel).not.toBeNull()
+      const keptReply = await prisma.comment.findUnique({ where: { id: otherReply.id } })
+      expect(keptReply).not.toBeNull()
+    })
+  })
+
+  describe('PATCH /comments/:id', () => {
+    it('should update own comment within the edit window', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId, 'Original comment content')
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ content: 'This is the updated comment content' })
+
+      expect(res.status).toBe(200)
+      expect(res.body.content).toBe('This is the updated comment content')
+      expect(res.body.edited).toBe(true)
+    })
+
+    it('should be idempotent when content is unchanged', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId, 'This comment stays the same')
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ content: 'This comment stays the same' })
+
+      expect(res.status).toBe(200)
+      expect(res.body.content).toBe('This comment stays the same')
+      expect(res.body.edited).toBe(false)
+    })
+
+    it('should return 403 when the edit window has expired', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId, 'This comment is older than an hour')
+      await prisma.comment.update({
+        where: { id: comment.id },
+        data: { createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000) }
+      })
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ content: 'This update is now too late' })
+
+      expect(res.status).toBe(403)
+      expect(res.body.error_code).toBe('EDIT_WINDOW_EXPIRED')
+    })
+
+    it('should return 403 when not the author', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId)
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${otherToken}`)
+        .send({ content: 'Someone elses attempt to edit' })
+
+      expect(res.status).toBe(403)
+      expect(res.body.error_code).toBe('FORBIDDEN')
+    })
+
+    it('should return 401 when not authenticated', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId)
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .send({ content: 'No token edit attempt' })
+
+      expect(res.status).toBe(401)
+    })
+
+    it('should return 403 when user has no profile', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId)
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${noProfileToken}`)
+        .send({ content: 'No profile edit attempt' })
+
+      expect(res.status).toBe(403)
+    })
+
+    it('should return 404 for non-existent comment', async () => {
+      const res = await request(app)
+        .patch('/comments/00000000-0000-0000-0000-000000000000')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ content: 'Edit a comment that does not exist' })
+
+      expect(res.status).toBe(404)
+      expect(res.body.error_code).toBe('RESOURCE_NOT_FOUND')
+    })
+
+    it('should return 422 for invalid mentions', async () => {
+      const factId = await getTestFactId()
+      const comment = await createComment(factId)
+
+      const res = await request(app)
+        .patch(`/comments/${comment.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ content: 'This content mentions an invalid @x!' })
+
+      expect(res.status).toBe(422)
+      expect(res.body.error_code).toBe('VALIDATION_ERROR')
+    })
   })
 
   describe('GET /facts/:factId/comments', () => {
