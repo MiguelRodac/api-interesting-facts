@@ -25,6 +25,9 @@ export interface FactResponse {
   likeBy: UserAvatarPreview[]
   comments: number
   commentsDetails: CommentPreview | null
+  repostCount: number
+  repostedByMe?: boolean
+  repostBy: UserAvatarPreview[]
   hashtags: HashtagPreview[]
   createdAt: string
   updatedAt: string

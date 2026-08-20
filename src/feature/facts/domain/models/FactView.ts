@@ -16,6 +16,9 @@ export interface FactView {
   likeBy: UserAvatarPreview[]
   comments: number
   commentsDetails: CommentPreview | null
+  repostCount: number
+  repostedByMe?: boolean
+  repostBy: UserAvatarPreview[]
   hashtags: Array<{ id: string, tag: string }>
   createdAt: Date
   updatedAt: Date

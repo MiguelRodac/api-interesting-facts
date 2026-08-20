@@ -23,6 +23,9 @@ export class SearchPosts {
       likeBy: fact.likeBy,
       comments: fact.comments,
       commentsDetails: fact.commentsDetails,
+      repostCount: fact.repostCount,
+      repostedByMe: fact.repostedByMe,
+      repostBy: fact.repostBy,
       hashtags: fact.hashtags,
       createdAt: fact.createdAt.toISOString(),
       updatedAt: fact.updatedAt.toISOString()
@@ -43,6 +46,9 @@ export class SearchPosts {
       likeBy: fact.likeBy,
       comments: fact.comments,
       commentsDetails: fact.commentsDetails,
+      repostCount: fact.repostCount,
+      repostedByMe: fact.repostedByMe,
+      repostBy: fact.repostBy,
       hashtags: fact.hashtags,
       createdAt: fact.createdAt.toISOString(),
       updatedAt: fact.updatedAt.toISOString()
@@ -63,6 +69,9 @@ export class SearchPosts {
       likeBy: fact.likeBy,
       comments: fact.comments,
       commentsDetails: fact.commentsDetails,
+      repostCount: fact.repostCount,
+      repostedByMe: fact.repostedByMe,
+      repostBy: fact.repostBy,
       hashtags: fact.hashtags,
       createdAt: fact.createdAt.toISOString(),
       updatedAt: fact.updatedAt.toISOString()

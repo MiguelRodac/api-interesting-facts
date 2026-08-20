@@ -173,13 +173,57 @@ async function batchFirstComment (factIds: string[]): Promise<Map<string, Commen
   return result
 }
 
+async function batchRepostCounts (factIds: string[]): Promise<Map<string, number>> {
+  if (factIds.length === 0) return new Map()
+  const rows = await prisma.repost.groupBy({
+    by: ['originalFactId'],
+    _count: { originalFactId: true },
+    where: { originalFactId: { in: factIds } }
+  })
+  return new Map(rows.map(r => [r.originalFactId, r._count.originalFactId]))
+}
+
+async function batchRecentReposters (factIds: string[], limit: number = 2): Promise<Map<string, UserAvatarPreview[]>> {
+  if (factIds.length === 0) return new Map()
+  const reposts = await prisma.repost.findMany({
+    where: { originalFactId: { in: factIds } },
+    orderBy: [{ originalFactId: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+    include: { author: { select: { username: true, avatarUrl: true, avatarColor: true } } }
+  })
+  const result = new Map<string, UserAvatarPreview[]>()
+  for (const repost of reposts) {
+    const arr = result.get(repost.originalFactId) ?? []
+    if (arr.length < limit) {
+      arr.push({
+        username: repost.author.username,
+        avatarUrl: repost.author.avatarUrl,
+        avatarColor: repost.author.avatarColor
+      })
+      result.set(repost.originalFactId, arr)
+    }
+  }
+  return result
+}
+
+async function batchViewerRepostedSet (factIds: string[], viewerId: string): Promise<Set<string>> {
+  if (factIds.length === 0) return new Set()
+  const userReposts = await prisma.repost.findMany({
+    where: { originalFactId: { in: factIds }, authorId: viewerId },
+    select: { originalFactId: true }
+  })
+  return new Set(userReposts.map(r => r.originalFactId))
+}
+
 function enrichFact (
   fact: { id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date },
   likeCountMap: Map<string, number>,
   commentCountMap: Map<string, number>,
   likeByMap: Map<string, UserAvatarPreview[]>,
   commentsDetailsMap: Map<string, CommentPreview | null>,
+  repostCountMap: Map<string, number>,
+  repostByMap: Map<string, UserAvatarPreview[]>,
   viewerLikedSet: Set<string> | null,
+  viewerRepostedSet: Set<string> | null,
   viewerId: string | null,
   hashtags: Array<{ id: string, tag: string }> = []
 ): FactView {
@@ -200,12 +244,18 @@ function enrichFact (
     likeBy: likeByMap.get(fact.id) ?? [],
     comments: commentCountMap.get(fact.id) ?? 0,
     commentsDetails: commentsDetailsMap.get(fact.id) ?? null,
+    repostCount: repostCountMap.get(fact.id) ?? 0,
+    repostBy: repostByMap.get(fact.id) ?? [],
     hashtags,
     createdAt: fact.createdAt,
     updatedAt: fact.updatedAt
   }
-  if (viewerId !== null && viewerLikedSet !== null) {
-    return { ...base, liked: viewerLikedSet.has(fact.id) }
+  if (viewerId !== null && viewerLikedSet !== null && viewerRepostedSet !== null) {
+    return {
+      ...base,
+      liked: viewerLikedSet.has(fact.id),
+      repostedByMe: viewerRepostedSet.has(fact.id)
+    }
   }
   return base
 }
@@ -216,12 +266,25 @@ async function enrichFacts (
   commentCountMap: Map<string, number>,
   likeByMap: Map<string, UserAvatarPreview[]>,
   commentsDetailsMap: Map<string, CommentPreview | null>,
+  repostCountMap: Map<string, number>,
+  repostByMap: Map<string, UserAvatarPreview[]>,
   viewerId: string | null,
   hashtagsMap: Map<string, Array<{ id: string, tag: string }>>
 ): Promise<FactView[]> {
   if (facts.length === 0) return []
-  const viewerLikedSet = viewerId !== null ? await batchUserLikes(facts.map(f => f.id), viewerId) : null
-  return facts.map(f => enrichFact(f, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerLikedSet, viewerId, hashtagsMap.get(f.id) ?? []))
+  const factIds = facts.map(f => f.id)
+  const [viewerLikedSet, viewerRepostedSet] = viewerId !== null
+    ? await Promise.all([
+        batchUserLikes(factIds, viewerId),
+        batchViewerRepostedSet(factIds, viewerId)
+      ])
+    : [null, null]
+  return facts.map(f => enrichFact(
+    f, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap,
+    repostCountMap, repostByMap,
+    viewerLikedSet, viewerRepostedSet, viewerId,
+    hashtagsMap.get(f.id) ?? []
+  ))
 }
 
 export class PrismaFactRepository implements FactRepository {
@@ -235,12 +298,15 @@ export class PrismaFactRepository implements FactRepository {
 
     if (fact == null) return null
 
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerLikedSet, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerLikedSet, viewerRepostedSet, hashtagsMap] = await Promise.all([
       batchLikeCounts([id]),
       batchCommentCounts([id]),
       batchRecentLikers([id], 2),
       batchFirstComment([id]),
+      batchRepostCounts([id]),
+      batchRecentReposters([id], 2),
       viewerId !== undefined ? batchUserLikes([id], viewerId) : null,
+      viewerId !== undefined ? batchViewerRepostedSet([id], viewerId) : null,
       batchHashtags([id])
     ])
 
@@ -250,7 +316,10 @@ export class PrismaFactRepository implements FactRepository {
       commentCountMap,
       likeByMap,
       commentsDetailsMap,
+      repostCountMap,
+      repostByMap,
       viewerLikedSet,
+      viewerRepostedSet,
       viewerId ?? null,
       hashtagsMap.get(id) ?? []
     )
@@ -285,14 +354,16 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const factIds = facts.map(f => f.id)
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 2),
       batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
     ])
-    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerId ?? null, hashtagsMap)
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
@@ -325,14 +396,16 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const factIds = facts.map(f => f.id)
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 2),
       batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
     ])
-    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerId ?? null, hashtagsMap)
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
@@ -369,14 +442,16 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const factIds = facts.map(f => f.id)
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 2),
       batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
     ])
-    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerId ?? null, hashtagsMap)
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
@@ -429,14 +504,16 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const factIds = facts.map(f => f.id)
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 2),
       batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
     ])
-    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerId ?? null, hashtagsMap)
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
@@ -521,14 +598,16 @@ export class PrismaFactRepository implements FactRepository {
     }
 
     const factIds = facts.map(f => f.id)
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 2),
       batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
     ])
-    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerId ?? null, hashtagsMap)
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }
@@ -586,14 +665,16 @@ export class PrismaFactRepository implements FactRepository {
       return buildPaginatedResult([], total, page, limit)
     }
 
-    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, hashtagsMap] = await Promise.all([
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 2),
       batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
     ])
-    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, viewerId ?? null, hashtagsMap)
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
 
     return buildPaginatedResult(enriched, total, page, limit)
   }

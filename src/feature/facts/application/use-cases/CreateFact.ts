@@ -61,6 +61,9 @@ export class CreateFact {
       likeBy: enrichedFact.likeBy,
       comments: enrichedFact.comments,
       commentsDetails: enrichedFact.commentsDetails,
+      repostCount: enrichedFact.repostCount,
+      repostedByMe: enrichedFact.repostedByMe,
+      repostBy: enrichedFact.repostBy,
       hashtags,
       createdAt: enrichedFact.createdAt.toISOString(),
       updatedAt: enrichedFact.updatedAt.toISOString()
