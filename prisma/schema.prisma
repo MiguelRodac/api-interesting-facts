@@ -94,7 +94,8 @@ model Comment {
   parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   replies Comment[] @relation("CommentReplies")
 
-  @@index([factId, createdAt(sort: Desc)])
   @@index([authorId, createdAt(sort: Desc)])
+  @@index([factId, createdAt(sort: Desc)])
+  @@index([parentCommentId, authorId])
   @@map("comments")
 }
