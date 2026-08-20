@@ -37,6 +37,8 @@ const TEST_UIDS = [
 afterEach(async () => {
   // Cleanup ONLY data created by tests (filtered by test UIDs).
   // Never touch rows belonging to real users.
+  // Reposts reference facts, so delete them before facts/users.
+  await prisma.repost.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
   await prisma.comment.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
   await prisma.like.deleteMany({ where: { userId: { in: TEST_UIDS } } })
   await prisma.fact.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
