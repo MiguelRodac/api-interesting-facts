@@ -19,6 +19,7 @@ model User {
   facts Fact[]
   likes Like[]
   comments Comment[]
+  reposts Repost[]
 
   @@map("users")
 }
@@ -44,6 +45,7 @@ model Fact {
   likes         Like[]
   factHashtags FactHashtag[]
   comments     Comment[]
+  reposts      Repost[]
 
   @@map("facts")
 }
@@ -98,4 +100,19 @@ model Comment {
   @@index([factId, createdAt(sort: Desc)])
   @@index([parentCommentId, authorId])
   @@map("comments")
+}
+
+model Repost {
+  id             String   @id @default(uuid())
+  originalFactId String   @map("original_fact_id")
+  authorId       String   @map("author_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  originalFact Fact @relation(fields: [originalFactId], references: [id], onDelete: Cascade)
+  author       User @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+
+  @@unique([authorId, originalFactId])
+  @@index([originalFactId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("reposts")
 }
