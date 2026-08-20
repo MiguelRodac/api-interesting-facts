@@ -438,4 +438,136 @@ describe('Facts Endpoints', () => {
       await prisma.hashtag.deleteMany({ where: { tag: 'enrichmenttag' } })
     })
   })
+
+  describe('FactResponse enrichment — reposts', () => {
+    // Seeds a fact by test-uid with 2 reposts (test-uid, other-uid),
+    // delivering repostCount === 2 and repostBy.length === 2.
+    const seedFact = async (): Promise<{ id: string }> => {
+      const fact = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Per path repost enrichment fact body' }
+      })
+      await prisma.repost.createMany({
+        data: [
+          { authorId: 'test-uid', originalFactId: fact.id },
+          { authorId: 'other-uid', originalFactId: fact.id }
+        ]
+      })
+      return fact
+    }
+
+    const assertRepostEnrichment = (fact: { repostCount: number, repostBy: unknown[] }): void => {
+      expect(fact.repostCount).toBe(2)
+      expect(fact.repostBy).toHaveLength(2)
+    }
+
+    it('findById — GET /facts/:id (anonymous)', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get(`/facts/${fact.id}`)
+
+      expect(res.status).toBe(200)
+      assertRepostEnrichment(res.body)
+      expect(res.body.repostedByMe).toBeUndefined()
+      expect(res.body.liked).toBeUndefined()
+    })
+
+    it('findByAuthorId — GET /facts/author/:authorId (anonymous)', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get('/facts/author/test-uid')
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertRepostEnrichment(found)
+      expect(found.repostedByMe).toBeUndefined()
+      expect(found.liked).toBeUndefined()
+    })
+
+    it('findAll — GET /facts (anonymous)', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get('/facts')
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertRepostEnrichment(found)
+      expect(found.repostedByMe).toBeUndefined()
+      expect(found.liked).toBeUndefined()
+    })
+
+    it('findPopular — GET /facts/popular (anonymous)', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app).get('/facts/popular')
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertRepostEnrichment(found)
+      expect(found.repostedByMe).toBeUndefined()
+      expect(found.liked).toBeUndefined()
+    })
+
+    it('findByTitleOrHashtag — GET /facts/search (authed)', async () => {
+      const fact = await prisma.fact.create({
+        data: { authorId: 'test-uid', content: 'Repost title search body', title: 'Repost Per Path Title' }
+      })
+      await prisma.repost.createMany({
+        data: [
+          { authorId: 'test-uid', originalFactId: fact.id },
+          { authorId: 'other-uid', originalFactId: fact.id }
+        ]
+      })
+
+      const res = await request(app)
+        .get('/facts/search?q=Repost%20Per%20Path%20Title&limit=100')
+        .set('Authorization', `Bearer ${otherToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertRepostEnrichment(found)
+      expect(found.repostedByMe).toBe(true)
+    })
+
+    it('findByAuthorOrMention — GET /facts/search (authed)', async () => {
+      const fact = await seedFact()
+
+      const res = await request(app)
+        .get('/facts/search?q=%40testauthor&limit=100')
+        .set('Authorization', `Bearer ${otherToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertRepostEnrichment(found)
+      expect(found.repostedByMe).toBe(true)
+    })
+
+    it('findByHashtag — GET /facts/search (authed)', async () => {
+      const fact = await seedFact()
+      const hashtag = await prisma.hashtag.upsert({
+        where: { tag: 'repostenrichmenttag' },
+        update: {},
+        create: { tag: 'repostenrichmenttag' }
+      })
+      await prisma.factHashtag.create({ data: { factId: fact.id, hashtagId: hashtag.id } })
+
+      const res = await request(app)
+        .get('/facts/search?q=%23repostenrichmenttag&limit=100')
+        .set('Authorization', `Bearer ${otherToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      expect(found).toBeDefined()
+      assertRepostEnrichment(found)
+      expect(found.repostedByMe).toBe(true)
+
+      // Clean up the test-created hashtag fixture so it doesn't persist in the DB.
+      await prisma.factHashtag.deleteMany({ where: { hashtagId: hashtag.id } })
+      await prisma.hashtag.deleteMany({ where: { tag: 'repostenrichmenttag' } })
+    })
+  })
 })
