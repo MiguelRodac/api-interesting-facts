@@ -18,6 +18,8 @@ import {
   LikeResponseSchema,
   PaginatedLikeResponseSchema,
   PaginatedLikePreviewResponseSchema,
+  RepostResponseSchema,
+  PaginatedRepostPreviewResponseSchema,
   CommentResponseSchema,
   CreateCommentRequestSchema,
   UpdateCommentRequestSchema,
@@ -512,6 +514,69 @@ registry.registerPath({
     200: {
       description: 'Paginated list of likes by user',
       content: { 'application/json': { schema: PaginatedLikeResponseSchema } }
+    },
+    401: { description: 'Authentication required' }
+  }
+})
+
+// ── Reposts ────────────────────────────────────────────────────────────────
+
+registry.registerPath({
+  method: 'post',
+  path: '/facts/{factId}/reposts',
+  summary: 'Repost a fact',
+  operationId: 'repostFact',
+  tags: ['Reposts'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ factId: z.string().uuid() })
+  },
+  responses: {
+    201: {
+      description: 'Repost created',
+      content: { 'application/json': { schema: RepostResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse
+  }
+})
+
+registry.registerPath({
+  method: 'delete',
+  path: '/facts/{factId}/reposts',
+  summary: 'Remove own repost',
+  operationId: 'unrepostFact',
+  tags: ['Reposts'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ factId: z.string().uuid() })
+  },
+  responses: {
+    204: { description: 'Repost removed' },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/facts/{factId}/reposts',
+  summary: 'Get all reposts for a fact',
+  operationId: 'getFactReposts',
+  tags: ['Reposts'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ factId: z.string().uuid() }),
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Paginated list of reposts for a fact, enriched with the user preview',
+      content: { 'application/json': { schema: PaginatedRepostPreviewResponseSchema } }
     },
     401: { description: 'Authentication required' }
   }

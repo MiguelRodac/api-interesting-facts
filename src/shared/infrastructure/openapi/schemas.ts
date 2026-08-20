@@ -265,6 +265,9 @@ export const FactResponseSchema = z.object({
   likeBy: z.array(UserAvatarPreviewSchema).max(2),
   comments: z.number().int(),
   commentsDetails: CommentPreviewSchema.nullable(),
+  repostCount: z.number().int(),
+  repostedByMe: z.boolean().optional(),
+  repostBy: z.array(UserAvatarPreviewSchema).max(2),
   hashtags: z.array(HashtagPreviewSchema),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime()
@@ -320,6 +323,35 @@ registry.register('LikeResponse', LikeResponseSchema)
 registry.register('LikePreview', LikePreviewSchema)
 registry.register('PaginatedLikeResponse', PaginatedLikeResponseSchema)
 registry.register('PaginatedLikePreviewResponse', PaginatedLikePreviewResponseSchema)
+
+// ── Repost ──────────────────────────────────────────────────────────────────
+
+export const RepostResponseSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string(),
+  factId: z.string().uuid(),
+  createdAt: z.string().datetime()
+})
+
+export const RepostPreviewSchema = z.object({
+  id: z.string().uuid(),
+  username: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  avatarColor: z.string().nullable(),
+  createdAt: z.string().datetime()
+})
+
+export const PaginatedRepostPreviewResponseSchema = z.object({
+  results: z.array(RepostPreviewSchema),
+  page: z.number().int(),
+  limit: z.number().int(),
+  nextPage: z.number().int().nullable()
+})
+
+registry.register('RepostResponse', RepostResponseSchema)
+registry.register('RepostPreview', RepostPreviewSchema)
+registry.register('PaginatedRepostPreviewResponse', PaginatedRepostPreviewResponseSchema)
 
 // ── Comment ────────────────────────────────────────────────────────────────
 
