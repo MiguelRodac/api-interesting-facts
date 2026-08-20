@@ -29,4 +29,4 @@ openspec/
 
 # Postman local overrides
 docs/postman/*.local.json
-docs/API_GUIDE.md
+docs/frontend-handoff.md

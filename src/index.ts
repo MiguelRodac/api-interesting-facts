@@ -2,7 +2,7 @@ import * as Sentry from '@sentry/node'
 import app from './app'
 import config from './shared/infrastructure/config'
 import { logger } from './shared/infrastructure/logger'
-import { banner } from './shared/infrastructure/banner'
+import { renderBanner } from './shared/infrastructure/banner'
 import { resetIdleTimer, startKeepAlive, stopKeepAlive } from './shared/infrastructure/keepAlive'
 
 // Initialize Sentry before anything else — captures all errors from startup onwards
@@ -21,7 +21,8 @@ app.use((_req, _res, next) => {
   next()
 })
 
-console.log(banner)
+const resolvedVersion = process.env.version ?? '0.0.1'
+console.log(renderBanner(resolvedVersion))
 
 const server = app.listen(config.port, () => {
   logger.info(`Server is running on port ${config.port}`)

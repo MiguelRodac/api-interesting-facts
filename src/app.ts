@@ -16,6 +16,8 @@ import { httpLogger } from '@shared/infrastructure/logger/pino-http'
 import prisma from '@shared/infrastructure/prisma'
 import { renderPingHtml } from '@shared/infrastructure/views/pingHtml'
 
+const faviconSvg = readFileSync(join(__dirname, 'shared/infrastructure/views/favicon.svg'), 'utf-8')
+
 const app = express()
 
 // Trust Vercel's proxy to get real client IP
@@ -80,10 +82,13 @@ app.get('/ping', async (req, res) => {
   const prefersHtml = accept.includes('text/html')
 
   let dbStatus: 'ok' | 'error' = 'ok'
+  let dbLatencyMs: number | null = null
   try {
-    await prisma.$queryRaw<[{ now: Date }]>`
+    const started = Date.now()
+    await prisma.$queryRaw<[{ result: number }]>`
       SELECT 1 AS result
     `
+    dbLatencyMs = Date.now() - started
   } catch {
     dbStatus = 'error'
   }
@@ -92,12 +97,16 @@ app.get('/ping', async (req, res) => {
   const now = new Date().toISOString()
   const uptimeSeconds = Math.round(process.uptime())
   const version = process.env.npm_package_version ?? '0.0.1'
+  const environment = process.env.NODE_ENV ?? 'development'
 
   const payload = {
     status: 'ok',
     timestamp: now,
     uptimeSeconds,
+    environment,
     database: dbStatus,
+    dbLatencyMs,
+    version,
     documentation: `${baseUrl}/api/docs`
   }
 
@@ -106,7 +115,6 @@ app.get('/ping', async (req, res) => {
     res.status(200).send(renderPingHtml({
       dbOk: dbStatus === 'ok',
       uptimeSeconds,
-      timestamp: now,
       baseUrl,
       version
     }))
@@ -120,9 +128,20 @@ app.get('/ping', async (req, res) => {
 // Scalar API docs (open, no auth)
 const openApiSpec = readFileSync(join(__dirname, '../docs/openapi.yaml'), 'utf-8')
 
+// Serve the favicon (used by Scalar docs page and the ping HTML page)
+app.get('/favicon.svg', (_req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml')
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+  res.status(200).send(faviconSvg)
+})
+
 app.use(
   '/api/docs',
-  apiReference({ content: openApiSpec })
+  apiReference({
+    content: openApiSpec,
+    favicon: '/favicon.svg',
+    pageTitle: 'Interesting Facts — API Docs'
+  })
 )
 
 // Mount user routes
