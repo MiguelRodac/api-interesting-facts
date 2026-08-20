@@ -105,6 +105,14 @@ export class PrismaCommentRepository implements CommentRepository {
     return mapComment(comment)
   }
 
+  async update (id: string, data: { content: string }): Promise<Comment> {
+    const comment = await prisma.comment.update({
+      where: { id },
+      data: { content: data.content }
+    })
+    return mapComment(comment)
+  }
+
   async delete (id: string): Promise<void> {
     await prisma.comment.delete({ where: { id } })
   }
@@ -178,6 +186,15 @@ export class PrismaCommentRepository implements CommentRepository {
     ])
 
     return buildPaginatedResult(comments.map(mapCommentWithAuthor), total, page, limit)
+  }
+
+  async countRepliesByParentId (parentId: string, excludeAuthorId: string): Promise<number> {
+    return prisma.comment.count({
+      where: {
+        parentCommentId: parentId,
+        authorId: { not: excludeAuthorId }
+      }
+    })
   }
 
   async countRepliesByParentIds (parentIds: string[]): Promise<Map<string, number>> {

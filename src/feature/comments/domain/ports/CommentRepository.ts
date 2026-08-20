@@ -21,8 +21,10 @@ export interface CommentWithAuthor extends Comment {
 export interface CommentRepository {
   create: (data: CreateCommentData) => Promise<Comment>
   findById: (id: string) => Promise<Comment | null>
+  update: (id: string, data: { content: string }) => Promise<Comment>
   delete: (id: string) => Promise<void>
   findByFactId: (factId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<CommentWithAuthor>>
   findByUserId: (userId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<CommentWithAuthor>>
+  countRepliesByParentId: (parentId: string, excludeAuthorId: string) => Promise<number>
   countRepliesByParentIds: (parentIds: string[]) => Promise<Map<string, number>>
 }
