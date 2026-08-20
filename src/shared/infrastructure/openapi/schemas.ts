@@ -338,6 +338,7 @@ export const CommentResponseSchema: z.ZodType<{
   factId?: string
   createdAt: string
   updatedAt: string
+  edited: boolean
   replies?: unknown[]
 }> = z.object({
   id: z.string().uuid(),
@@ -347,6 +348,7 @@ export const CommentResponseSchema: z.ZodType<{
   factId: z.string().uuid().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
+  edited: z.boolean(),
   // Self-reference via explicit $ref (the installed zod-to-openapi lacks a ZodLazy transformer).
   replies: z.array(z.any()).optional().openapi({
     type: 'array',
@@ -357,6 +359,10 @@ export const CommentResponseSchema: z.ZodType<{
 export const CreateCommentRequestSchema = z.object({
   content: z.string().min(10).max(500),
   parentCommentId: z.string().uuid().optional()
+})
+
+export const UpdateCommentRequestSchema = z.object({
+  content: z.string()
 })
 
 export const PaginatedCommentResponseSchema = z.object({
@@ -371,6 +377,7 @@ registry.register('CommentPreview', CommentPreviewSchema)
 registry.register('CommentAuthorPreview', CommentAuthorPreviewSchema)
 registry.register('CommentResponse', CommentResponseSchema)
 registry.register('CreateCommentRequest', CreateCommentRequestSchema)
+registry.register('UpdateCommentRequest', UpdateCommentRequestSchema)
 registry.register('PaginatedCommentResponse', PaginatedCommentResponseSchema)
 
 // ── Search ──────────────────────────────────────────────────────────────────

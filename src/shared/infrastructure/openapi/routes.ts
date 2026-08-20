@@ -20,6 +20,7 @@ import {
   PaginatedLikePreviewResponseSchema,
   CommentResponseSchema,
   CreateCommentRequestSchema,
+  UpdateCommentRequestSchema,
   PaginatedCommentResponseSchema,
   HashtagWithUsageSchema,
   ValidationErrorSchema,
@@ -558,6 +559,32 @@ registry.registerPath({
     401: unauthorizedResponse,
     403: forbiddenResponse,
     404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'patch',
+  path: '/comments/{id}',
+  summary: 'Update own comment (within 1 hour)',
+  operationId: 'updateComment',
+  tags: ['Comments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ id: z.string().uuid() }),
+    body: {
+      content: { 'application/json': { schema: UpdateCommentRequestSchema } }
+    }
+  },
+  responses: {
+    200: {
+      description: 'Comment updated',
+      content: { 'application/json': { schema: CommentResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    422: validationResponse
   }
 })
 
