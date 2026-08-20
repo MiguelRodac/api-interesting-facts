@@ -15,8 +15,7 @@ import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
 import prisma from '@shared/infrastructure/prisma'
 import { renderPingHtml } from '@shared/infrastructure/views/pingHtml'
-
-const faviconSvg = readFileSync(join(__dirname, 'shared/infrastructure/views/favicon.svg'), 'utf-8')
+import { faviconSvg } from '@shared/infrastructure/views/faviconSvg'
 
 const app = express()
 
