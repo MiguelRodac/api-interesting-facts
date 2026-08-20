@@ -20,6 +20,7 @@ model User {
   likes Like[]
   comments Comment[]
   reposts Repost[]
+  commentLikes CommentLike[]
 
   @@map("users")
 }
@@ -91,10 +92,11 @@ model Comment {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
 
-  fact    Fact      @relation(fields: [factId], references: [id], onDelete: Cascade)
-  author  User      @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
-  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
-  replies Comment[] @relation("CommentReplies")
+  fact         Fact          @relation(fields: [factId], references: [id], onDelete: Cascade)
+  author       User          @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+  parent       Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies      Comment[]     @relation("CommentReplies")
+  commentLikes CommentLike[]
 
   @@index([authorId, createdAt(sort: Desc)])
   @@index([factId, createdAt(sort: Desc)])
@@ -115,4 +117,19 @@ model Repost {
   @@index([originalFactId, createdAt(sort: Desc)])
   @@index([authorId, createdAt(sort: Desc)])
   @@map("reposts")
+}
+
+model CommentLike {
+  id        String   @id @default(uuid())
+  commentId String   @map("comment_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  comment Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [firebaseUid], onDelete: Cascade)
+
+  @@unique([commentId, userId])
+  @@index([commentId, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("comment_likes")
 }
