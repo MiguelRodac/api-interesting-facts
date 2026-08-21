@@ -1,6 +1,7 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type Repost } from '../../domain/entities/Repost'
 import { type RepostWithUser } from '../../domain/models/RepostWithUser'
+import { type RepostWithFact } from '../../domain/models/RepostWithFact'
 import { type RepostRepository } from '../../domain/ports/RepostRepository'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
@@ -52,6 +53,25 @@ function mapRepostWithUser (repost: {
   }
 }
 
+function mapRepostWithFact (repost: {
+  id: string
+  originalFactId: string
+  authorId: string
+  createdAt: Date
+  author: { username: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }
+}): RepostWithFact {
+  return {
+    id: repost.id,
+    originalFactId: repost.originalFactId,
+    authorId: repost.authorId,
+    createdAt: repost.createdAt,
+    username: repost.author.username,
+    displayName: repost.author.displayName,
+    avatarUrl: repost.author.avatarUrl,
+    avatarColor: repost.author.avatarColor
+  }
+}
+
 export class PrismaRepostRepository implements RepostRepository {
   async findByAuthorAndFact (authorId: string, originalFactId: string): Promise<Repost | null> {
     const repost = await prisma.repost.findUnique({
@@ -82,6 +102,45 @@ export class PrismaRepostRepository implements RepostRepository {
     ])
 
     return buildPaginatedResult(reposts.map(mapRepostWithUser), total, page, limit)
+  }
+
+  async findAllWithFact (params?: BaseQueryParams): Promise<ResultWithPagination<RepostWithFact>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const { skip, take } = buildPagination(params)
+    const [reposts, total] = await Promise.all([
+      prisma.repost.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
+      }),
+      prisma.repost.count()
+    ])
+
+    return buildPaginatedResult(reposts.map(mapRepostWithFact), total, page, limit)
+  }
+
+  async findByAuthorWithFact (authorId: string, params?: BaseQueryParams): Promise<ResultWithPagination<RepostWithFact>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const { skip, take } = buildPagination(params)
+    const [reposts, total] = await Promise.all([
+      prisma.repost.findMany({
+        where: { authorId },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
+      }),
+      prisma.repost.count({ where: { authorId } })
+    ])
+
+    return buildPaginatedResult(reposts.map(mapRepostWithFact), total, page, limit)
   }
 
   async create (authorId: string, originalFactId: string): Promise<Repost> {

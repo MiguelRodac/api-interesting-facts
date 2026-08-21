@@ -4,6 +4,7 @@ import { type BaseQueryParams, type ResultWithPagination, type SearchOrderParams
 
 export interface FactRepository {
   findById: (id: string, viewerId?: string) => Promise<FactView | null>
+  findByIds: (ids: string[], viewerId?: string) => Promise<FactView[]>
   findByAuthorId: (authorId: string, params?: BaseQueryParams, viewerId?: string) => Promise<ResultWithPagination<FactView>>
   findAll: (params?: BaseQueryParams, viewerId?: string) => Promise<ResultWithPagination<FactView>>
   findPopular: (params?: BaseQueryParams, viewerId?: string) => Promise<ResultWithPagination<FactView>>

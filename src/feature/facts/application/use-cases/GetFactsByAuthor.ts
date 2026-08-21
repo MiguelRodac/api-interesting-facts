@@ -1,36 +1,62 @@
 import { type FactRepository } from '../../domain/ports/FactRepository'
-import { type FactResponse } from '../dto/FactResponse'
-import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
+import { type RepostRepository } from '@reposts/domain/ports/RepostRepository'
+import { type FeedEntry } from '../dto/FeedEntry'
+import { mapFactViewToResponse } from '../mappers/factMapper'
+import { DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
 
 export class GetFactsByAuthor {
   private readonly factRepository: FactRepository
+  private readonly repostRepository: RepostRepository
 
-  constructor (factRepository: FactRepository) {
+  constructor (factRepository: FactRepository, repostRepository: RepostRepository) {
     this.factRepository = factRepository
+    this.repostRepository = repostRepository
   }
 
-  async execute (authorId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactResponse>> {
-    const { results: facts, ...pagination } = await this.factRepository.findByAuthorId(authorId, params, viewerId)
+  async execute (authorId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FeedEntry>> {
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const page = params?.page ?? 1
+
+    const [factsPage, repostsPage] = await Promise.all([
+      this.factRepository.findByAuthorId(authorId, params, viewerId),
+      this.repostRepository.findByAuthorWithFact(authorId, params)
+    ])
+
+    const factEntries: FeedEntry[] = factsPage.results.map(fact => ({
+      type: 'fact',
+      fact: mapFactViewToResponse(fact),
+      createdAt: fact.createdAt.toISOString()
+    }))
+
+    const originalFactIds = repostsPage.results.map(r => r.originalFactId)
+    const embedded = await this.factRepository.findByIds(originalFactIds, viewerId)
+    const embeddedMap = new Map(embedded.map(f => [f.id, mapFactViewToResponse(f)]))
+
+    const repostEntries: FeedEntry[] = []
+    for (const repost of repostsPage.results) {
+      const fact = embeddedMap.get(repost.originalFactId)
+      if (fact === undefined) continue
+      repostEntries.push({
+        type: 'repost',
+        fact,
+        repostedBy: {
+          username: repost.username,
+          displayName: repost.displayName,
+          avatarUrl: repost.avatarUrl,
+          avatarColor: repost.avatarColor,
+          isMe: repost.authorId === viewerId
+        },
+        createdAt: repost.createdAt.toISOString()
+      })
+    }
+
+    const all = [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 
     return {
-      results: facts.map(fact => ({
-        id: fact.id,
-        author: fact.author,
-        title: fact.title,
-        content: fact.content,
-        likes: fact.likes,
-        liked: fact.liked,
-        likeBy: fact.likeBy,
-        comments: fact.comments,
-        commentsDetails: fact.commentsDetails,
-        repostCount: fact.repostCount,
-        repostedByMe: fact.repostedByMe,
-        repostBy: fact.repostBy,
-        hashtags: fact.hashtags,
-        createdAt: fact.createdAt.toISOString(),
-        updatedAt: fact.updatedAt.toISOString()
-      })),
-      ...pagination
+      results: all.slice(0, limit),
+      page,
+      limit,
+      nextPage: all.length > limit ? page + 1 : null
     }
   }
 }

@@ -325,6 +325,39 @@ export class PrismaFactRepository implements FactRepository {
     )
   }
 
+  async findByIds (ids: string[], viewerId?: string): Promise<FactView[]> {
+    if (ids.length === 0) return []
+
+    const facts = await prisma.fact.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        authorId: true,
+        title: true,
+        content: true,
+        createdAt: true,
+        updatedAt: true,
+        author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
+      }
+    })
+
+    if (facts.length === 0) return []
+
+    const factIds = facts.map(f => f.id)
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
+      batchLikeCounts(factIds),
+      batchCommentCounts(factIds),
+      batchRecentLikers(factIds, 2),
+      batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
+      batchHashtags(factIds)
+    ])
+    const enriched = await enrichFacts(facts, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerId ?? null, hashtagsMap)
+
+    return enriched
+  }
+
   async findByAuthorId (authorId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FactView>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT

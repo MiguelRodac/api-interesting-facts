@@ -181,4 +181,76 @@ describe('Reposts Endpoints', () => {
       expect(res.status).toBe(401)
     })
   })
+
+  describe('GET /facts — unified feed with reposts', () => {
+    const reposter = async (): Promise<{ username: string, displayName: string }> => {
+      const user = await prisma.user.findUnique({ where: { firebaseUid: 'test-uid' } })
+      return { username: user?.username ?? '', displayName: user?.displayName ?? '' }
+    }
+
+    it('should surface reposts as repost feed entries', async () => {
+      const fact = await createFactBy('other-uid')
+      const author = await reposter()
+
+      await request(app)
+        .post(`/facts/${fact.id}/reposts`)
+        .set('Authorization', `Bearer ${validToken}`)
+
+      const res = await request(app).get('/facts')
+
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body.results)).toBe(true)
+
+      const repostEntry = res.body.results.find(
+        (r: { type: string, fact: { id: string } }) => r.type === 'repost' && r.fact.id === fact.id
+      )
+      expect(repostEntry).toBeDefined()
+      expect(repostEntry.fact).toBeDefined()
+      expect(repostEntry.fact.content).toBe('A fact to be reposted')
+      expect(repostEntry.repostedBy).toMatchObject({
+        username: author.username,
+        displayName: author.displayName,
+        isMe: false
+      })
+      expect(repostEntry.createdAt).toBeDefined()
+    }, 20000)
+
+    it('should show facts of the profile plus reposts made by that author', async () => {
+      const fact = await createFactBy('other-uid')
+      const author = await reposter()
+
+      await request(app)
+        .post(`/facts/${fact.id}/reposts`)
+        .set('Authorization', `Bearer ${validToken}`)
+
+      const res = await request(app).get('/facts/author/test-uid')
+      expect(res.status).toBe(200)
+
+      const repostEntry = res.body.results.find(
+        (r: { type: string, fact: { id: string } }) => r.type === 'repost' && r.fact.id === fact.id
+      )
+      expect(repostEntry).toBeDefined()
+      expect(repostEntry.fact.content).toBe('A fact to be reposted')
+      expect(repostEntry.repostedBy).toMatchObject({ username: author.username, isMe: false })
+    }, 20000)
+
+    it('should mark a repost as isMe when viewer is the reposter', async () => {
+      const fact = await createFactBy('other-uid')
+
+      await request(app)
+        .post(`/facts/${fact.id}/reposts`)
+        .set('Authorization', `Bearer ${validToken}`)
+
+      const res = await request(app)
+        .get('/facts')
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      const repostEntry = res.body.results.find(
+        (r: { type: string, fact: { id: string } }) => r.type === 'repost' && r.fact.id === fact.id
+      )
+      expect(repostEntry).toBeDefined()
+      expect(repostEntry.repostedBy.isMe).toBe(true)
+    }, 20000)
+  })
 })

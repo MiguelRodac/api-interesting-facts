@@ -348,7 +348,7 @@ describe('Facts Endpoints', () => {
       const res = await request(app).get(`/facts/author/test-uid`)
 
       expect(res.status).toBe(200)
-      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact: { id: string } }) => r.type === 'fact' && r.fact.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertEnrichment(found)
     })
@@ -359,7 +359,7 @@ describe('Facts Endpoints', () => {
       const res = await request(app).get('/facts')
 
       expect(res.status).toBe(200)
-      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact: { id: string } }) => r.type === 'fact' && r.fact.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertEnrichment(found)
     })
@@ -477,7 +477,7 @@ describe('Facts Endpoints', () => {
       const res = await request(app).get('/facts/author/test-uid')
 
       expect(res.status).toBe(200)
-      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact: { id: string } }) => r.type === 'fact' && r.fact.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertRepostEnrichment(found)
       expect(found.repostedByMe).toBeUndefined()
@@ -490,7 +490,7 @@ describe('Facts Endpoints', () => {
       const res = await request(app).get('/facts')
 
       expect(res.status).toBe(200)
-      const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact: { id: string } }) => r.type === 'fact' && r.fact.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertRepostEnrichment(found)
       expect(found.repostedByMe).toBeUndefined()
