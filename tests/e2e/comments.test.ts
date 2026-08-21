@@ -103,7 +103,7 @@ describe('Comments Endpoints', () => {
       const res = await request(app)
         .post(`/facts/${factId}/comments`)
         .set('Authorization', `Bearer ${validToken}`)
-        .send({ content: 'short' })
+        .send({ content: '   ' })
 
       expect(res.status).toBe(400)
       expect(res.body.error_code).toBe('BAD_REQUEST')
