@@ -1,5 +1,6 @@
 import { type Comment } from '../entities/Comment'
 import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
+import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 
 export interface CreateCommentData {
   content: string
@@ -27,4 +28,7 @@ export interface CommentRepository {
   findByUserId: (userId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<CommentWithAuthor>>
   countRepliesByParentId: (parentId: string, excludeAuthorId: string) => Promise<number>
   countRepliesByParentIds: (parentIds: string[]) => Promise<Map<string, number>>
+  countLikesByCommentIds: (commentIds: string[]) => Promise<Map<string, number>>
+  findRecentLikersByCommentIds: (commentIds: string[], limit?: number) => Promise<Map<string, UserAvatarPreview[]>>
+  findViewerLikedComments: (commentIds: string[], viewerId: string) => Promise<Set<string>>
 }

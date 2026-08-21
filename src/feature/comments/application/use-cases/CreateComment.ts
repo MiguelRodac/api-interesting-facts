@@ -34,7 +34,11 @@ export class CreateComment {
       factId: comment.factId,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
-      edited: false
+      edited: false,
+      // A brand-new comment has no likes yet
+      likesCount: 0,
+      liked: false,
+      likeBy: []
     }
   }
 

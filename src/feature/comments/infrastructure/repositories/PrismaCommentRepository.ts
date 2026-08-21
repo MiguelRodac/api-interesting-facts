@@ -5,6 +5,7 @@ import {
   type CommentWithAuthor,
   type CreateCommentData
 } from '../../domain/ports/CommentRepository'
+import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 import {
   DEFAULT_PAGE,
   DEFAULT_LIMIT,
@@ -210,5 +211,46 @@ export class PrismaCommentRepository implements CommentRepository {
       result.set(row.parentCommentId, row._count.parentCommentId)
     }
     return result
+  }
+
+  async countLikesByCommentIds (commentIds: string[]): Promise<Map<string, number>> {
+    if (commentIds.length === 0) return new Map()
+    const rows = await prisma.commentLike.groupBy({
+      by: ['commentId'],
+      _count: { commentId: true },
+      where: { commentId: { in: commentIds } }
+    })
+    return new Map(rows.map(r => [r.commentId, r._count.commentId]))
+  }
+
+  async findRecentLikersByCommentIds (commentIds: string[], limit: number = 3): Promise<Map<string, UserAvatarPreview[]>> {
+    if (commentIds.length === 0) return new Map()
+    const likes = await prisma.commentLike.findMany({
+      where: { commentId: { in: commentIds } },
+      orderBy: [{ commentId: 'asc' }, { createdAt: 'desc' }],
+      include: { user: { select: { username: true, avatarUrl: true, avatarColor: true } } }
+    })
+    const result = new Map<string, UserAvatarPreview[]>()
+    for (const like of likes) {
+      const arr = result.get(like.commentId) ?? []
+      if (arr.length < limit) {
+        arr.push({
+          username: like.user.username,
+          avatarUrl: like.user.avatarUrl,
+          avatarColor: like.user.avatarColor
+        })
+        result.set(like.commentId, arr)
+      }
+    }
+    return result
+  }
+
+  async findViewerLikedComments (commentIds: string[], viewerId: string): Promise<Set<string>> {
+    if (commentIds.length === 0) return new Set()
+    const likes = await prisma.commentLike.findMany({
+      where: { commentId: { in: commentIds }, userId: viewerId },
+      select: { commentId: true }
+    })
+    return new Set(likes.map(l => l.commentId))
   }
 }

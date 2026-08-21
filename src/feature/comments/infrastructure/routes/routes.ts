@@ -80,7 +80,8 @@ router.get('/facts/:factId/comments', optionalAuth, async (req: Request, res: Re
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const factId = req.params.factId as string
-    const result = await getCommentsByFact.execute(factId, { page, limit, order_by, order_dir })
+    const viewerId = req.user?.uid
+    const result = await getCommentsByFact.execute(factId, { page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)
@@ -92,7 +93,8 @@ router.get('/users/:userId/comments', requireAuth, async (req: Request, res: Res
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const userId = req.params.userId as string
-    const result = await getCommentsByUser.execute(userId, { page, limit, order_by, order_dir })
+    const viewerId = req.user?.uid
+    const result = await getCommentsByUser.execute(userId, { page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)

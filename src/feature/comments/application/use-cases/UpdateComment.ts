@@ -17,7 +17,7 @@ export class UpdateComment {
     this.commentRepository = commentRepository
   }
 
-  private mapToCommentResponse (comment: Comment): CommentResponse {
+  private mapToCommentResponse (comment: Comment, likesCount: number, liked: boolean, likeBy: import('@shared/domain/types/UserAvatarPreview').UserAvatarPreview[]): CommentResponse {
     return {
       id: comment.id,
       content: comment.content,
@@ -31,8 +31,25 @@ export class UpdateComment {
       factId: comment.factId,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
-      edited: comment.updatedAt.getTime() !== comment.createdAt.getTime()
+      edited: comment.updatedAt.getTime() !== comment.createdAt.getTime(),
+      likesCount,
+      liked,
+      likeBy
     }
+  }
+
+  private async toResponse (comment: Comment, viewerId: string): Promise<CommentResponse> {
+    const [likesCountMap, likeByMap, viewerLikedSet] = await Promise.all([
+      this.commentRepository.countLikesByCommentIds([comment.id]),
+      this.commentRepository.findRecentLikersByCommentIds([comment.id]),
+      this.commentRepository.findViewerLikedComments([comment.id], viewerId)
+    ])
+    return this.mapToCommentResponse(
+      comment,
+      likesCountMap.get(comment.id) ?? 0,
+      viewerLikedSet.has(comment.id),
+      likeByMap.get(comment.id) ?? []
+    )
   }
 
   async execute (commentId: string, authorId: string, content: string): Promise<CommentResponse> {
@@ -45,7 +62,7 @@ export class UpdateComment {
 
     // IDEMPOTENCY: short-circuit if content is identical (zero DB writes)
     if (trimmed === comment.content) {
-      return this.mapToCommentResponse(comment)
+      return this.toResponse(comment, authorId)
     }
 
     if (now - comment.createdAt.getTime() > EDIT_WINDOW_MS) {
@@ -62,6 +79,6 @@ export class UpdateComment {
     validateMentions(trimmed)
 
     const updated = await this.commentRepository.update(commentId, { content: trimmed })
-    return this.mapToCommentResponse(updated)
+    return this.toResponse(updated, authorId)
   }
 }
