@@ -6,11 +6,16 @@ import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { PrismaAvatarOptionRepository } from '@avatar/infrastructure/repositories/PrismaAvatarOptionRepository'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 import { USERNAME_PATTERN } from '@shared/domain/validation'
+import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
+import { PrismaMentionRepository } from '@mentions/infrastructure/repositories/PrismaMentionRepository'
+import { GetMentionsByUser } from '@mentions/application/use-cases/GetMentionsByUser'
 
 const router = Router()
 const userRepository = new PrismaUserRepository()
 const avatarOptionRepository = new PrismaAvatarOptionRepository()
 const getUserByUsername = new GetUserByUsername(userRepository)
+const mentionRepository = new PrismaMentionRepository()
+const getMentionsByUser = new GetMentionsByUser(mentionRepository)
 
 const SearchQuerySchema = z.object({
   q: z.string().min(1, 'Query parameter q is required')
@@ -22,6 +27,11 @@ const CheckUsernameQuerySchema = z.object({
     .min(1, 'username parameter is required')
     .regex(USERNAME_PATTERN, 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots')
 }).strict()
+
+const MentionsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT)
+})
 
 // GET /users/search?q={query} — Search users for @mention autocomplete (auth required)
 router.get('/search', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
@@ -70,6 +80,26 @@ router.get('/avatar-options', async (_req: Request, res: Response, next: NextFun
   try {
     const options = await avatarOptionRepository.findAll()
     res.status(200).json(options)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// GET /users/:username/mentions — Paginated mention list for a user (public)
+router.get('/:username/mentions', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const username = req.params.username as string
+
+    if (!USERNAME_PATTERN.test(username)) {
+      throw new ValidationError('Username must be 3-30 characters and only contain letters, numbers, underscores or dots', [
+        { field: 'username', message: 'Username must be 3-30 characters and only contain letters, numbers, underscores or dots' }
+      ])
+    }
+
+    const { page, limit } = MentionsQuerySchema.parse(req.query)
+    const user = await getUserByUsername.execute(username)
+    const result = await getMentionsByUser.execute(user.id, { page, limit })
+    res.status(200).json(result)
   } catch (err) {
     next(err)
   }

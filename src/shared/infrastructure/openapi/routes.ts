@@ -24,6 +24,7 @@ import {
   CreateCommentRequestSchema,
   UpdateCommentRequestSchema,
   PaginatedCommentResponseSchema,
+  PaginatedMentionResponseSchema,
   HashtagWithUsageSchema,
   ValidationErrorSchema,
   BadRequestErrorSchema,
@@ -232,6 +233,32 @@ registry.registerPath({
       description: 'Public profile',
       content: { 'application/json': { schema: PublicUserResponseSchema } }
     },
+    404: notFoundResponse
+  }
+})
+
+const MentionListQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1).optional(),
+  limit: z.coerce.number().int().positive().max(100).default(20).optional()
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/users/{username}/mentions',
+  summary: 'Get mentions for a user by username',
+  operationId: 'getMentionsByUser',
+  tags: ['Users'],
+  description: 'Paginated list of facts and comments where the given username was @mentioned.',
+  request: {
+    params: z.object({ username: z.string().regex(USERNAME_PATTERN) }),
+    query: MentionListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Paginated list of mentions',
+      content: { 'application/json': { schema: PaginatedMentionResponseSchema } }
+    },
+    422: validationResponse,
     404: notFoundResponse
   }
 })

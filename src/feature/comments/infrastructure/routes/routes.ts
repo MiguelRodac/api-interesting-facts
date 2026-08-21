@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
 import { PrismaCommentRepository } from '../repositories/PrismaCommentRepository'
 import { PrismaFactRepository } from '../../../facts/infrastructure/repositories/PrismaFactRepository'
+import { PrismaMentionRepository } from '../../../mentions/infrastructure/repositories/PrismaMentionRepository'
 import { CreateComment } from '../../application/use-cases/CreateComment'
 import { DeleteComment } from '../../application/use-cases/DeleteComment'
 import { UpdateComment } from '../../application/use-cases/UpdateComment'
@@ -31,9 +32,10 @@ const UpdateCommentBodySchema = z.object({
 const router = Router()
 const commentRepository = new PrismaCommentRepository()
 const factRepository = new PrismaFactRepository()
-const createComment = new CreateComment(commentRepository, factRepository)
+const mentionRepository = new PrismaMentionRepository()
+const createComment = new CreateComment(commentRepository, factRepository, mentionRepository)
 const deleteComment = new DeleteComment(commentRepository)
-const updateComment = new UpdateComment(commentRepository)
+const updateComment = new UpdateComment(commentRepository, mentionRepository)
 const getCommentsByFact = new GetCommentsByFact(commentRepository, factRepository)
 const getCommentsByUser = new GetCommentsByUser(commentRepository)
 

@@ -6,6 +6,7 @@ export interface UserRepository {
   findByUsername: (username: string) => Promise<User | null>
   findByEmail: (email: string) => Promise<User | null>
   findBySearch: (query: string) => Promise<User[]>
+  findUidsByUsernames: (usernames: string[]) => Promise<Map<string, string>>
   existsByUsername: (username: string) => Promise<boolean>
   existsByEmail: (email: string) => Promise<boolean>
   create: (data: CreateUserData) => Promise<User>

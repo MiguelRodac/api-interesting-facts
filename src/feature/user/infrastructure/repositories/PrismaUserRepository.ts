@@ -109,6 +109,17 @@ export class PrismaUserRepository implements UserRepository {
     }))
   }
 
+  async findUidsByUsernames (usernames: string[]): Promise<Map<string, string>> {
+    if (usernames.length === 0) return new Map()
+
+    const users = await prisma.user.findMany({
+      where: { username: { in: usernames } },
+      select: { username: true, firebaseUid: true }
+    })
+
+    return new Map(users.map(user => [user.username, user.firebaseUid]))
+  }
+
   async existsByUsername (username: string): Promise<boolean> {
     const count = await prisma.user.count({
       where: { username }

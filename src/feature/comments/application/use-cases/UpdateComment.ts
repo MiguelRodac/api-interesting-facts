@@ -7,14 +7,19 @@ import { EditWindowExpiredError } from '../../domain/errors/EditWindowExpiredErr
 import { ContentTooShortError } from '../../domain/errors/ContentTooShortError'
 import { ContentTooLongError } from '../../domain/errors/ContentTooLongError'
 import { COMMENT_CONTENT_MIN_LENGTH, COMMENT_CONTENT_MAX_LENGTH, validateMentions } from '@shared/domain/validation'
+import { type MentionRepository } from '../../../mentions/domain/ports/MentionRepository'
+import { MentionParser } from '../../../mentions/application/MentionParser'
+import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
 
 const EDIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
 
 export class UpdateComment {
   private readonly commentRepository: CommentRepository
+  private readonly mentionParser: MentionParser
 
-  constructor (commentRepository: CommentRepository) {
+  constructor (commentRepository: CommentRepository, mentionRepository: MentionRepository) {
     this.commentRepository = commentRepository
+    this.mentionParser = new MentionParser(mentionRepository, new PrismaUserRepository())
   }
 
   private mapToCommentResponse (comment: Comment, likesCount: number, liked: boolean, likeBy: import('@shared/domain/types/UserAvatarPreview').UserAvatarPreview[]): CommentResponse {
@@ -79,6 +84,10 @@ export class UpdateComment {
     validateMentions(trimmed)
 
     const updated = await this.commentRepository.update(commentId, { content: trimmed })
+
+    // Re-parse and replace mentions (only reached when content actually changed)
+    await this.mentionParser.storeCommentMentions(commentId, authorId, trimmed)
+
     return this.toResponse(updated, authorId)
   }
 }

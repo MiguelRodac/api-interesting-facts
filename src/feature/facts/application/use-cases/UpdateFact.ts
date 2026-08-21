@@ -7,15 +7,20 @@ import { ContentTooShortError } from '../../domain/errors/ContentTooShortError'
 import { ContentTooLongError } from '../../domain/errors/ContentTooLongError'
 import { TitleTooLongError } from '../../domain/errors/TitleTooLongError'
 import { PrismaHashtagRepository } from '@hashtag/infrastructure/repositories/PrismaHashtagRepository'
+import { PrismaMentionRepository } from '@mentions/infrastructure/repositories/PrismaMentionRepository'
+import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
+import { MentionParser } from '@mentions/application/MentionParser'
 import { FACT_TITLE_MAX_LENGTH, FACT_CONTENT_MIN_LENGTH, FACT_CONTENT_MAX_LENGTH, validateMentions } from '@shared/domain/validation'
 
 export class UpdateFact {
   private readonly factRepository: FactRepository
   private readonly hashtagRepository: PrismaHashtagRepository
+  private readonly mentionParser: MentionParser
 
   constructor (factRepository: FactRepository) {
     this.factRepository = factRepository
     this.hashtagRepository = new PrismaHashtagRepository()
+    this.mentionParser = new MentionParser(new PrismaMentionRepository(), new PrismaUserRepository())
   }
 
   async execute (id: string, data: UpdateFactInput, authorId: string): Promise<FactResponse> {
@@ -58,6 +63,9 @@ export class UpdateFact {
     if (normalizedContent !== undefined) {
       const tagNames = await this.hashtagRepository.extractHashtags(normalizedContent)
       hashtags = await this.hashtagRepository.replaceFactHashtags(id, tagNames)
+
+      // Re-parse and replace mentions if content changed
+      await this.mentionParser.storeFactMentions(id, authorId, normalizedContent)
     }
 
     const enrichedFact = await this.factRepository.findById(id)

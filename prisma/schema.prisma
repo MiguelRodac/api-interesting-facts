@@ -21,6 +21,8 @@ model User {
   comments Comment[]
   reposts Repost[]
   commentLikes CommentLike[]
+  mentionsAsAuthor Mention[] @relation("MentionAuthor")
+  mentionsAsMentioned Mention[] @relation("MentionedUser")
 
   @@map("users")
 }
@@ -47,6 +49,7 @@ model Fact {
   factHashtags FactHashtag[]
   comments     Comment[]
   reposts      Repost[]
+  mentions     Mention[]
 
   @@map("facts")
 }
@@ -97,6 +100,7 @@ model Comment {
   parent       Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   replies      Comment[]     @relation("CommentReplies")
   commentLikes CommentLike[]
+  mentions     Mention[]
 
   @@index([authorId, createdAt(sort: Desc)])
   @@index([factId, createdAt(sort: Desc)])
@@ -132,4 +136,22 @@ model CommentLike {
   @@index([commentId, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
   @@map("comment_likes")
+}
+
+model Mention {
+  id              String    @id @default(uuid())
+  factId          String?   @map("fact_id")
+  commentId       String?   @map("comment_id")
+  authorId        String    @map("author_id")
+  mentionedUserId String    @map("mentioned_user_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  fact          Fact?   @relation(fields: [factId], references: [id], onDelete: Cascade)
+  comment       Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  author        User    @relation("MentionAuthor", fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+  mentionedUser User    @relation("MentionedUser", fields: [mentionedUserId], references: [firebaseUid], onDelete: Cascade)
+
+  @@index([mentionedUserId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
+  @@map("mentions")
 }

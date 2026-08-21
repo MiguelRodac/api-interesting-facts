@@ -41,6 +41,15 @@ afterEach(async () => {
   await prisma.repost.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
   await prisma.comment.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
   await prisma.like.deleteMany({ where: { userId: { in: TEST_UIDS } } })
+  // Mentions reference facts/comments and users, so delete them before facts/users.
+  await prisma.mention.deleteMany({
+    where: {
+      OR: [
+        { authorId: { in: TEST_UIDS } },
+        { mentionedUserId: { in: TEST_UIDS } }
+      ]
+    }
+  })
   await prisma.fact.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
   await prisma.user.deleteMany({ where: { firebaseUid: { in: TEST_UIDS } } })
 })

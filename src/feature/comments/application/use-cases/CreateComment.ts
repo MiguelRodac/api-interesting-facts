@@ -10,14 +10,19 @@ import { ContentTooShortError } from '../../domain/errors/ContentTooShortError'
 import { ContentTooLongError } from '../../domain/errors/ContentTooLongError'
 import { COMMENT_CONTENT_MIN_LENGTH, COMMENT_CONTENT_MAX_LENGTH } from '@shared/domain/validation'
 import { validateMentions } from '@shared/domain/validation'
+import { type MentionRepository } from '../../../mentions/domain/ports/MentionRepository'
+import { MentionParser } from '../../../mentions/application/MentionParser'
+import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
 
 export class CreateComment {
   private readonly commentRepository: CommentRepository
   private readonly factRepository: FactRepository
+  private readonly mentionParser: MentionParser
 
-  constructor (commentRepository: CommentRepository, factRepository: FactRepository) {
+  constructor (commentRepository: CommentRepository, factRepository: FactRepository, mentionRepository: MentionRepository) {
     this.commentRepository = commentRepository
     this.factRepository = factRepository
+    this.mentionParser = new MentionParser(mentionRepository, new PrismaUserRepository())
   }
 
   private mapComment (comment: Comment): CommentResponse {
@@ -87,6 +92,9 @@ export class CreateComment {
       authorId,
       parentCommentId
     })
+
+    // Extract and store mentions
+    await this.mentionParser.storeCommentMentions(comment.id, authorId, trimmed)
 
     return this.mapComment(comment)
   }

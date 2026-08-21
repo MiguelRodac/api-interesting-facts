@@ -412,6 +412,41 @@ registry.register('CreateCommentRequest', CreateCommentRequestSchema)
 registry.register('UpdateCommentRequest', UpdateCommentRequestSchema)
 registry.register('PaginatedCommentResponse', PaginatedCommentResponseSchema)
 
+// ── Mention ──────────────────────────────────────────────────────────────────
+
+export const MentionFactPayloadSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().nullable(),
+  content: z.string()
+})
+
+export const MentionCommentPayloadSchema = z.object({
+  id: z.string().uuid(),
+  content: z.string(),
+  factId: z.string().uuid()
+})
+
+export const MentionItemSchema = z.object({
+  id: z.string().uuid(),
+  type: z.enum(['fact', 'comment']),
+  author: CommentAuthorPreviewSchema,
+  createdAt: z.string().datetime(),
+  fact: MentionFactPayloadSchema.optional(),
+  comment: MentionCommentPayloadSchema.optional()
+})
+
+export const PaginatedMentionResponseSchema = z.object({
+  results: z.array(MentionItemSchema),
+  page: z.number().int(),
+  limit: z.number().int(),
+  nextPage: z.number().int().nullable()
+})
+
+registry.register('MentionFactPayload', MentionFactPayloadSchema)
+registry.register('MentionCommentPayload', MentionCommentPayloadSchema)
+registry.register('MentionItem', MentionItemSchema)
+registry.register('PaginatedMentionResponse', PaginatedMentionResponseSchema)
+
 // ── Search ──────────────────────────────────────────────────────────────────
 
 export const GlobalSearchResponseSchema = z.object({
