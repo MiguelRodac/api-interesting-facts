@@ -20,7 +20,7 @@ export interface MentionFactPayload {
 export interface MentionCommentPayload {
   id: string
   content: string
-  factId: string
+  factId: string | null
 }
 
 export interface MentionItem {

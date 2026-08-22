@@ -36,7 +36,8 @@ function buildPagination (params?: BaseQueryParams): { skip: number, take: numbe
 function mapComment (comment: {
   id: string
   content: string
-  factId: string
+  factId: string | null
+  repostId: string | null
   authorId: string
   parentCommentId: string | null
   createdAt: Date
@@ -46,6 +47,7 @@ function mapComment (comment: {
     id: comment.id,
     content: comment.content,
     factId: comment.factId,
+    repostId: comment.repostId,
     authorId: comment.authorId,
     parentCommentId: comment.parentCommentId,
     createdAt: comment.createdAt,
@@ -56,7 +58,8 @@ function mapComment (comment: {
 function mapCommentWithAuthor (comment: {
   id: string
   content: string
-  factId: string
+  factId: string | null
+  repostId: string | null
   authorId: string
   parentCommentId: string | null
   createdAt: Date
@@ -65,7 +68,8 @@ function mapCommentWithAuthor (comment: {
   replies?: Array<{
     id: string
     content: string
-    factId: string
+    factId: string | null
+    repostId: string | null
     authorId: string
     parentCommentId: string | null
     createdAt: Date
@@ -77,6 +81,7 @@ function mapCommentWithAuthor (comment: {
     id: comment.id,
     content: comment.content,
     factId: comment.factId,
+    repostId: comment.repostId,
     authorId: comment.authorId,
     parentCommentId: comment.parentCommentId,
     createdAt: comment.createdAt,
@@ -135,6 +140,56 @@ export class PrismaCommentRepository implements CommentRepository {
         }
       }),
       prisma.comment.count({ where: { factId, parentCommentId: null } })
+    ])
+
+    const topLevelIds = topLevel.map(c => c.id)
+
+    if (topLevelIds.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    const replies = await prisma.comment.findMany({
+      where: { parentCommentId: { in: topLevelIds } },
+      orderBy: { createdAt: 'asc' as const },
+      include: {
+        author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+      }
+    })
+
+    const repliesByParent = new Map<string, typeof replies>()
+    for (const reply of replies) {
+      const parentId = reply.parentCommentId
+      if (parentId == null) continue
+      const existing = repliesByParent.get(parentId) ?? []
+      existing.push(reply)
+      repliesByParent.set(parentId, existing)
+    }
+
+    const results = topLevel.map(c => mapCommentWithAuthor({
+      ...c,
+      replies: repliesByParent.get(c.id) ?? []
+    }))
+
+    return buildPaginatedResult(results, total, page, limit)
+  }
+
+  async findByRepostId (repostId: string, params?: BaseQueryParams): Promise<ResultWithPagination<CommentWithAuthor>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const { skip, take } = buildPagination(params)
+    const orderBy = buildOrderBy(params?.order_by, params?.order_dir)
+
+    const [topLevel, total] = await Promise.all([
+      prisma.comment.findMany({
+        where: { repostId, parentCommentId: null },
+        orderBy,
+        skip,
+        take,
+        include: {
+          author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
+      }),
+      prisma.comment.count({ where: { repostId, parentCommentId: null } })
     ])
 
     const topLevelIds = topLevel.map(c => c.id)
@@ -252,5 +307,15 @@ export class PrismaCommentRepository implements CommentRepository {
       select: { commentId: true }
     })
     return new Set(likes.map(l => l.commentId))
+  }
+
+  async batchCommentCountsByRepostIds (repostIds: string[]): Promise<Map<string, number>> {
+    if (repostIds.length === 0) return new Map()
+    const rows = await prisma.comment.groupBy({
+      by: ['repostId'],
+      _count: { repostId: true },
+      where: { repostId: { in: repostIds } }
+    })
+    return new Map(rows.map(r => [r.repostId!, r._count.repostId]))
   }
 }

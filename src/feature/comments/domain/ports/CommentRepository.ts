@@ -4,7 +4,8 @@ import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 
 export interface CreateCommentData {
   content: string
-  factId: string
+  factId?: string | null
+  repostId?: string | null
   authorId: string
   parentCommentId?: string | null
 }
@@ -25,10 +26,12 @@ export interface CommentRepository {
   update: (id: string, data: { content: string }) => Promise<Comment>
   delete: (id: string) => Promise<void>
   findByFactId: (factId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<CommentWithAuthor>>
+  findByRepostId: (repostId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<CommentWithAuthor>>
   findByUserId: (userId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<CommentWithAuthor>>
   countRepliesByParentId: (parentId: string, excludeAuthorId: string) => Promise<number>
   countRepliesByParentIds: (parentIds: string[]) => Promise<Map<string, number>>
   countLikesByCommentIds: (commentIds: string[]) => Promise<Map<string, number>>
   findRecentLikersByCommentIds: (commentIds: string[], limit?: number) => Promise<Map<string, UserAvatarPreview[]>>
   findViewerLikedComments: (commentIds: string[], viewerId: string) => Promise<Set<string>>
+  batchCommentCountsByRepostIds: (repostIds: string[]) => Promise<Map<string, number>>
 }

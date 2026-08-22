@@ -37,6 +37,7 @@ export class CreateComment {
       },
       parentCommentId: comment.parentCommentId,
       factId: comment.factId,
+      repostId: comment.repostId,
       createdAt: comment.createdAt.toISOString(),
       updatedAt: comment.updatedAt.toISOString(),
       edited: false,

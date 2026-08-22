@@ -7,7 +7,6 @@ import { FactNotFoundError } from '../../../facts/domain/errors/FactNotFoundErro
 
 function mapCommentWithAuthor (
   comment: CommentWithAuthor,
-  includeFactId: boolean,
   likesCountMap: Map<string, number>,
   likeByMap: Map<string, UserAvatarPreview[]>,
   viewerLikedSet: Set<string>
@@ -22,7 +21,8 @@ function mapCommentWithAuthor (
       avatarColor: comment.author.avatarColor
     },
     parentCommentId: comment.parentCommentId,
-    ...(includeFactId && { factId: comment.factId }),
+    factId: comment.factId,
+    repostId: comment.repostId,
     createdAt: comment.createdAt.toISOString(),
     updatedAt: comment.updatedAt.toISOString(),
     edited: comment.updatedAt.getTime() !== comment.createdAt.getTime(),
@@ -30,7 +30,7 @@ function mapCommentWithAuthor (
     liked: viewerLikedSet.has(comment.id),
     likeBy: likeByMap.get(comment.id) ?? [],
     ...(comment.replies != null && {
-      replies: comment.replies.map(r => mapCommentWithAuthor(r, includeFactId, likesCountMap, likeByMap, viewerLikedSet))
+      replies: comment.replies.map(r => mapCommentWithAuthor(r, likesCountMap, likeByMap, viewerLikedSet))
     })
   }
 }
@@ -76,7 +76,7 @@ export class GetCommentsByFact {
     ])
 
     return {
-      results: comments.map(c => mapCommentWithAuthor(c, false, likesCountMap, likeByMap, viewerLikedSet)),
+      results: comments.map(c => mapCommentWithAuthor(c, likesCountMap, likeByMap, viewerLikedSet)),
       ...pagination
     }
   }

@@ -24,11 +24,12 @@ function buildPagination (params?: BaseQueryParams): { skip: number, take: numbe
   return { skip, take: limit }
 }
 
-function mapLike (like: { id: string, userId: string, factId: string, createdAt: Date }): Like {
+function mapLike (like: { id: string, userId: string, factId: string | null, repostId: string | null, createdAt: Date }): Like {
   return {
     id: like.id,
     userId: like.userId,
     factId: like.factId,
+    repostId: like.repostId,
     createdAt: like.createdAt
   }
 }
@@ -36,7 +37,8 @@ function mapLike (like: { id: string, userId: string, factId: string, createdAt:
 function mapLikeWithUser (like: {
   id: string
   userId: string
-  factId: string
+  factId: string | null
+  repostId: string | null
   createdAt: Date
   user: { username: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }
 }): LikeWithUser {
@@ -44,6 +46,7 @@ function mapLikeWithUser (like: {
     id: like.id,
     userId: like.userId,
     factId: like.factId,
+    repostId: like.repostId,
     createdAt: like.createdAt,
     username: like.user.username,
     displayName: like.user.displayName,
@@ -54,10 +57,8 @@ function mapLikeWithUser (like: {
 
 export class PrismaLikeRepository implements LikeRepository {
   async findByUserAndFact (userId: string, factId: string): Promise<Like | null> {
-    const like = await prisma.like.findUnique({
-      where: {
-        userId_factId: { userId, factId }
-      }
+    const like = await prisma.like.findFirst({
+      where: { userId, factId }
     })
 
     if (like == null) return null
@@ -113,10 +114,64 @@ export class PrismaLikeRepository implements LikeRepository {
   }
 
   async delete (userId: string, factId: string): Promise<void> {
-    await prisma.like.delete({
-      where: {
-        userId_factId: { userId, factId }
+    await prisma.like.deleteMany({
+      where: { userId, factId }
+    })
+  }
+
+  async findByUserAndRepost (userId: string, repostId: string): Promise<Like | null> {
+    const like = await prisma.like.findFirst({
+      where: { userId, repostId }
+    })
+
+    if (like == null) return null
+    return mapLike(like)
+  }
+
+  async findByRepostId (repostId: string, params?: BaseQueryParams): Promise<ResultWithPagination<LikeWithUser>> {
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const { skip, take } = buildPagination(params)
+    const [likes, total] = await Promise.all([
+      prisma.like.findMany({
+        where: { repostId },
+        orderBy: buildOrderBy(params?.order_by, params?.order_dir),
+        skip,
+        take,
+        include: {
+          user: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
+      }),
+      prisma.like.count({ where: { repostId } })
+    ])
+
+    return buildPaginatedResult(likes.map(mapLikeWithUser), total, page, limit)
+  }
+
+  async createRepostLike (userId: string, repostId: string): Promise<Like> {
+    const like = await prisma.like.create({
+      data: {
+        userId,
+        repostId
       }
     })
+
+    return mapLike(like)
+  }
+
+  async deleteRepostLike (userId: string, repostId: string): Promise<void> {
+    await prisma.like.deleteMany({
+      where: { userId, repostId }
+    })
+  }
+
+  async batchLikeCountsByRepostIds (repostIds: string[]): Promise<Map<string, number>> {
+    if (repostIds.length === 0) return new Map()
+    const likeCounts = await prisma.like.groupBy({
+      by: ['repostId'],
+      _count: { repostId: true },
+      where: { repostId: { in: repostIds } }
+    })
+    return new Map(likeCounts.map(l => [l.repostId!, l._count.repostId]))
   }
 }

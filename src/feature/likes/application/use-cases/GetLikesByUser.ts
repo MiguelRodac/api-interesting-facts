@@ -17,6 +17,7 @@ export class GetLikesByUser {
         id: like.id,
         userId: like.userId,
         factId: like.factId,
+        repostId: like.repostId,
         createdAt: like.createdAt.toISOString()
       })),
       ...pagination

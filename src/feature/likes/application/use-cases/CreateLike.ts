@@ -31,7 +31,8 @@ export class CreateLike {
     return {
       id: like.id,
       userId: like.userId,
-      factId: like.factId,
+      factId: like.factId!,
+      repostId: like.repostId,
       createdAt: like.createdAt.toISOString()
     }
   }

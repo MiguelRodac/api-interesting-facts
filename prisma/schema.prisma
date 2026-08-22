@@ -8,21 +8,21 @@ datasource db {
 }
 
 model User {
-  firebaseUid   String    @id @map("firebase_uid")
-  email         String    @unique
-  username      String    @unique
-  displayName   String    @map("display_name")
-  avatarUrl     String?   @map("avatar_url")
-  avatarColor   String?   @map("avatar_color")
-  createdAt     DateTime  @default(now()) @map("created_at")
+  firebaseUid String   @id @map("firebase_uid")
+  email       String   @unique
+  username    String   @unique
+  displayName String   @map("display_name")
+  avatarUrl   String?  @map("avatar_url")
+  avatarColor String?  @map("avatar_color")
+  createdAt   DateTime @default(now()) @map("created_at")
 
-  facts Fact[]
-  likes Like[]
-  comments Comment[]
-  reposts Repost[]
-  commentLikes CommentLike[]
-  mentionsAsAuthor Mention[] @relation("MentionAuthor")
-  mentionsAsMentioned Mention[] @relation("MentionedUser")
+  facts               Fact[]
+  likes               Like[]
+  comments            Comment[]
+  reposts             Repost[]
+  commentLikes        CommentLike[]
+  mentionsAsAuthor    Mention[]     @relation("MentionAuthor")
+  mentionsAsMentioned Mention[]     @relation("MentionedUser")
 
   @@map("users")
 }
@@ -45,7 +45,7 @@ model Fact {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  likes         Like[]
+  likes        Like[]
   factHashtags FactHashtag[]
   comments     Comment[]
   reposts      Repost[]
@@ -67,7 +67,7 @@ model Hashtag {
 model FactHashtag {
   factId    String  @map("fact_id")
   hashtagId String  @map("hashtag_id")
-  fact      Fact   @relation(fields: [factId], references: [id], onDelete: Cascade)
+  fact      Fact    @relation(fields: [factId], references: [id], onDelete: Cascade)
   hashtag   Hashtag @relation(fields: [hashtagId], references: [id], onDelete: Cascade)
 
   @@id([factId, hashtagId])
@@ -77,25 +77,30 @@ model FactHashtag {
 model Like {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
-  factId    String   @map("fact_id")
+  factId    String?  @map("fact_id")
+  repostId  String?  @map("repost_id")
   user      User     @relation(fields: [userId], references: [firebaseUid], onDelete: Cascade)
-  fact      Fact     @relation(fields: [factId], references: [id], onDelete: Cascade)
+  fact      Fact?    @relation(fields: [factId], references: [id], onDelete: Cascade)
+  repost    Repost?  @relation(fields: [repostId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
 
-  @@unique([userId, factId])
+  @@index([factId])
+  @@index([repostId])
   @@map("likes")
 }
 
 model Comment {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   content         String
-  factId          String    @map("fact_id")
-  authorId        String    @map("author_id")
-  parentCommentId String?   @map("parent_comment_id")
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  factId          String?  @map("fact_id")
+  repostId        String?  @map("repost_id")
+  authorId        String   @map("author_id")
+  parentCommentId String?  @map("parent_comment_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
-  fact         Fact          @relation(fields: [factId], references: [id], onDelete: Cascade)
+  fact         Fact?         @relation(fields: [factId], references: [id], onDelete: Cascade)
+  repost       Repost?       @relation(fields: [repostId], references: [id], onDelete: Cascade)
   author       User          @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
   parent       Comment?      @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
   replies      Comment[]     @relation("CommentReplies")
@@ -104,6 +109,7 @@ model Comment {
 
   @@index([authorId, createdAt(sort: Desc)])
   @@index([factId, createdAt(sort: Desc)])
+  @@index([repostId, createdAt(sort: Desc)])
   @@index([parentCommentId, authorId])
   @@map("comments")
 }
@@ -114,8 +120,10 @@ model Repost {
   authorId       String   @map("author_id")
   createdAt      DateTime @default(now()) @map("created_at")
 
-  originalFact Fact @relation(fields: [originalFactId], references: [id], onDelete: Cascade)
-  author       User @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+  originalFact Fact      @relation(fields: [originalFactId], references: [id], onDelete: Cascade)
+  author       User      @relation(fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+  likes        Like[]
+  comments     Comment[]
 
   @@unique([authorId, originalFactId])
   @@index([originalFactId, createdAt(sort: Desc)])
@@ -139,17 +147,17 @@ model CommentLike {
 }
 
 model Mention {
-  id              String    @id @default(uuid())
-  factId          String?   @map("fact_id")
-  commentId       String?   @map("comment_id")
-  authorId        String    @map("author_id")
-  mentionedUserId String    @map("mentioned_user_id")
-  createdAt       DateTime  @default(now()) @map("created_at")
+  id              String   @id @default(uuid())
+  factId          String?  @map("fact_id")
+  commentId       String?  @map("comment_id")
+  authorId        String   @map("author_id")
+  mentionedUserId String   @map("mentioned_user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  fact          Fact?   @relation(fields: [factId], references: [id], onDelete: Cascade)
+  fact          Fact?    @relation(fields: [factId], references: [id], onDelete: Cascade)
   comment       Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  author        User    @relation("MentionAuthor", fields: [authorId], references: [firebaseUid], onDelete: Cascade)
-  mentionedUser User    @relation("MentionedUser", fields: [mentionedUserId], references: [firebaseUid], onDelete: Cascade)
+  author        User     @relation("MentionAuthor", fields: [authorId], references: [firebaseUid], onDelete: Cascade)
+  mentionedUser User     @relation("MentionedUser", fields: [mentionedUserId], references: [firebaseUid], onDelete: Cascade)
 
   @@index([mentionedUserId, createdAt(sort: Desc)])
   @@index([authorId, createdAt(sort: Desc)])

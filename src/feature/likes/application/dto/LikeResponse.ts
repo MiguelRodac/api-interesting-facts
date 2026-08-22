@@ -1,7 +1,8 @@
 export interface LikeResponse {
   id: string
   userId: string
-  factId: string
+  factId: string | null
+  repostId: string | null
   createdAt: string
 }
 

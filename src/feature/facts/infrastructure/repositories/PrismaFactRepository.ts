@@ -60,7 +60,7 @@ async function batchLikeCounts (factIds: string[]): Promise<Map<string, number>>
     _count: { factId: true },
     where: { factId: { in: factIds } }
   })
-  return new Map(likeCounts.map(l => [l.factId, l._count.factId]))
+  return new Map(likeCounts.map(l => [l.factId!, l._count.factId]))
 }
 
 async function batchUserLikes (factIds: string[], viewerId: string): Promise<Set<string>> {
@@ -69,7 +69,7 @@ async function batchUserLikes (factIds: string[], viewerId: string): Promise<Set
     where: { factId: { in: factIds }, userId: viewerId },
     select: { factId: true }
   })
-  return new Set(userLikes.map(l => l.factId))
+  return new Set(userLikes.map(l => l.factId!))
 }
 
 async function batchHashtags (factIds: string[]): Promise<Map<string, Array<{ id: string, tag: string }>>> {
@@ -96,7 +96,7 @@ async function batchCommentCounts (factIds: string[]): Promise<Map<string, numbe
     _count: { factId: true },
     where: { factId: { in: factIds } }
   })
-  return new Map(rows.map(r => [r.factId, r._count.factId]))
+  return new Map(rows.map(r => [r.factId!, r._count.factId]))
 }
 
 async function batchRecentLikers (factIds: string[], limit: number = 2): Promise<Map<string, UserAvatarPreview[]>> {
@@ -108,14 +108,14 @@ async function batchRecentLikers (factIds: string[], limit: number = 2): Promise
   })
   const result = new Map<string, UserAvatarPreview[]>()
   for (const like of likes) {
-    const arr = result.get(like.factId) ?? []
+    const arr = result.get(like.factId!) ?? []
     if (arr.length < limit) {
       arr.push({
         username: like.user.username,
         avatarUrl: like.user.avatarUrl,
         avatarColor: like.user.avatarColor
       })
-      result.set(like.factId, arr)
+      result.set(like.factId!, arr)
     }
   }
   return result
@@ -131,8 +131,8 @@ async function batchFirstComment (factIds: string[]): Promise<Map<string, Commen
 
   const picked = new Map<string, { id: string, content: string, author: UserAvatarPreview, createdAt: Date }>()
   for (const c of comments) {
-    if (!picked.has(c.factId)) {
-      picked.set(c.factId, {
+    if (!picked.has(c.factId!)) {
+      picked.set(c.factId!, {
         id: c.id,
         content: c.content,
         author: {

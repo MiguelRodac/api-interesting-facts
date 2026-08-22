@@ -15,7 +15,7 @@ interface MentionRow {
   createdAt: Date
   author: { username: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }
   fact: { id: string, title: string | null, content: string } | null
-  comment: { id: string, content: string, factId: string } | null
+  comment: { id: string, content: string, factId: string | null } | null
 }
 
 function mapMention (mention: MentionRow): MentionItem {

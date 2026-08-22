@@ -18,7 +18,8 @@ export interface CommentResponse {
   content: string
   author: CommentAuthorPreview
   parentCommentId: string | null
-  factId?: string
+  factId: string | null
+  repostId: string | null
   createdAt: string
   updatedAt: string
   edited: boolean
