@@ -5,6 +5,8 @@ import { PrismaFactRepository } from '../repositories/PrismaFactRepository'
 import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
 import { PrismaHashtagRepository } from '@hashtag/infrastructure/repositories/PrismaHashtagRepository'
 import { PrismaRepostRepository } from '@reposts/infrastructure/repositories/PrismaRepostRepository'
+import { PrismaLikeRepository } from '@likes/infrastructure/repositories/PrismaLikeRepository'
+import { PrismaCommentRepository } from '@comments/infrastructure/repositories/PrismaCommentRepository'
 import { CreateFact } from '../../application/use-cases/CreateFact'
 import { GetFactById } from '../../application/use-cases/GetFactById'
 import { UpdateFact } from '../../application/use-cases/UpdateFact'
@@ -50,12 +52,14 @@ const factRepository = new PrismaFactRepository()
 const userRepository = new PrismaUserRepository()
 const hashtagRepository = new PrismaHashtagRepository()
 const repostRepository = new PrismaRepostRepository()
+const likeRepository = new PrismaLikeRepository()
+const commentRepository = new PrismaCommentRepository()
 const createFact = new CreateFact(factRepository)
 const getFactById = new GetFactById(factRepository)
 const updateFact = new UpdateFact(factRepository)
 const deleteFact = new DeleteFact(factRepository)
-const getFacts = new GetFacts(factRepository, repostRepository)
-const getFactsByAuthor = new GetFactsByAuthor(factRepository, repostRepository)
+const getFacts = new GetFacts(factRepository, repostRepository, likeRepository, commentRepository)
+const getFactsByAuthor = new GetFactsByAuthor(factRepository, repostRepository, likeRepository, commentRepository)
 const getPopularFacts = new GetPopularFacts(factRepository)
 const searchPosts = new SearchPosts(factRepository)
 const searchHashtags = new SearchHashtags(hashtagRepository)

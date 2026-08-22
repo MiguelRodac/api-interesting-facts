@@ -73,6 +73,12 @@ function mapRepostWithFact (repost: {
 }
 
 export class PrismaRepostRepository implements RepostRepository {
+  async findById (id: string): Promise<Repost | null> {
+    const repost = await prisma.repost.findUnique({ where: { id } })
+    if (repost == null) return null
+    return mapRepost(repost)
+  }
+
   async findByAuthorAndFact (authorId: string, originalFactId: string): Promise<Repost | null> {
     const repost = await prisma.repost.findUnique({
       where: {

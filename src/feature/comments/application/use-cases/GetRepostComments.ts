@@ -1,0 +1,83 @@
+import { type CommentRepository, type CommentWithAuthor } from '../../domain/ports/CommentRepository'
+import { type CommentResponse } from '../dto/CommentResponse'
+import { type RepostRepository } from '../../../reposts/domain/ports/RepostRepository'
+import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
+import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
+import { RepostNotFoundError } from '../../../reposts/domain/errors/RepostNotFoundError'
+
+function mapCommentWithAuthor (
+  comment: CommentWithAuthor,
+  likesCountMap: Map<string, number>,
+  likeByMap: Map<string, UserAvatarPreview[]>,
+  viewerLikedSet: Set<string>
+): CommentResponse {
+  return {
+    id: comment.id,
+    content: comment.content,
+    author: {
+      username: comment.author.username,
+      displayName: comment.author.displayName,
+      avatarUrl: comment.author.avatarUrl,
+      avatarColor: comment.author.avatarColor
+    },
+    parentCommentId: comment.parentCommentId,
+    factId: comment.factId,
+    repostId: comment.repostId,
+    createdAt: comment.createdAt.toISOString(),
+    updatedAt: comment.updatedAt.toISOString(),
+    edited: comment.updatedAt.getTime() !== comment.createdAt.getTime(),
+    likesCount: likesCountMap.get(comment.id) ?? 0,
+    liked: viewerLikedSet.has(comment.id),
+    likeBy: likeByMap.get(comment.id) ?? [],
+    ...(comment.replies != null && {
+      replies: comment.replies.map(r => mapCommentWithAuthor(r, likesCountMap, likeByMap, viewerLikedSet))
+    })
+  }
+}
+
+function collectCommentIds (comments: CommentWithAuthor[], acc: string[] = []): string[] {
+  for (const c of comments) {
+    acc.push(c.id)
+    if (c.replies != null) collectCommentIds(c.replies, acc)
+  }
+  return acc
+}
+
+export class GetRepostComments {
+  private readonly commentRepository: CommentRepository
+  private readonly repostRepository: RepostRepository
+
+  constructor (commentRepository: CommentRepository, repostRepository: RepostRepository) {
+    this.commentRepository = commentRepository
+    this.repostRepository = repostRepository
+  }
+
+  async execute (repostId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<CommentResponse>> {
+    const repost = await this.repostRepository.findById(repostId)
+
+    if (repost == null) {
+      throw new RepostNotFoundError()
+    }
+
+    const { results: comments, ...pagination } = await this.commentRepository.findByRepostId(repostId, params)
+
+    if (comments.length === 0) {
+      return { results: [], ...pagination }
+    }
+
+    const commentIds = collectCommentIds(comments)
+
+    const [likesCountMap, likeByMap, viewerLikedSet] = await Promise.all([
+      this.commentRepository.countLikesByCommentIds(commentIds),
+      this.commentRepository.findRecentLikersByCommentIds(commentIds),
+      viewerId !== undefined
+        ? this.commentRepository.findViewerLikedComments(commentIds, viewerId)
+        : Promise.resolve(new Set<string>())
+    ])
+
+    return {
+      results: comments.map(c => mapCommentWithAuthor(c, likesCountMap, likeByMap, viewerLikedSet)),
+      ...pagination
+    }
+  }
+}

@@ -1,5 +1,7 @@
 import { type FactRepository } from '../../domain/ports/FactRepository'
 import { type RepostRepository } from '@reposts/domain/ports/RepostRepository'
+import { type LikeRepository } from '@likes/domain/ports/LikeRepository'
+import { type CommentRepository } from '@comments/domain/ports/CommentRepository'
 import { type FeedEntry } from '../dto/FeedEntry'
 import { mapFactViewToResponse } from '../mappers/factMapper'
 import { DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
@@ -7,10 +9,14 @@ import { DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination } from '
 export class GetFactsByAuthor {
   private readonly factRepository: FactRepository
   private readonly repostRepository: RepostRepository
+  private readonly likeRepository: LikeRepository
+  private readonly commentRepository: CommentRepository
 
-  constructor (factRepository: FactRepository, repostRepository: RepostRepository) {
+  constructor (factRepository: FactRepository, repostRepository: RepostRepository, likeRepository: LikeRepository, commentRepository: CommentRepository) {
     this.factRepository = factRepository
     this.repostRepository = repostRepository
+    this.likeRepository = likeRepository
+    this.commentRepository = commentRepository
   }
 
   async execute (authorId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FeedEntry>> {
@@ -29,7 +35,12 @@ export class GetFactsByAuthor {
     }))
 
     const originalFactIds = repostsPage.results.map(r => r.originalFactId)
-    const embedded = await this.factRepository.findByIds(originalFactIds, viewerId)
+    const repostIds = repostsPage.results.map(r => r.id)
+    const [embedded, repostLikeCounts, repostCommentCounts] = await Promise.all([
+      this.factRepository.findByIds(originalFactIds, viewerId),
+      this.likeRepository.batchLikeCountsByRepostIds(repostIds),
+      this.commentRepository.batchCommentCountsByRepostIds(repostIds)
+    ])
     const embeddedMap = new Map(embedded.map(f => [f.id, mapFactViewToResponse(f)]))
 
     const repostEntries: FeedEntry[] = []
@@ -46,7 +57,9 @@ export class GetFactsByAuthor {
           avatarColor: repost.avatarColor,
           isMe: repost.authorId === viewerId
         },
-        createdAt: repost.createdAt.toISOString()
+        createdAt: repost.createdAt.toISOString(),
+        repostLikeCount: repostLikeCounts.get(repost.id) ?? 0,
+        repostCommentCount: repostCommentCounts.get(repost.id) ?? 0
       })
     }
 

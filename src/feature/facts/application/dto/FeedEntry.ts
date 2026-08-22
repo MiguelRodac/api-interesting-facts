@@ -10,4 +10,4 @@ export interface RepostAuthor {
 
 export type FeedEntry =
   | { type: 'fact', fact: FactResponse, createdAt: string }
-  | { type: 'repost', fact: FactResponse, repostedBy: RepostAuthor, createdAt: string }
+  | { type: 'repost', fact: FactResponse, repostedBy: RepostAuthor, createdAt: string, repostLikeCount: number, repostCommentCount: number }

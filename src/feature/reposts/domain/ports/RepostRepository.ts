@@ -4,6 +4,7 @@ import { type RepostWithFact } from '../models/RepostWithFact'
 import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
 
 export interface RepostRepository {
+  findById: (id: string) => Promise<Repost | null>
   findByAuthorAndFact: (authorId: string, originalFactId: string) => Promise<Repost | null>
   findByFactId: (originalFactId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<RepostWithUser>>
   findAllWithFact: (params?: BaseQueryParams) => Promise<ResultWithPagination<RepostWithFact>>
