@@ -72,10 +72,14 @@ The API runs on `http://localhost:3000`. API docs at `http://localhost:3000/api/
 | `FIREBASE_CLIENT_EMAIL` | Firebase service account email |
 | `FIREBASE_PRIVATE_KEY` | Firebase service account private key |
 | `FIREBASE_API_KEY` | Firebase web API key |
-| `DEV_LOGIN_SECRET` | Secret for `/auth/dev-login` (dev only) |
 | `CORS_ORIGIN` | Allowed origin for CORS (default: `*`) |
+| `BASE_URL` | Base URL for error responses (default: `http://localhost:3000`) |
 | `PORT` | Server port (default: `3000`) |
+| `MIN_APP_VERSION` | Minimum app version accepted (default: `1.0.0`) |
+| `RATE_LIMIT_MAX` | Max requests per window (default: `100`) |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window in ms (default: `900000` / 15 min) |
 | `KEEP_ALIVE_IDLE_THRESHOLD_MS` | Fire a DB ping after this many ms of idle (default: `1200000` / 20 min) |
+| `SENTRY_DSN` | Sentry DSN for error tracking (optional) |
 
 ## Running locally
 
@@ -121,8 +125,9 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 - `FIREBASE_CLIENT_EMAIL`
 - `FIREBASE_PRIVATE_KEY`
 - `FIREBASE_API_KEY`
-- `DEV_LOGIN_SECRET`
 - `CORS_ORIGIN`
+- `BASE_URL`
+- `MIN_APP_VERSION`
 - `KEEP_ALIVE_IDLE_THRESHOLD_MS` (optional, default: 1200000)
 
 ## API overview
@@ -132,7 +137,6 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/auth/register` | None | Register + auto-login |
-| `POST` | `/auth/dev-login` | `DEV_LOGIN_SECRET` | Dev login with email/password → Firebase token |
 | `GET` | `/auth/me` | Firebase token | Get current user profile |
 | `PATCH` | `/auth/me` | Firebase token | Update profile |
 
