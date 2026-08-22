@@ -53,7 +53,8 @@ const config = {
   keepAlive: {
     // Fire a DB ping after this many ms of idle (default 20 min — Render free tier sleeps after 30 min)
     idleThresholdMs: Number(process.env.KEEP_ALIVE_IDLE_THRESHOLD_MS ?? '1200000')
-  }
+  },
+  minAppVersion: process.env.MIN_APP_VERSION
 }
 
 export default config
