@@ -15,7 +15,6 @@ import { GetRepostLikes } from '../../../likes/application/use-cases/GetRepostLi
 import { CreateRepostComment } from '../../../comments/application/use-cases/CreateRepostComment'
 import { GetRepostComments } from '../../../comments/application/use-cases/GetRepostComments'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
-import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 const ListQuerySchema = z.object({
@@ -136,7 +135,7 @@ router.post('/reposts/:repostId/comments', requireAuth, requireProfile, async (r
   }
 })
 
-router.get('/reposts/:repostId/comments', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/reposts/:repostId/comments', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)

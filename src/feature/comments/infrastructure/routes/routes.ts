@@ -10,7 +10,6 @@ import { UpdateComment } from '../../application/use-cases/UpdateComment'
 import { GetCommentsByFact } from '../../application/use-cases/GetCommentsByFact'
 import { GetCommentsByUser } from '../../application/use-cases/GetCommentsByUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
-import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 const ListQuerySchema = z.object({
@@ -77,7 +76,7 @@ router.patch('/comments/:id', requireAuth, requireProfile, async (req: Request, 
   }
 })
 
-router.get('/facts/:factId/comments', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/facts/:factId/comments', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)

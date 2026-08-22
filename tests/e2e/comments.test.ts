@@ -374,24 +374,28 @@ describe('Comments Endpoints', () => {
     it('should return 200 for fact with no comments', async () => {
       const factId = await getTestFactId()
 
-      const res = await request(app).get(`/facts/${factId}/comments`)
+      const res = await request(app)
+        .get(`/facts/${factId}/comments`)
+        .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(200)
       expect(res.body.results.length).toBe(0)
       expect(res.body.nextPage).toBeNull()
     })
 
-    it('should return 200 without auth (optionalAuth)', async () => {
+    it('should return 401 without auth', async () => {
       const factId = await getTestFactId()
       await createComment(factId)
 
       const res = await request(app).get(`/facts/${factId}/comments`)
 
-      expect(res.status).toBe(200)
+      expect(res.status).toBe(401)
     })
 
     it('should return 404 for non-existent fact', async () => {
-      const res = await request(app).get('/facts/non-existent-id/comments')
+      const res = await request(app)
+        .get('/facts/non-existent-id/comments')
+        .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(404)
     })
