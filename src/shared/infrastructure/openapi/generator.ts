@@ -4,7 +4,7 @@ import { registry } from './registry'
 // Side-effect: populates the registry with all schemas and paths
 import './routes'
 
-export function generateSpec(): ReturnType<OpenApiGeneratorV3['generateDocument']> {
+export function generateSpec (): ReturnType<OpenApiGeneratorV3['generateDocument']> {
   const generator = new OpenApiGeneratorV3(registry.definitions)
   return generator.generateDocument({
     openapi: '3.0.3',

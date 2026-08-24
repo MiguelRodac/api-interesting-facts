@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 dotenv.config()
 
-const REQUIRED: Array<{ key: string; label: string }> = [
+const REQUIRED: Array<{ key: string, label: string }> = [
   { key: 'DATABASE_URL', label: 'DATABASE_URL' },
   { key: 'FIREBASE_PROJECT_ID', label: 'FIREBASE_PROJECT_ID' },
   { key: 'FIREBASE_CLIENT_EMAIL', label: 'FIREBASE_CLIENT_EMAIL' },
@@ -25,11 +25,11 @@ for (const { key, label } of REQUIRED) {
   }
 }
 if (missing.length > 0) {
-  console.error(`[config] Missing required environment variables:`)
+  console.error('[config] Missing required environment variables:')
   for (const label of missing) {
     console.error(`  - ${label}`)
   }
-  console.error(`[config] App will not start.`)
+  console.error('[config] App will not start.')
   process.exit(1)
 }
 

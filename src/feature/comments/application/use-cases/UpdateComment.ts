@@ -22,7 +22,7 @@ export class UpdateComment {
     this.mentionParser = new MentionParser(mentionRepository, new PrismaUserRepository())
   }
 
-  private mapToCommentResponse (comment: Comment, likesCount: number, liked: boolean, likeBy: import('@shared/domain/types/UserAvatarPreview').UserAvatarPreview[]): CommentResponse {
+  private mapToCommentResponse (comment: Comment, likesCount: number, liked: boolean, likeBy: Array<import('@shared/domain/types/UserAvatarPreview').UserAvatarPreview>): CommentResponse {
     return {
       id: comment.id,
       content: comment.content,
@@ -68,7 +68,7 @@ export class UpdateComment {
 
     // IDEMPOTENCY: short-circuit if content is identical (zero DB writes)
     if (trimmed === comment.content) {
-      return this.toResponse(comment, authorId)
+      return await this.toResponse(comment, authorId)
     }
 
     if (now - comment.createdAt.getTime() > EDIT_WINDOW_MS) {
@@ -89,6 +89,6 @@ export class UpdateComment {
     // Re-parse and replace mentions (only reached when content actually changed)
     await this.mentionParser.storeCommentMentions(commentId, authorId, trimmed)
 
-    return this.toResponse(updated, authorId)
+    return await this.toResponse(updated, authorId)
   }
 }

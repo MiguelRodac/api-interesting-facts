@@ -172,6 +172,10 @@ export class PrismaLikeRepository implements LikeRepository {
       _count: { repostId: true },
       where: { repostId: { in: repostIds } }
     })
-    return new Map(likeCounts.map(l => [l.repostId!, l._count.repostId]))
+    const result = new Map<string, number>()
+    for (const l of likeCounts) {
+      if (l.repostId != null) result.set(l.repostId, l._count.repostId)
+    }
+    return result
   }
 }

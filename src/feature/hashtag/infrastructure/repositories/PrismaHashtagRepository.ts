@@ -98,7 +98,7 @@ export class PrismaHashtagRepository {
   }
 
   async findPopular (query?: string, limit: number = 10): Promise<HashtagWithUsage[]> {
-    const where = query
+    const where = query != null && query.length > 0
       ? { tag: { contains: query.toLowerCase() } }
       : {}
 

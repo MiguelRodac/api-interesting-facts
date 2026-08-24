@@ -80,7 +80,7 @@ router.get('/', optionalAuth, async (req: Request, res: Response, next: NextFunc
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
-    const viewerId = req.user?.uid as string | undefined
+    const viewerId = req.user?.uid
     const result = await getFacts.execute({ page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
@@ -93,7 +93,7 @@ router.get('/author/:authorId', optionalAuth, async (req: Request, res: Response
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const authorId = req.params.authorId as string
-    const viewerId = req.user?.uid as string | undefined
+    const viewerId = req.user?.uid
     const result = await getFactsByAuthor.execute(authorId, { page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
@@ -105,7 +105,7 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = PopularQuerySchema.parse(req.query)
-    const viewerId = req.user?.uid as string | undefined
+    const viewerId = req.user?.uid
     const result = await getPopularFacts.execute({ page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
@@ -115,9 +115,9 @@ router.get('/popular', optionalAuth, async (req: Request, res: Response, next: N
 
 router.get('/search', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { q, order_by, order_dir, page, limit } = SearchQuerySchema.parse(req.query)
+    const { q, order_by: orderBy, order_dir: orderDir, page, limit } = SearchQuerySchema.parse(req.query)
     const sanitized = q.trim()
-    const viewerId = req.user?.uid as string | undefined
+    const viewerId = req.user?.uid
     const skip = (page - 1) * limit
 
     // Fetch enough to cover the page + detect hasMore (request limit+1)
@@ -126,8 +126,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
       const [users, facts] = await Promise.all([
-        userRepository.findBySearch(query, { order_by, order_dir, limit: fetchLimit }),
-        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by, order_dir, limit: fetchLimit })
+        userRepository.findBySearch(query, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
+        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
       ])
 
       // Paginate merged results
@@ -159,8 +159,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
       const [hashtags, facts] = await Promise.all([
-        searchHashtags.execute(query, { order_by, order_dir, limit: fetchLimit }),
-        searchPosts.executeByHashtag(query, viewerId, { order_by, order_dir, limit: fetchLimit })
+        searchHashtags.execute(query, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
+        searchPosts.executeByHashtag(query, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
       ])
 
       const merged = [...hashtags, ...facts]
@@ -184,10 +184,10 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
 
     // Plain query — merge all categories
     const [users, factsByTitleOrHashtag, hashtags, factsByAuthorOrMention] = await Promise.all([
-      userRepository.findBySearch(sanitized, { order_by, order_dir, limit: fetchLimit }),
-      searchPosts.execute(sanitized, viewerId, { order_by, order_dir, limit: fetchLimit }),
-      searchHashtags.execute(sanitized, { order_by, order_dir, limit: fetchLimit }),
-      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by, order_dir, limit: fetchLimit })
+      userRepository.findBySearch(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
+      searchPosts.execute(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
+      searchHashtags.execute(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
     ])
 
     // Merge facts, deduplicating by id
@@ -239,7 +239,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
 router.get('/:id', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
-    const viewerId = req.user?.uid as string | undefined
+    const viewerId = req.user?.uid
     const fact = await getFactById.execute(id, viewerId)
     res.status(200).json(fact)
   } catch (err) {

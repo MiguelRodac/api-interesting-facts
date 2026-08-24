@@ -31,7 +31,7 @@ import {
   UnauthorizedErrorSchema,
   ForbiddenErrorSchema,
   ResourceNotFoundErrorSchema,
-  ResourceConflictErrorSchema,
+  ResourceConflictErrorSchema
 } from './schemas'
 
 // ── Security schemes ────────────────────────────────────────────────────────
