@@ -84,6 +84,7 @@ model Like {
   repost    Repost?  @relation(fields: [repostId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([factId, userId])
   @@index([factId])
   @@index([repostId])
   @@map("likes")
@@ -108,6 +109,7 @@ model Comment {
   mentions     Mention[]
 
   @@index([authorId, createdAt(sort: Desc)])
+  @@index([factId, parentCommentId, createdAt(sort: Desc)])
   @@index([factId, createdAt(sort: Desc)])
   @@index([repostId, createdAt(sort: Desc)])
   @@index([parentCommentId, authorId])
@@ -127,7 +129,6 @@ model Repost {
 
   @@unique([authorId, originalFactId])
   @@index([originalFactId, createdAt(sort: Desc)])
-  @@index([authorId, createdAt(sort: Desc)])
   @@map("reposts")
 }
 
