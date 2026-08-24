@@ -342,6 +342,48 @@ export const RepostPreviewSchema = z.object({
   createdAt: z.string().datetime()
 })
 
+export const RepostInFeedSchema = z.object({
+  id: z.string().uuid().describe('Repost UUID — use for like/comment on the repost'),
+  factId: z.string().uuid().describe('Original fact UUID — use for reposting the original fact'),
+  author: FactAuthorPreviewSchema.describe('Author of the original fact'),
+  title: z.string().nullable().describe('Title of the original fact'),
+  content: z.string().describe('Content of the original fact'),
+  hashtags: z.array(HashtagPreviewSchema),
+  repostCount: z.number().int().describe('Total reposts of the original fact'),
+  repostedBy: z.object({
+    username: z.string(),
+    displayName: z.string(),
+    avatarUrl: z.string().nullable(),
+    avatarColor: z.string().nullable(),
+    isMe: z.boolean()
+  }).describe('Who reposted this'),
+  repostLikeCount: z.number().int().describe('Likes ON this repost'),
+  repostCommentCount: z.number().int().describe('Comments ON this repost'),
+  repostCommentsDetails: CommentPreviewSchema.nullable().describe('First comment on this repost'),
+  createdAt: z.string().datetime().describe('When the repost was created')
+})
+
+export const FeedEntryFactSchema = z.object({
+  type: z.literal('fact'),
+  fact: FactResponseSchema,
+  createdAt: z.string().datetime()
+})
+
+export const FeedEntryRepostSchema = z.object({
+  type: z.literal('repost'),
+  repost: RepostInFeedSchema,
+  createdAt: z.string().datetime()
+})
+
+export const FeedEntrySchema = z.discriminatedUnion('type', [FeedEntryFactSchema, FeedEntryRepostSchema])
+
+export const PaginatedFeedResponseSchema = z.object({
+  results: z.array(FeedEntrySchema),
+  page: z.number().int(),
+  limit: z.number().int(),
+  nextPage: z.number().int().nullable()
+})
+
 export const PaginatedRepostPreviewResponseSchema = z.object({
   results: z.array(RepostPreviewSchema),
   page: z.number().int(),
@@ -351,6 +393,11 @@ export const PaginatedRepostPreviewResponseSchema = z.object({
 
 registry.register('RepostResponse', RepostResponseSchema)
 registry.register('RepostPreview', RepostPreviewSchema)
+registry.register('RepostInFeed', RepostInFeedSchema)
+registry.register('FeedEntryFact', FeedEntryFactSchema)
+registry.register('FeedEntryRepost', FeedEntryRepostSchema)
+registry.register('FeedEntry', FeedEntrySchema)
+registry.register('PaginatedFeedResponse', PaginatedFeedResponseSchema)
 registry.register('PaginatedRepostPreviewResponse', PaginatedRepostPreviewResponseSchema)
 
 // ── Comment ────────────────────────────────────────────────────────────────

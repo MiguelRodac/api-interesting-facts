@@ -10,7 +10,7 @@ import {
   CheckUsernameResponseSchema,
   AvatarOptionResponseSchema,
   PublicUserResponseSchema,
-  PaginatedFactResponseSchema,
+  PaginatedFeedResponseSchema,
   CreateFactRequestSchema,
   FactResponseSchema,
   UpdateFactRequestSchema,
@@ -282,14 +282,15 @@ const PopularQuerySchema = z.object({
 registry.registerPath({
   method: 'get',
   path: '/facts',
-  summary: 'Get all facts (newest first)',
+  summary: 'Get feed (facts + reposts, newest first)',
   operationId: 'getFacts',
   tags: ['Facts'],
+  description: 'Returns a mixed stream of facts and reposts. Each entry has a `type` discriminator: "fact" or "repost".',
   request: { query: ListQuerySchema },
   responses: {
     200: {
-      description: 'Paginated list of facts',
-      content: { 'application/json': { schema: PaginatedFactResponseSchema } }
+      description: 'Paginated feed with facts and reposts',
+      content: { 'application/json': { schema: PaginatedFeedResponseSchema } }
     }
   }
 })
@@ -348,7 +349,7 @@ registry.registerPath({
   responses: {
     200: {
       description: 'Paginated list of facts sorted by popularity',
-      content: { 'application/json': { schema: PaginatedFactResponseSchema } }
+      content: { 'application/json': { schema: PaginatedFeedResponseSchema } }
     }
   }
 })
@@ -418,7 +419,7 @@ registry.registerPath({
 registry.registerPath({
   method: 'get',
   path: '/facts/author/{authorId}',
-  summary: 'Get all facts by an author',
+  summary: 'Get all facts by an author (including their reposts)',
   operationId: 'getFactsByAuthor',
   tags: ['Facts'],
   request: {
@@ -427,9 +428,41 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Paginated list of facts by author',
-      content: { 'application/json': { schema: PaginatedFactResponseSchema } }
+      description: 'Paginated feed with facts and reposts by author',
+      content: { 'application/json': { schema: PaginatedFeedResponseSchema } }
     }
+  }
+})
+
+// ── Search ──────────────────────────────────────────────────────────────────
+
+const SearchQuerySchema = z.object({
+  q: z.string().min(1).max(50),
+  order_by: z.enum(['recent', 'popular']).optional(),
+  order_dir: z.enum(['asc', 'desc']).optional(),
+  page: z.coerce.number().int().positive().default(1).optional(),
+  limit: z.coerce.number().int().positive().max(100).default(100).optional()
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/search',
+  summary: 'Global search (users, facts, hashtags)',
+  operationId: 'search',
+  tags: ['Search'],
+  security: [{ bearerAuth: [] }],
+  description: 'Search across users, facts, and hashtags in a single request.',
+  request: {
+    query: SearchQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Combined search results',
+      content: { 'application/json': { schema: GlobalSearchResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    422: validationResponse
   }
 })
 
@@ -606,6 +639,116 @@ registry.registerPath({
       content: { 'application/json': { schema: PaginatedRepostPreviewResponseSchema } }
     },
     401: { description: 'Authentication required' }
+  }
+})
+
+// ─── Repost Likes ──────────────────────────────────────────────────────────
+
+registry.registerPath({
+  method: 'post',
+  path: '/reposts/{repostId}/likes',
+  summary: 'Like a repost',
+  operationId: 'likeRepost',
+  tags: ['Repost Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ repostId: z.string().uuid() })
+  },
+  responses: {
+    201: {
+      description: 'Like created on repost',
+      content: { 'application/json': { schema: LikeResponseSchema } }
+    },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse
+  }
+})
+
+registry.registerPath({
+  method: 'delete',
+  path: '/reposts/{repostId}/likes',
+  summary: 'Unlike a repost',
+  operationId: 'unlikeRepost',
+  tags: ['Repost Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ repostId: z.string().uuid() })
+  },
+  responses: {
+    204: { description: 'Like removed from repost' },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/reposts/{repostId}/likes',
+  summary: 'Get all likes for a repost',
+  operationId: 'getRepostLikes',
+  tags: ['Repost Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ repostId: z.string().uuid() }),
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Paginated list of likes for a repost',
+      content: { 'application/json': { schema: PaginatedLikePreviewResponseSchema } }
+    },
+    401: { description: 'Authentication required' }
+  }
+})
+
+// ─── Repost Comments ───────────────────────────────────────────────────────
+
+registry.registerPath({
+  method: 'post',
+  path: '/reposts/{repostId}/comments',
+  summary: 'Create a comment on a repost',
+  operationId: 'createRepostComment',
+  tags: ['Repost Comments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ repostId: z.string().uuid() }),
+    body: {
+      content: { 'application/json': { schema: CreateCommentRequestSchema } }
+    }
+  },
+  responses: {
+    201: {
+      description: 'Comment created on repost',
+      content: { 'application/json': { schema: CommentResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/reposts/{repostId}/comments',
+  summary: 'Get threaded comments for a repost',
+  operationId: 'getRepostComments',
+  tags: ['Repost Comments'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: z.object({ repostId: z.string().uuid() }),
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Threaded comments on repost',
+      content: { 'application/json': { schema: PaginatedCommentResponseSchema } }
+    },
+    401: { description: 'Authentication required' },
+    404: notFoundResponse
   }
 })
 
