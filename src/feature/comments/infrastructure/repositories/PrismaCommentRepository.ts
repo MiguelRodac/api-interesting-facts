@@ -245,7 +245,7 @@ export class PrismaCommentRepository implements CommentRepository {
   }
 
   async countRepliesByParentId (parentId: string, excludeAuthorId: string): Promise<number> {
-    return prisma.comment.count({
+    return await prisma.comment.count({
       where: {
         parentCommentId: parentId,
         authorId: { not: excludeAuthorId }
@@ -316,6 +316,67 @@ export class PrismaCommentRepository implements CommentRepository {
       _count: { repostId: true },
       where: { repostId: { in: repostIds } }
     })
-    return new Map(rows.map(r => [r.repostId!, r._count.repostId]))
+    const result = new Map<string, number>()
+    for (const r of rows) {
+      if (r.repostId != null) {
+        result.set(r.repostId, r._count.repostId)
+      }
+    }
+    return result
+  }
+
+  async batchFirstCommentByRepostIds (repostIds: string[]): Promise<Map<string, import('../../application/dto/CommentPreview').CommentPreview | null>> {
+    if (repostIds.length === 0) return new Map()
+
+    const comments = await prisma.comment.findMany({
+      where: { repostId: { in: repostIds }, parentCommentId: null },
+      orderBy: [{ repostId: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+      include: { author: { select: { username: true, avatarUrl: true, avatarColor: true } } }
+    })
+
+    const picked = new Map<string, { id: string, content: string, author: import('@shared/domain/types/UserAvatarPreview').UserAvatarPreview, createdAt: Date }>()
+    for (const c of comments) {
+      const rid = c.repostId
+      if (rid == null) continue
+      if (!picked.has(rid)) {
+        picked.set(rid, {
+          id: c.id,
+          content: c.content,
+          author: {
+            username: c.author.username,
+            avatarUrl: c.author.avatarUrl,
+            avatarColor: c.author.avatarColor
+          },
+          createdAt: c.createdAt
+        })
+      }
+    }
+
+    if (picked.size === 0) return new Map()
+
+    const pickedIds = [...picked.values()].map(p => p.id)
+    const replyRows = await prisma.comment.groupBy({
+      by: ['parentCommentId'],
+      _count: { parentCommentId: true },
+      where: { parentCommentId: { in: pickedIds } }
+    })
+    const replyCountMap = new Map<string, number>()
+    for (const row of replyRows) {
+      if (row.parentCommentId == null) continue
+      replyCountMap.set(row.parentCommentId, row._count.parentCommentId)
+    }
+
+    const result = new Map<string, import('../../application/dto/CommentPreview').CommentPreview | null>()
+    for (const [repostId, c] of picked) {
+      result.set(repostId, {
+        id: c.id,
+        content: c.content,
+        author: c.author,
+        parentCommentId: null,
+        replies: replyCountMap.get(c.id) ?? 0,
+        createdAt: c.createdAt.toISOString()
+      })
+    }
+    return result
   }
 }

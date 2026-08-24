@@ -1,6 +1,7 @@
 import { type Comment } from '../entities/Comment'
 import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
 import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
+import { type CommentPreview } from '../../application/dto/CommentPreview'
 
 export interface CreateCommentData {
   content: string
@@ -34,4 +35,5 @@ export interface CommentRepository {
   findRecentLikersByCommentIds: (commentIds: string[], limit?: number) => Promise<Map<string, UserAvatarPreview[]>>
   findViewerLikedComments: (commentIds: string[], viewerId: string) => Promise<Set<string>>
   batchCommentCountsByRepostIds: (repostIds: string[]) => Promise<Map<string, number>>
+  batchFirstCommentByRepostIds: (repostIds: string[]) => Promise<Map<string, CommentPreview | null>>
 }
