@@ -60,7 +60,11 @@ async function batchLikeCounts (factIds: string[]): Promise<Map<string, number>>
     _count: { factId: true },
     where: { factId: { in: factIds } }
   })
-  return new Map(likeCounts.map(l => [l.factId!, l._count.factId]))
+  const result = new Map<string, number>()
+  for (const l of likeCounts) {
+    if (l.factId != null) result.set(l.factId, l._count.factId)
+  }
+  return result
 }
 
 async function batchUserLikes (factIds: string[], viewerId: string): Promise<Set<string>> {
@@ -69,7 +73,7 @@ async function batchUserLikes (factIds: string[], viewerId: string): Promise<Set
     where: { factId: { in: factIds }, userId: viewerId },
     select: { factId: true }
   })
-  return new Set(userLikes.map(l => l.factId!))
+  return new Set(userLikes.map(l => l.factId).filter((id): id is string => id != null))
 }
 
 async function batchHashtags (factIds: string[]): Promise<Map<string, Array<{ id: string, tag: string }>>> {
@@ -96,7 +100,11 @@ async function batchCommentCounts (factIds: string[]): Promise<Map<string, numbe
     _count: { factId: true },
     where: { factId: { in: factIds } }
   })
-  return new Map(rows.map(r => [r.factId!, r._count.factId]))
+  const result = new Map<string, number>()
+  for (const r of rows) {
+    if (r.factId != null) result.set(r.factId, r._count.factId)
+  }
+  return result
 }
 
 async function batchRecentLikers (factIds: string[], limit: number = 1): Promise<Map<string, UserAvatarPreview[]>> {
@@ -108,14 +116,16 @@ async function batchRecentLikers (factIds: string[], limit: number = 1): Promise
   })
   const result = new Map<string, UserAvatarPreview[]>()
   for (const like of likes) {
-    const arr = result.get(like.factId!) ?? []
+    const fid = like.factId
+    if (fid == null) continue
+    const arr = result.get(fid) ?? []
     if (arr.length < limit) {
       arr.push({
         username: like.user.username,
         avatarUrl: like.user.avatarUrl,
         avatarColor: like.user.avatarColor
       })
-      result.set(like.factId!, arr)
+      result.set(fid, arr)
     }
   }
   return result
@@ -131,8 +141,10 @@ async function batchFirstComment (factIds: string[]): Promise<Map<string, Commen
 
   const picked = new Map<string, { id: string, content: string, author: UserAvatarPreview, createdAt: Date }>()
   for (const c of comments) {
-    if (!picked.has(c.factId!)) {
-      picked.set(c.factId!, {
+    const fid = c.factId
+    if (fid == null) continue
+    if (!picked.has(fid)) {
+      picked.set(fid, {
         id: c.id,
         content: c.content,
         author: {
@@ -275,9 +287,9 @@ async function enrichFacts (
   const factIds = facts.map(f => f.id)
   const [viewerLikedSet, viewerRepostedSet] = viewerId !== null
     ? await Promise.all([
-        batchUserLikes(factIds, viewerId),
-        batchViewerRepostedSet(factIds, viewerId)
-      ])
+      batchUserLikes(factIds, viewerId),
+      batchViewerRepostedSet(factIds, viewerId)
+    ])
     : [null, null]
   return facts.map(f => enrichFact(
     f, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap,
@@ -740,5 +752,102 @@ export class PrismaFactRepository implements FactRepository {
     await prisma.fact.delete({
       where: { id }
     })
+  }
+
+  // ─── Batch optimization methods ───────────────────────────────────────────
+
+  private readonly FACT_SELECT = {
+    id: true,
+    authorId: true,
+    title: true,
+    content: true,
+    createdAt: true,
+    updatedAt: true,
+    author: { select: { firebaseUid: true, username: true, email: true, displayName: true, avatarUrl: true, avatarColor: true } }
+  } as const
+
+  async findRawByIds (ids: string[]): Promise<Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>> {
+    if (ids.length === 0) return []
+    return await prisma.fact.findMany({
+      where: { id: { in: ids } },
+      select: this.FACT_SELECT
+    })
+  }
+
+  async findRawAll (params?: BaseQueryParams): Promise<{ facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>, total: number }> {
+    const { skip, take } = buildPagination(params)
+
+    const [facts, total] = await Promise.all([
+      prisma.fact.findMany({
+        select: this.FACT_SELECT,
+        orderBy: buildOrderBy(params?.order_by, params?.order_dir),
+        skip,
+        take
+      }),
+      prisma.fact.count()
+    ])
+
+    return { facts, total }
+  }
+
+  async batchBuildEnrichmentMaps (factIds: string[]): Promise<import('../../domain/ports/FactRepository').EnrichmentMaps> {
+    if (factIds.length === 0) {
+      return {
+        likeCountMap: new Map(),
+        commentCountMap: new Map(),
+        likeByMap: new Map(),
+        commentsDetailsMap: new Map(),
+        repostCountMap: new Map(),
+        repostByMap: new Map(),
+        hashtagsMap: new Map()
+      }
+    }
+
+    const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
+      batchLikeCounts(factIds),
+      batchCommentCounts(factIds),
+      batchRecentLikers(factIds, 1),
+      batchFirstComment(factIds),
+      batchRepostCounts(factIds),
+      batchRecentReposters(factIds, 2),
+      batchHashtags(factIds)
+    ])
+
+    return { likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap }
+  }
+
+  async batchEnrichFacts (
+    facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>,
+    enrichmentMaps: import('../../domain/ports/FactRepository').EnrichmentMaps,
+    viewerId?: string
+  ): Promise<FactView[]> {
+    if (facts.length === 0) return []
+
+    const factIds = facts.map(f => f.id)
+    const { likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap } = enrichmentMaps
+
+    const [viewerLikedSet, viewerRepostedSet] = viewerId != null
+      ? await Promise.all([
+        batchUserLikes(factIds, viewerId),
+        batchViewerRepostedSet(factIds, viewerId)
+      ])
+      : [null, null]
+
+    return facts.map(f => enrichFact(
+      f, likeCountMap, commentCountMap, likeByMap, commentsDetailsMap,
+      repostCountMap, repostByMap,
+      viewerLikedSet, viewerRepostedSet,
+      viewerId ?? null,
+      hashtagsMap.get(f.id) ?? []
+    ))
+  }
+
+  async batchViewerContext (factIds: string[], viewerId: string): Promise<{ viewerLikedSet: Set<string>, viewerRepostedSet: Set<string> }> {
+    if (factIds.length === 0) return { viewerLikedSet: new Set(), viewerRepostedSet: new Set() }
+    const [viewerLikedSet, viewerRepostedSet] = await Promise.all([
+      batchUserLikes(factIds, viewerId),
+      batchViewerRepostedSet(factIds, viewerId)
+    ])
+    return { viewerLikedSet, viewerRepostedSet }
   }
 }
