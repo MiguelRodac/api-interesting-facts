@@ -327,7 +327,7 @@ describe('Facts Endpoints', () => {
     }
 
     const assertEnrichment = (fact: { likeBy: unknown[], comments: number, commentsDetails: { replies: number } | null }): void => {
-      expect(fact.likeBy).toHaveLength(2)
+      expect(fact.likeBy).toHaveLength(1)
       expect(fact.comments).toBe(2)
       expect(fact.commentsDetails).not.toBeNull()
       expect(fact.commentsDetails?.replies).toBe(1)

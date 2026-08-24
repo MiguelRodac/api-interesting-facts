@@ -202,12 +202,12 @@ describe('Reposts Endpoints', () => {
       expect(Array.isArray(res.body.results)).toBe(true)
 
       const repostEntry = res.body.results.find(
-        (r: { type: string, fact: { id: string } }) => r.type === 'repost' && r.fact.id === fact.id
+        (r: { type: string, repost: { factId: string } }) => r.type === 'repost' && r.repost.factId === fact.id
       )
       expect(repostEntry).toBeDefined()
-      expect(repostEntry.fact).toBeDefined()
-      expect(repostEntry.fact.content).toBe('A fact to be reposted')
-      expect(repostEntry.repostedBy).toMatchObject({
+      expect(repostEntry.repost).toBeDefined()
+      expect(repostEntry.repost.content).toBe('A fact to be reposted')
+      expect(repostEntry.repost.repostedBy).toMatchObject({
         username: author.username,
         displayName: author.displayName,
         isMe: false
@@ -227,11 +227,11 @@ describe('Reposts Endpoints', () => {
       expect(res.status).toBe(200)
 
       const repostEntry = res.body.results.find(
-        (r: { type: string, fact: { id: string } }) => r.type === 'repost' && r.fact.id === fact.id
+        (r: { type: string, repost: { factId: string } }) => r.type === 'repost' && r.repost.factId === fact.id
       )
       expect(repostEntry).toBeDefined()
-      expect(repostEntry.fact.content).toBe('A fact to be reposted')
-      expect(repostEntry.repostedBy).toMatchObject({ username: author.username, isMe: false })
+      expect(repostEntry.repost.content).toBe('A fact to be reposted')
+      expect(repostEntry.repost.repostedBy).toMatchObject({ username: author.username, isMe: false })
     }, 20000)
 
     it('should mark a repost as isMe when viewer is the reposter', async () => {
@@ -247,10 +247,10 @@ describe('Reposts Endpoints', () => {
 
       expect(res.status).toBe(200)
       const repostEntry = res.body.results.find(
-        (r: { type: string, fact: { id: string } }) => r.type === 'repost' && r.fact.id === fact.id
+        (r: { type: string, repost: { factId: string } }) => r.type === 'repost' && r.repost.factId === fact.id
       )
       expect(repostEntry).toBeDefined()
-      expect(repostEntry.repostedBy.isMe).toBe(true)
+      expect(repostEntry.repost.repostedBy.isMe).toBe(true)
     }, 20000)
   })
 })
