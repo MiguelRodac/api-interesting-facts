@@ -8,11 +8,20 @@ REST API for sharing interesting facts — built with Express.js, TypeScript, Po
 |---------|------|
 | `/auth` | Register, login, profile management (Firebase ID token auth) |
 | `/facts` | Create, read, update, delete interesting facts |
-| `/users/:username` | Public user profiles |
-| `/likes` | Like/unlike facts, list likes by fact or user |
+| `/facts/:id/likes` | Like/unlike facts |
+| `/facts/:id/comments` | Comment on facts (nested replies) |
+| `/facts/:id/reposts` | Repost a fact |
+| `/reposts/:id/likes` | Like/unlike reposts |
+| `/reposts/:id/comments` | Comment on reposts (nested replies) |
+| `/users/:username` | Public user profiles + user facts |
+| `/users/:username/likes` | User's liked facts |
+| `/users/:username/comments` | User's comments |
+| `/users/:username/mentions` | User's mentions |
+| `/search` | Search facts, users, hashtags |
 | `/api/docs` | Interactive API docs (Scalar/OpenAPI) |
 | `/ping` | Health check — HTML page in browser, JSON for API clients (includes docs link) |
 | Rate limiting | 100 req/15 min per IP (protects against floods) |
+| Version check | `X-App-Version` header — returns 426 if outdated |
 
 ## Stack
 
@@ -33,17 +42,22 @@ Clean Architecture — each feature lives under `src/feature/<name>/` with domai
 ```
 src/
 ├── feature/
-│   ├── facts/       # Domain, use-cases, routes, repositories
-│   ├── likes/       # Same structure
-│   └── user/        # Same structure
+│   ├── facts/        # Domain, use-cases, routes, repositories
+│   ├── likes/        # Polymorphic likes (facts + reposts)
+│   ├── comments/     # Polymorphic comments (facts + reposts) + comment likes
+│   ├── reposts/      # Repost CRUD + engagement
+│   ├── mentions/     # @username mentions
+│   ├── hashtag/      # #hashtag search
+│   └── user/         # User profiles, onboarding
 └── shared/
     ├── infrastructure/
     │   ├── config/       # Environment variables (Zod-validated)
     │   ├── firebase/     # Firebase Admin SDK (lazy init)
     │   ├── logger/       # Pino HTTP logger
-    │   └── middleware/   # Auth, error handling
+    │   └── middleware/   # Auth, error handling, version check
     └── domain/
-        └── errors/       # Shared error types
+        ├── errors/       # Shared error types
+        └── types/        # Shared types (pagination, UserAvatarPreview)
 ```
 
 ## Quick start
@@ -145,19 +159,123 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
 | `POST` | `/facts` | Firebase token | Create a fact |
-| `GET` | `/facts` | None | List facts (paginated) |
+| `GET` | `/facts` | None | List facts + reposts (paginated feed) |
+| `GET` | `/facts/popular` | None | List popular facts (by likes) |
 | `GET` | `/facts/:id` | None | Get single fact |
+| `GET` | `/facts/author/:authorId` | None | Get facts by author + their reposts |
 | `PATCH` | `/facts/:id` | Firebase token | Update own fact |
 | `DELETE` | `/facts/:id` | Firebase token | Delete own fact |
 
-### Likes — `/likes`
+### Fact Likes — `/facts/:factId/likes`
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/likes` | Firebase token | Like a fact |
-| `DELETE` | `/likes/:factId` | Firebase token | Unlike a fact |
-| `GET` | `/likes/fact/:factId` | None | Get likes for a fact |
-| `GET` | `/likes/user` | Firebase token | Get current user's likes |
+| `POST` | `/facts/:factId/likes` | Firebase token | Like a fact |
+| `DELETE` | `/facts/:factId/likes` | Firebase token | Unlike a fact |
+| `GET` | `/facts/:factId/likes` | Firebase token | Get likes for a fact |
+
+### Fact Comments — `/facts/:factId/comments`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/facts/:factId/comments` | Firebase token | Comment on a fact |
+| `GET` | `/facts/:factId/comments` | Firebase token | Get comments for a fact (paginated) |
+
+### Reposts — `/facts/:factId/reposts`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/facts/:factId/reposts` | Firebase token | Repost a fact |
+| `DELETE` | `/facts/:factId/reposts` | Firebase token | Undo repost |
+| `GET` | `/facts/:factId/reposts` | Firebase token | Get reposts for a fact |
+
+### Repost Likes — `/reposts/:repostId/likes`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/reposts/:repostId/likes` | Firebase token | Like a repost |
+| `DELETE` | `/reposts/:repostId/likes` | Firebase token | Unlike a repost |
+| `GET` | `/reposts/:repostId/likes` | Firebase token | Get likes for a repost |
+
+### Repost Comments — `/reposts/:repostId/comments`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `POST` | `/reposts/:repostId/comments` | Firebase token | Comment on a repost |
+| `GET` | `/reposts/:repostId/comments` | Firebase token | Get comments for a repost (paginated) |
+
+### Search — `/search`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/search?q=...` | Firebase token | Search facts, users, hashtags |
+
+### Users — `/users/:username`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/users/:username` | None | Get user profile |
+| `GET` | `/users/:username/facts` | None | Get user's facts + reposts |
+| `GET` | `/users/:username/likes` | Firebase token | Get user's liked facts |
+| `GET` | `/users/:username/comments` | Firebase token | Get user's comments |
+| `GET` | `/users/:username/mentions` | Firebase token | Get user's mentions |
+
+## Feed structure
+
+The feed (`GET /facts`) returns a mixed stream of facts and reposts. Each entry has a `type` discriminator:
+
+### `type: "fact"`
+
+```json
+{
+  "type": "fact",
+  "fact": {
+    "id": "uuid",
+    "author": { "id": "firebaseUid", "username": "...", "displayName": "...", "avatarUrl": null, "avatarColor": null },
+    "title": "Optional title",
+    "content": "Fact content #hashtag @mention",
+    "likes": 5,
+    "liked": true,
+    "likeBy": [{ "username": "...", "avatarUrl": null, "avatarColor": null }],
+    "comments": 3,
+    "commentsDetails": { "id": "...", "content": "...", "author": { "username": "..." }, "parentCommentId": null, "replies": 1, "createdAt": "..." },
+    "repostCount": 2,
+    "repostedByMe": false,
+    "repostBy": [{ "username": "...", "avatarUrl": null, "avatarColor": null }],
+    "hashtags": [{ "id": "...", "tag": "hashtag" }],
+    "createdAt": "2026-08-24T...",
+    "updatedAt": "2026-08-24T..."
+  },
+  "createdAt": "2026-08-24T..."
+}
+```
+
+### `type: "repost"`
+
+```json
+{
+  "type": "repost",
+  "repost": {
+    "id": "repost-uuid",
+    "factId": "original-fact-uuid",
+    "author": { "id": "firebaseUid", "username": "...", "displayName": "...", "avatarUrl": null, "avatarColor": null },
+    "title": "Original fact title",
+    "content": "Original fact content",
+    "hashtags": [{ "id": "...", "tag": "hashtag" }],
+    "repostCount": 5,
+    "repostedBy": { "username": "...", "displayName": "...", "avatarUrl": null, "avatarColor": null, "isMe": false },
+    "repostLikeCount": 3,
+    "repostCommentCount": 1,
+    "repostCommentsDetails": { "id": "...", "content": "...", "author": { "username": "..." }, "parentCommentId": null, "replies": 0, "createdAt": "..." },
+    "createdAt": "2026-08-24T..."
+  },
+  "createdAt": "2026-08-24T..."
+}
+```
+
+**Key IDs for frontend:**
+- `repost.id` — use for like/comment on the repost (`POST /reposts/:repostId/likes`)
+- `repost.factId` — use for reposting the original fact (`POST /facts/:factId/reposts`)
 
 ## Security
 
@@ -169,6 +287,7 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 | Auth | Firebase ID tokens (JWT, cryptographically verified) |
 | CORS | Configurable origin whitelist |
 | Body size | Limited to `1mb` to prevent payload floods |
+| Version check | `X-App-Version` header validated against `MIN_APP_VERSION` |
 
 ## Monitoring
 
