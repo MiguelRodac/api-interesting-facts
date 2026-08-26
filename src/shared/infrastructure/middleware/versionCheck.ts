@@ -27,13 +27,12 @@ export function versionCheck (req: Request, res: Response, next: NextFunction): 
         type: `${process.env.BASE_URL ?? 'http://localhost:3000'}/errors/version/missing-header`,
         title: 'Missing Version Header',
         status: 400,
-        detail: 'X-App-Version header is required. Please update your client.',
+        detail: 'App version not valid. Please update your client.',
         error_code: 'APP_VERSION_MISSING',
         category: 'version',
         instance: req.originalUrl,
         trace_id: crypto.randomUUID(),
-        timestamp: new Date().toISOString(),
-        min_version: MIN_APP_VERSION
+        timestamp: new Date().toISOString()
       })
       return
     }
@@ -51,13 +50,12 @@ export function versionCheck (req: Request, res: Response, next: NextFunction): 
       type: `${process.env.BASE_URL ?? 'http://localhost:3000'}/errors/version/upgrade-required`,
       title: 'Upgrade Required',
       status: 426,
-      detail: `This version (${clientVersion}) is no longer supported. Please update to version ${MIN_APP_VERSION} or later.`,
+      detail: 'App version not supported. Please update your client to the latest version.',
       error_code: 'APP_VERSION_OUTDATED',
       category: 'version',
       instance: req.originalUrl,
       trace_id: crypto.randomUUID(),
-      timestamp: new Date().toISOString(),
-      min_version: MIN_APP_VERSION
+      timestamp: new Date().toISOString()
     })
     return
   }
