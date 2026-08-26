@@ -43,13 +43,14 @@ export function generateSpec (): ReturnType<OpenApiGeneratorV3['generateDocument
         '## Versioning',
         '',
         'Clients must send their app version in the `X-App-Version` header (semver, e.g. `1.2.0`) on every request.',
+        'Requests without it are rejected with 400 — no header, no API.',
         '',
         '| Status | error_code | Meaning |',
         '|---|---|---|',
-        '| 400 | APP_VERSION_MISSING | Header missing while strict mode is enabled |',
+        '| 400 | APP_VERSION_MISSING | Header missing |',
         '| 426 | APP_VERSION_OUTDATED | Client version no longer supported — update required |',
         '',
-        'Error bodies intentionally omit the minimum supported version.'
+        '`GET /ping`, `/api/docs` and `/favicon.svg` are exempt (browser-facing). Error bodies intentionally omit the minimum supported version.'
       ].join('\n'),
       version: '0.0.1',
       contact: { name: 'API Support' }

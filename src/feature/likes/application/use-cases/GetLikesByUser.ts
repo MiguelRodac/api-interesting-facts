@@ -48,7 +48,7 @@ export class GetLikesByUser {
     }))
 
     // Build repost entries with full enrichment
-    let repostEntries: FeedEntry[] = []
+    const repostEntries: FeedEntry[] = []
     if (repostsWithFact.length > 0) {
       const originalFactIds = repostsWithFact.map(r => r.originalFactId)
       const repostIdsForBatch = repostsWithFact.map(r => r.id)

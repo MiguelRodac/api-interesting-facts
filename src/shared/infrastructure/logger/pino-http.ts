@@ -4,7 +4,8 @@ import { logger } from './index'
 
 const isDev = process.env.NODE_ENV !== 'production'
 
-const traceIdHeader = process.env.TRACE_ID_HEADER ?? 'x-trace-id'
+// Validated at startup by shared/infrastructure/config
+const traceIdHeader = process.env.TRACE_ID_HEADER as string
 
 interface RequestWithHeaders {
   method?: string

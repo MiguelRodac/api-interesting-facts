@@ -4,7 +4,7 @@ const isDev = process.env.NODE_ENV !== 'production'
 
 export const createLogger = (): pino.Logger => {
   return pino({
-    level: process.env.PINO_LOG_LEVEL ?? (isDev ? 'debug' : 'info'),
+    level: process.env.PINO_LOG_LEVEL as string,
     transport: isDev
       ? { target: 'pino-pretty', options: { colorize: true } }
       : undefined,

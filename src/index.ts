@@ -21,7 +21,8 @@ app.use((_req, _res, next) => {
   next()
 })
 
-const resolvedVersion = process.env.version ?? '0.0.1'
+// Banner shows the npm package version (injected by npm/Vercel at build time)
+const resolvedVersion = process.env.npm_package_version ?? 'dev'
 console.log(renderBanner(resolvedVersion))
 
 const server = app.listen(config.port, () => {

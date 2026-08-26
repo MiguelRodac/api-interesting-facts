@@ -2,29 +2,58 @@ import { type Request, type Response, type NextFunction } from 'express'
 import { compareVersions } from '@shared/domain/utils/compareVersions'
 import { logger } from '../logger'
 
-const MIN_APP_VERSION = process.env.MIN_APP_VERSION ?? '1.0.0'
-const STRICT_VERSION_CHECK = process.env.STRICT_VERSION_CHECK === 'true'
+// Validated at startup by shared/infrastructure/config — guaranteed present
+const MIN_APP_VERSION = process.env.MIN_APP_VERSION as string
 
 /**
- * Middleware that checks the X-App-Version header against MIN_APP_VERSION.
- * If the client version is older, responds with 426 Upgrade Required.
+ * Strict by default: requests missing X-App-Version are rejected with 400.
+ * Set STRICT_VERSION_CHECK=false only for local debugging / e2e tests.
+ */
+function isStrict (): boolean {
+  return process.env.STRICT_VERSION_CHECK !== 'false'
+}
+
+/**
+ * Browser-facing routes that don't require X-App-Version:
+ * - /ping        → health checks (UptimeRobot) and status page
+ * - /api/docs    → Scalar docs UI (opened directly in a browser)
+ * - /favicon.svg → favicon served for the docs/ping pages
+ */
+const EXEMPT_PATHS = new Set(['/ping', '/favicon.svg'])
+
+function isExempt (path: string): boolean {
+  if (EXEMPT_PATHS.has(path)) return true
+  return path === '/api/docs' || path.startsWith('/api/docs/')
+}
+
+/**
+ * Middleware that checks the X-App-Version header against MIN_APP_VERSION on
+ * EVERY endpoint. Applied globally via app.use() before all routes.
  *
  * Behavior:
- * - STRICT_VERSION_CHECK=true: rejects requests missing X-App-Version header (400)
- * - STRICT_VERSION_CHECK=false (default): skips check when header is missing
+ * - Missing X-App-Version header → 400 APP_VERSION_MISSING (unless strict mode disabled)
+ * - Version older than MIN_APP_VERSION → 426 APP_VERSION_OUTDATED
+ * - Exempt: /ping, /api/docs, /favicon.svg (accessed directly from a browser)
+ *
+ * Error bodies never disclose the minimum supported version.
  */
 export function versionCheck (req: Request, res: Response, next: NextFunction): void {
+  if (isExempt(req.path)) {
+    next()
+    return
+  }
+
   const clientVersion = req.headers['x-app-version']
 
   if (clientVersion == null || typeof clientVersion !== 'string') {
-    if (STRICT_VERSION_CHECK) {
+    if (isStrict()) {
       logger.warn(
         { path: req.path },
-        'Missing X-App-Version header — blocking request (strict mode)'
+        'Missing X-App-Version header — blocking request'
       )
 
       res.status(400).json({
-        type: `${process.env.BASE_URL ?? 'http://localhost:3000'}/errors/version/missing-header`,
+        type: `${process.env.BASE_URL as string}/errors/version/missing-header`,
         title: 'Missing Version Header',
         status: 400,
         detail: 'App version not valid. Please update your client.',
@@ -47,7 +76,7 @@ export function versionCheck (req: Request, res: Response, next: NextFunction): 
     )
 
     res.status(426).json({
-      type: `${process.env.BASE_URL ?? 'http://localhost:3000'}/errors/version/upgrade-required`,
+      type: `${process.env.BASE_URL as string}/errors/version/upgrade-required`,
       title: 'Upgrade Required',
       status: 426,
       detail: 'App version not supported. Please update your client to the latest version.',

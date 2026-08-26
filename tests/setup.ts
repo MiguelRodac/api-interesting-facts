@@ -1,5 +1,8 @@
 import { mockGetAuth } from './mocks/firebase'
 
+// Disable strict version check for e2e tests (requests don't send X-App-Version)
+process.env.STRICT_VERSION_CHECK = 'false'
+
 // Mock firebase-admin/auth before app loads
 jest.mock('firebase-admin/auth', () => ({
   getAuth: mockGetAuth

@@ -91,7 +91,7 @@ export abstract class DomainError extends Error {
     traceId: string,
     includeDetails: boolean = true
   ): RFC9457Response {
-    const baseUrl = process.env.BASE_URL ?? 'http://localhost:3000'
+    const baseUrl = process.env.BASE_URL as string
     const typeSlug = this.errorCode.code.toLowerCase().replace(/_/g, '-')
 
     const safeDetails = this.sanitizeDetails(this.details, includeDetails)

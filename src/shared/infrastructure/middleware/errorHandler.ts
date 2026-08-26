@@ -135,7 +135,7 @@ export const errorHandler = (
     return
   }
 
-  const baseUrl = process.env.BASE_URL ?? 'http://localhost:3000'
+  const baseUrl = process.env.BASE_URL as string
   const problemDetails: RFC9457Response = {
     type: `${baseUrl}/errors/${ErrorCategory.INFRASTRUCTURE}/internal-error`,
     title: 'Internal Error',

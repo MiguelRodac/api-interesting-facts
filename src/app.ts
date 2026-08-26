@@ -29,8 +29,8 @@ app.set('trust proxy', 1)
 const isDev = process.env.NODE_ENV !== 'production'
 
 // Global rate limiter
-const RATE_LIMIT_MAX = parseInt(process.env.RATE_LIMIT_MAX ?? '100', 10)
-const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS ?? (15 * 60 * 1000).toString(), 10)
+const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX)
+const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS)
 
 if (!isDev) {
   const limiter = rateLimit({
@@ -49,7 +49,7 @@ if (!isDev) {
   app.use(limiter)
 
   // Higher limit only for /hashtags and /users/search (autocomplete on keystroke)
-  const autocompleteLimit = parseInt(process.env.AUTOCOMPLETE_RATE_LIMIT ?? '200', 10)
+  const autocompleteLimit = Number(process.env.AUTOCOMPLETE_RATE_LIMIT)
   const autocompleteLimiter = rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS,
     max: autocompleteLimit,
@@ -69,7 +69,7 @@ if (!isDev) {
 
 // CORS — allow frontend origin
 const corsOptions: cors.CorsOptions = {
-  origin: process.env.CORS_ORIGIN ?? '*',
+  origin: process.env.CORS_ORIGIN as string,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Trace-Id', 'X-App-Version'],
   credentials: true
@@ -102,7 +102,7 @@ app.get('/ping', async (req, res) => {
   const now = new Date().toISOString()
   const uptimeSeconds = Math.round(process.uptime())
   const version = process.env.npm_package_version ?? '0.0.1'
-  const environment = process.env.NODE_ENV ?? 'development'
+  const environment = process.env.NODE_ENV as string
 
   const payload = {
     status: 'ok',
@@ -175,7 +175,7 @@ app.use('/', repostRoutes)
 
 app.use((_req, res) => {
   res.status(404).json({
-    type: `${process.env.BASE_URL ?? 'http://localhost:3000'}/errors/not-found/route-not-found`,
+    type: `${process.env.BASE_URL as string}/errors/not-found/route-not-found`,
     title: 'Route Not Found',
     status: 404,
     detail: `Route ${_req.method} ${_req.originalUrl} does not exist`,

@@ -80,22 +80,28 @@ The API runs on `http://localhost:3000`. API docs at `http://localhost:3000/api/
 
 ## Environment variables
 
+**Todas las variables son obligatorias** — si falta una o viene vacía, la API aborta el arranque. Única excepción: `SENTRY_DSN` (opcional).
+
 | Variable | Description |
 |----------|-------------|
+| `NODE_ENV` | `development` o `production` (habilita rate limiting y logs JSON) |
+| `PORT` | Server port |
 | `DATABASE_URL` | PostgreSQL connection string |
 | `FIREBASE_PROJECT_ID` | Firebase project ID |
 | `FIREBASE_CLIENT_EMAIL` | Firebase service account email |
 | `FIREBASE_PRIVATE_KEY` | Firebase service account private key |
 | `FIREBASE_API_KEY` | Firebase web API key |
-| `CORS_ORIGIN` | Allowed origin for CORS (default: `*`) |
-| `BASE_URL` | Base URL for error responses (default: `http://localhost:3000`) |
-| `PORT` | Server port (default: `3000`) |
-| `MIN_APP_VERSION` | Minimum app version accepted (default: `1.0.0`) |
-| `STRICT_VERSION_CHECK` | If `true`, requests missing `X-App-Version` are rejected with 400 (default: `false`) |
-| `RATE_LIMIT_MAX` | Max requests per window (default: `100`) |
-| `RATE_LIMIT_WINDOW_MS` | Rate limit window in ms (default: `900000` / 15 min) |
-| `KEEP_ALIVE_IDLE_THRESHOLD_MS` | Fire a DB ping after this many ms of idle (default: `1200000` / 20 min) |
-| `SENTRY_DSN` | Sentry DSN for error tracking (optional) |
+| `PINO_LOG_LEVEL` | Log level: `trace`, `debug`, `info`, `warn`, `error`, `fatal` |
+| `TRACE_ID_HEADER` | Header name for request trace ID |
+| `CORS_ORIGIN` | Allowed origin for CORS |
+| `BASE_URL` | Base URL for RFC9457 error `type` fields |
+| `MIN_APP_VERSION` | Minimum app version accepted (semver) — older clients get 426 |
+| `STRICT_VERSION_CHECK` | `true` = reject requests missing `X-App-Version` with 400. `false` only for local debugging / e2e tests |
+| `RATE_LIMIT_MAX` | Max requests per window per IP (production only) |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window in ms (e.g. `900000` / 15 min) |
+| `AUTOCOMPLETE_RATE_LIMIT` | Higher limit for autocomplete endpoints (`/hashtags`, `/users/search`, `/facts/search`) |
+| `KEEP_ALIVE_IDLE_THRESHOLD_MS` | Fire a DB ping after this many ms of idle (default guidance: `1200000` / 20 min) |
+| `SENTRY_DSN` | **Optional** — Sentry DSN; empty/absent disables error tracking |
 
 ## Running locally
 
@@ -144,7 +150,14 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 - `CORS_ORIGIN`
 - `BASE_URL`
 - `MIN_APP_VERSION`
-- `KEEP_ALIVE_IDLE_THRESHOLD_MS` (optional, default: 1200000)
+- `STRICT_VERSION_CHECK=true`
+- `RATE_LIMIT_MAX`
+- `RATE_LIMIT_WINDOW_MS`
+- `AUTOCOMPLETE_RATE_LIMIT`
+- `KEEP_ALIVE_IDLE_THRESHOLD_MS`
+- `PINO_LOG_LEVEL`, `TRACE_ID_HEADER`, `NODE_ENV=production`
+
+> **All of the above are required** — the API aborts startup if any is missing. See [Environment variables](#environment-variables).
 
 ## API overview
 
@@ -309,9 +322,9 @@ The feed (`GET /facts`) returns a mixed stream of facts and reposts. Each entry 
 Clients send `X-App-Version: <semver>` on every request.
 
 - Version older than `MIN_APP_VERSION` → **426** `APP_VERSION_OUTDATED`
-- Missing header while `STRICT_VERSION_CHECK=true` → **400** `APP_VERSION_MISSING`
+- Missing header → **400** `APP_VERSION_MISSING` (default behavior)
 
-Error responses never disclose the minimum supported version (security).
+Exempt: `/ping`, `/api/docs`, `/favicon.svg` (browser-facing). Error responses never disclose the minimum supported version (security).
 
 ## Security
 
