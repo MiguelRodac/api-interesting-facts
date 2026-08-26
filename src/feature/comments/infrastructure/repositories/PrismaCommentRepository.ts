@@ -97,6 +97,7 @@ export class PrismaCommentRepository implements CommentRepository {
       data: {
         content: data.content,
         factId: data.factId,
+        repostId: data.repostId,
         authorId: data.authorId,
         parentCommentId: data.parentCommentId ?? null
       }

@@ -18,23 +18,23 @@ export class CreateComment {
   private readonly commentRepository: CommentRepository
   private readonly factRepository: FactRepository
   private readonly mentionParser: MentionParser
+  private readonly userRepository: PrismaUserRepository
 
   constructor (commentRepository: CommentRepository, factRepository: FactRepository, mentionRepository: MentionRepository) {
     this.commentRepository = commentRepository
     this.factRepository = factRepository
     this.mentionParser = new MentionParser(mentionRepository, new PrismaUserRepository())
+    this.userRepository = new PrismaUserRepository()
   }
 
-  private mapComment (comment: Comment): CommentResponse {
+  private async mapComment (comment: Comment): Promise<CommentResponse> {
+    const user = await this.userRepository.findById(comment.authorId)
     return {
       id: comment.id,
       content: comment.content,
-      author: {
-        username: '',
-        displayName: '',
-        avatarUrl: null,
-        avatarColor: null
-      },
+      author: user != null
+        ? { username: user.username, displayName: user.displayName, avatarUrl: user.avatarUrl, avatarColor: user.avatarColor }
+        : { username: '', displayName: '', avatarUrl: null, avatarColor: null },
       parentCommentId: comment.parentCommentId,
       factId: comment.factId,
       repostId: comment.repostId,
@@ -97,6 +97,6 @@ export class CreateComment {
     // Extract and store mentions
     await this.mentionParser.storeCommentMentions(comment.id, authorId, trimmed)
 
-    return this.mapComment(comment)
+    return await this.mapComment(comment)
   }
 }
