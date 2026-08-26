@@ -14,7 +14,7 @@ import commentLikeRoutes from '@commentLikes/infrastructure/routes/routes'
 import repostRoutes from '@reposts/infrastructure/routes/routes'
 import hashtagRoutes from '@hashtag/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
-// import { versionCheck } from '@shared/infrastructure/middleware/versionCheck'
+import { versionCheck } from '@shared/infrastructure/middleware/versionCheck'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
 import prisma from '@shared/infrastructure/prisma'
 import { renderPingHtml } from '@shared/infrastructure/views/pingHtml'
@@ -80,7 +80,7 @@ app.use(express.json({ limit: '1mb' }))
 app.use(httpLogger)
 
 // Version check — rejects requests from outdated app versions
-// app.use(versionCheck)
+app.use(versionCheck)
 
 app.get('/ping', async (req, res) => {
   const accept = req.get('Accept') ?? ''
