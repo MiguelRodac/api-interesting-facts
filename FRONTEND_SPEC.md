@@ -1,26 +1,26 @@
-# Frontend Integration Spec — Reposts, Feed, Engagement
+# Frontend Integration Spec — Reposts, Feed, Engagement, Versioning
 
-> **Fecha:** 2026-08-24
-> **Backend branch:** main (11 commits ahead of origin)
-> **Status:** Listo para push — esperando señal del frontend
+> **Fecha:** 2026-08-26
+> **Backend branch:** main
+> **Status:** Pusheado a origin/main
 
 ---
 
 ## 1. Cambios en el Feed (`GET /facts`)
 
-El feed ahora mezcla facts y reposts. Cada entrada tiene un `type` discriminator.
+El feed mezcla facts y reposts. Cada entrada tiene un `type` discriminator.
 
-### `type: "fact"` — sin cambios
+### `type: "fact"`
 
 ```typescript
 {
   type: "fact",
-  fact: FactResponse,  // misma estructura de antes
+  fact: FactResponse,
   createdAt: string
 }
 ```
 
-### `type: "repost"` — NUEVA ESTRUCTURA
+### `type: "repost"`
 
 ```typescript
 {
@@ -28,18 +28,12 @@ El feed ahora mezcla facts y reposts. Cada entrada tiene un `type` discriminator
   repost: {
     id: string,              // UUID del repost
     factId: string,          // UUID del fact original
-    author: {                // author del fact ORIGINAL
-      id: string,
-      username: string,
-      displayName: string,
-      avatarUrl: string | null,
-      avatarColor: string | null
-    },
-    title: string | null,    // titulo del fact original
-    content: string,          // contenido del fact original
+    author: FactAuthorPreview, // author del fact ORIGINAL
+    title: string | null,
+    content: string,
     hashtags: HashtagPreview[],
-    repostCount: number,      // reposts del fact original
-    repostedBy: {             // quien lo reposteó
+    repostCount: number,           // reposts del fact original
+    repostedBy: {                  // quien lo reposteó
       username: string,
       displayName: string,
       avatarUrl: string | null,
@@ -47,13 +41,17 @@ El feed ahora mezcla facts y reposts. Cada entrada tiene un `type` discriminator
       isMe: boolean
     },
     repostLikeCount: number,       // likes AL repost
+    liked?: boolean,               // NUEVO: viewer dio like al repost? (con token)
+    likeBy: UserAvatarPreview[],   // NUEVO: hasta 3 usuarios recientes
     repostCommentCount: number,    // comments AL repost
-    repostCommentsDetails: CommentPreview | null,  // primer comment del repost
-    createdAt: string              // cuando se hizo el repost
+    repostCommentsDetails: CommentPreview | null,
+    createdAt: string
   },
-  createdAt: string  // = repost.createdAt
+  createdAt: string
 }
 ```
+
+**`likeBy` (facts y reposts):** devuelve hasta **3** usuarios recientes. Todos traen `avatarUrl`/`avatarColor`; solo el **último** trae `username`.
 
 ---
 
@@ -64,6 +62,8 @@ El feed ahora mezcla facts y reposts. Cada entrada tiene un `type` discriminator
 | Like al repost | `POST /reposts/:repostId/likes` | `repost.id` |
 | Unlike al repost | `DELETE /reposts/:repostId/likes` | `repost.id` |
 | Comment al repost | `POST /reposts/:repostId/comments` | `repost.id` |
+| Like a comment de repost | `POST /reposts/:repostId/comments/:commentId/likes` | `repost.id` + `comment.id` |
+| Repost detail | `GET /reposts/:repostId` | `repost.id` |
 | Repostear el fact original | `POST /facts/:factId/reposts` | `repost.factId` |
 | Like al fact original | `POST /facts/:factId/likes` | `fact.id` (en type:"fact") |
 | Ver fact original | `GET /facts/:factId` | `repost.factId` |
@@ -74,102 +74,118 @@ El feed ahora mezcla facts y reposts. Cada entrada tiene un `type` discriminator
 
 ---
 
-## 3. CAMBIOS EN EL FRONTEND
+## 3. SEARCH (`GET /facts/search`) — ⚠️ CAMBIO DE FORMATO
 
-### 3.1 Quitar composite ID
+El shape de la respuesta depende del prefijo del query:
 
-**Antes (hack):**
-```typescript
-const compositeId = `${factId}-repost-${username}`
+### `@mention` y texto plano → campo `results` (FeedEntry[])
+
+```json
+{
+  "users": [UserSearchResult],
+  "results": [
+    { "type": "fact", "fact": { }, "createdAt": "..." },
+    { "type": "repost", "repost": { }, "createdAt": "..." }
+  ],
+  "hashtags": [],
+  "page": 1, "limit": 100, "hasMore": false
+}
 ```
 
-**Ahora:**
-```typescript
-// El backend ya manda el ID único del repost
-const repostId = entry.repost.id
-```
+- Ahora incluye **reposts** de los autores matcheados (además de facts)
+- Facts y reposts vienen con enriquecimiento completo
+- El campo se llama **`results`**, NO `facts`
 
-### 3.2 Navegación
+### `#hashtag` → formato legacy (sin cambios)
 
-**Antes:**
-```typescript
-router.push(`/fact/${originalFactId}`)
-```
-
-**Ahora:**
-```typescript
-// Para ver el repost
-router.push(`/repost/${entry.repost.id}`)
-
-// Para ver el fact original
-router.push(`/fact/${entry.repost.factId}`)
-```
-
-### 3.3 Like/Comment en reposts
-
-**Antes:** No existía
-**Ahora:**
-```typescript
-// Like al repost
-await api.post(`/reposts/${entry.repost.id}/likes`)
-
-// Comment al repost
-await api.post(`/reposts/${entry.repost.id}/comments`, { content: "..." })
-```
-
-### 3.4 Repostear desde un repost card
-
-**Antes:** No existía
-**Ahora:**
-```typescript
-// Repostear el fact ORIGINAL (no el repost)
-await api.post(`/facts/${entry.repost.factId}/reposts`)
+```json
+{
+  "users": [],
+  "facts": [FactResponse],
+  "hashtags": [HashtagWithUsage],
+  "page": 1, "limit": 100, "hasMore": false
+}
 ```
 
 ---
 
-## 4. NUEVOS ENDPOINTS
+## 4. USER LIKES (`GET /users/:userId/likes`) — ⚠️ CAMBIO DE FORMATO
 
-### Reposts
+Devuelve un feed enriquecido de TODO lo que el usuario likeó (facts + reposts), ordenado por fecha de like:
 
-| Method | Path | Auth | Body | Response |
-|--------|------|------|------|----------|
-| `POST` | `/facts/:factId/reposts` | ✅ | — | `Repost` |
-| `DELETE` | `/facts/:factId/reposts` | ✅ | — | 204 |
-| `GET` | `/facts/:factId/reposts` | ✅ | — | `{ results: Repost[], ... }` |
+```json
+{
+  "results": [
+    { "type": "fact", "fact": { }, "createdAt": "<fecha del LIKE>" },
+    { "type": "repost", "repost": { }, "createdAt": "<fecha del LIKE>" }
+  ],
+  "page": 1, "limit": 20, "nextPage": null
+}
+```
 
-### Repost Likes
+- Ya NO devuelve la lista plana de likes con `factId`
+- Auth **opcional** — sin token, `liked`/`repostedByMe` vienen indefinidos
+- El `createdAt` de cada entry es la fecha **del like**, no del post
 
-| Method | Path | Auth | Body | Response |
-|--------|------|------|------|----------|
-| `POST` | `/reposts/:repostId/likes` | ✅ | — | `Like` |
-| `DELETE` | `/reposts/:repostId/likes` | ✅ | — | 204 |
-| `GET` | `/reposts/:repostId/likes` | ✅ | — | `{ results: Like[], ... }` |
+---
 
-### Repost Comments
+## 5. NUEVOS ENDPOINTS
 
-| Method | Path | Auth | Body | Response |
-|--------|------|------|------|----------|
-| `POST` | `/reposts/:repostId/comments` | ✅ | `{ content, parentCommentId? }` | `Comment` |
-| `GET` | `/reposts/:repostId/comments` | ✅ | — | `{ results: Comment[], ... }` |
-
-### Search
-
-| Method | Path | Auth | Query | Response |
-|--------|------|------|-------|----------|
-| `GET` | `/search` | ✅ | `q, order_by?, order_dir?, page?, limit?` | `{ users, facts, hashtags, page, limit, hasMore }` |
-
-### User Facts + Reposts
+### Repost Detail
 
 | Method | Path | Auth | Response |
 |--------|------|------|----------|
-| `GET` | `/users/:username/facts` | None | `{ results: FeedEntry[], ... }` |
+| `GET` | `/reposts/:repostId` | Optional | `RepostResponse` completo |
 
-> Retorna facts Y reposts del usuario (mixed feed).
+### Comment Likes (facts Y reposts)
+
+| Method | Path | Auth | Body | Response |
+|--------|------|------|------|----------|
+| `POST` | `/facts/:factId/comments/:commentId/likes` | ✅ | — | `CommentLike` (201) |
+| `DELETE` | `/facts/:factId/comments/:commentId/likes` | ✅ | — | 204 |
+| `GET` | `/facts/:factId/comments/:commentId/likes` | ✅ | — | `{ results: LikePreview[], ... }` |
+| `POST` | `/reposts/:repostId/comments/:commentId/likes` | ✅ | — | `CommentLike` (201) |
+| `DELETE` | `/reposts/:repostId/comments/:commentId/likes` | ✅ | — | 204 |
+| `GET` | `/reposts/:repostId/comments/:commentId/likes` | ✅ | — | `{ results: LikePreview[], ... }` |
+
+```typescript
+interface CommentLike {
+  id: string
+  userId: string
+  commentId: string
+  factId: string | null     // null si es comment de repost
+  repostId: string | null   // null si es comment de fact
+  createdAt: string
+}
+```
 
 ---
 
-## 5. TIPOS TYPESCRIPT (para copiar)
+## 6. BUG FIXES EN COMMENTS
+
+- `POST /reposts/:repostId/comments` — ahora guarda `repostId` en DB y el response trae `author` con datos reales (antes venía `username: ""`)
+- `POST /facts/:factId/comments` — mismo fix de author
+
+---
+
+## 7. VERSIONING — HEADER OBLIGATORIO
+
+Enviar en **todas** las requests:
+
+```
+X-App-Version: 1.2.0
+```
+
+| Status | error_code | Cuándo |
+|--------|-----------|--------|
+| `400` | `APP_VERSION_MISSING` | Falta el header y el backend está en modo strict |
+| `426` | `APP_VERSION_OUTDATED` | La versión es vieja — forzar actualización |
+
+**Importante:** el backend NUNCA revela la versión mínima soportada (seguridad). Ante 426, mostrar UI de "actualizar app" genérica.
+
+---
+
+## 8. TIPOS TYPESCRIPT (para copiar)
 
 ```typescript
 interface FactAuthorPreview {
@@ -219,6 +235,14 @@ interface FactResponse {
   updatedAt: string
 }
 
+interface RepostedBy {
+  username: string
+  displayName: string
+  avatarUrl: string | null
+  avatarColor: string | null
+  isMe: boolean
+}
+
 interface RepostResponse {
   id: string
   factId: string
@@ -227,14 +251,10 @@ interface RepostResponse {
   content: string
   hashtags: HashtagPreview[]
   repostCount: number
-  repostedBy: {
-    username: string
-    displayName: string
-    avatarUrl: string | null
-    avatarColor: string | null
-    isMe: boolean
-  }
+  repostedBy: RepostedBy
   repostLikeCount: number
+  liked?: boolean
+  likeBy: UserAvatarPreview[]
   repostCommentCount: number
   repostCommentsDetails: CommentPreview | null
   createdAt: string
@@ -243,24 +263,33 @@ interface RepostResponse {
 type FeedEntry =
   | { type: 'fact', fact: FactResponse, createdAt: string }
   | { type: 'repost', repost: RepostResponse, createdAt: string }
+
+interface PaginatedFeed {
+  results: FeedEntry[]
+  page: number
+  limit: number
+  nextPage: number | null
+}
 ```
 
 ---
 
-## 6. VALIDACIONES
+## 9. VALIDACIONES
 
 - `POST /reposts/:repostId/likes` — no duplicados (409 si ya tiene like)
-- `POST /facts/:factId/reposts` — no puedes repostear tu propio fact (400)
-- `POST /facts/:factId/reposts` — no duplicados (409)
-- `POST /reposts/:repostId/comments` — content required, min 10 chars, max 1000
-- `POST /facts/:factId/comments` — content required, min 10 chars, max 1000
-- Todos los endpoints de reposts requieren auth + profile completo
+- `POST /facts/:factId/reposts` — no puedes repostear tu propio fact (400), no duplicados (409)
+- Comments — content required, min 10 chars, max 1000
+- Comment likes — no duplicados (409); el comment debe pertenecer al fact/repost de la URL (404 si no)
 
 ---
 
-## 7. PENDIENTES FUTUROS
+## 10. CHECKLIST FRONTEND
 
-- `repostCommentsDetails` viene con el primer comment del repost (ya funcionando)
-- `repostCommentsDetails` puede venir `null` si no hay comments
-- Feed batch optimizado: ~10 queries por request (antes ~30)
-- 2 índices compuestos nuevos en PostgreSQL para performance
+- [ ] Enviar header `X-App-Version` en todas las requests (interceptor HTTP)
+- [ ] Manejar 426 → pantalla "actualiza la app"
+- [ ] Manejar 400 APP_VERSION_MISSING (solo si strict mode activo)
+- [ ] `/users/:id/likes` → renderizar FeedEntry[] en vez de lista de likes
+- [ ] `/facts/search` @ y plain → leer `results` en vez de `facts`
+- [ ] Mostrar `likeBy` (hasta 3 avatares) en facts y reposts
+- [ ] Like a comments de reposts vía nuevos endpoints
+- [ ] Usar `GET /reposts/:repostId` para la vista de detalle de repost

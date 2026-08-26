@@ -16,7 +16,7 @@ import {
   UpdateFactRequestSchema,
   GlobalSearchResponseSchema,
   LikeResponseSchema,
-  PaginatedLikeResponseSchema,
+  CommentLikeResponseSchema,
   PaginatedLikePreviewResponseSchema,
   RepostResponseSchema,
   RepostInFeedSchema,
@@ -273,6 +273,14 @@ const ListQuerySchema = z.object({
   order_dir: z.enum(['asc', 'desc']).optional()
 })
 
+const SearchQuerySchema = z.object({
+  q: z.string().min(1).max(50),
+  order_by: z.enum(['recent', 'popular']).optional(),
+  order_dir: z.enum(['asc', 'desc']).optional(),
+  page: z.coerce.number().int().positive().default(1).optional(),
+  limit: z.coerce.number().int().positive().max(100).default(100).optional()
+})
+
 const PopularQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1).optional(),
   limit: z.coerce.number().int().positive().max(100).default(10).optional(),
@@ -323,19 +331,28 @@ registry.registerPath({
 registry.registerPath({
   method: 'get',
   path: '/facts/search',
-  summary: 'Global search (users, facts, hashtags)',
+  summary: 'Global search (users, facts, reposts, hashtags)',
   operationId: 'globalSearch',
   tags: ['Facts'],
-  description: 'Search across users, facts, and hashtags in a single request.',
+  security: [{ bearerAuth: [] }],
+  description: [
+    'Search across users, posts, and hashtags in a single request.',
+    '',
+    'Response shape depends on the query prefix:',
+    '- `@mention` queries: returns users matching the mention AND `results` with FeedEntry[] (facts + reposts, fully enriched).',
+    '- Plain text queries: same as mentions — merged results in `results` as FeedEntry[].',
+    '- `#hashtag` queries: returns hashtags plus legacy `facts` array (FactResponse[], no reposts).'
+  ].join('\n'),
   request: {
-    query: z.object({ q: z.string().min(1) })
+    query: SearchQuerySchema
   },
   responses: {
     200: {
-      description: 'Combined search results',
+      description: 'Combined search results (shape varies by query prefix — see description)',
       content: { 'application/json': { schema: GlobalSearchResponseSchema } }
     },
     400: badRequestResponse,
+    401: unauthorizedResponse,
     422: validationResponse
   }
 })
@@ -435,38 +452,6 @@ registry.registerPath({
   }
 })
 
-// ── Search ──────────────────────────────────────────────────────────────────
-
-const SearchQuerySchema = z.object({
-  q: z.string().min(1).max(50),
-  order_by: z.enum(['recent', 'popular']).optional(),
-  order_dir: z.enum(['asc', 'desc']).optional(),
-  page: z.coerce.number().int().positive().default(1).optional(),
-  limit: z.coerce.number().int().positive().max(100).default(100).optional()
-})
-
-registry.registerPath({
-  method: 'get',
-  path: '/search',
-  summary: 'Global search (users, facts, hashtags)',
-  operationId: 'search',
-  tags: ['Search'],
-  security: [{ bearerAuth: [] }],
-  description: 'Search across users, facts, and hashtags in a single request.',
-  request: {
-    query: SearchQuerySchema
-  },
-  responses: {
-    200: {
-      description: 'Combined search results',
-      content: { 'application/json': { schema: GlobalSearchResponseSchema } }
-    },
-    400: badRequestResponse,
-    401: unauthorizedResponse,
-    422: validationResponse
-  }
-})
-
 // ── Hashtags ────────────────────────────────────────────────────────────────
 
 registry.registerPath({
@@ -563,9 +548,16 @@ registry.registerPath({
 registry.registerPath({
   method: 'get',
   path: '/users/{userId}/likes',
-  summary: 'Get all likes by a user',
+  summary: 'Get all posts liked by a user (facts + reposts, enriched)',
   operationId: 'getUserLikes',
   tags: ['Likes'],
+  description: [
+    'Returns a paginated feed of everything the user has liked, as FeedEntry[] sorted by like date (most recent first).',
+    '',
+    'Each entry is `{ type: "fact", fact }` or `{ type: "repost", repost }` with full enrichment',
+    '(likes, likeBy, comments, repostCount, hashtags, viewer context).',
+    'Authentication is optional; `liked`/`repostedByMe` fields are only populated with a token.'
+  ].join('\n'),
   security: [{ bearerAuth: [] }],
   request: {
     params: z.object({ userId: z.string() }),
@@ -573,8 +565,8 @@ registry.registerPath({
   },
   responses: {
     200: {
-      description: 'Paginated list of likes by user',
-      content: { 'application/json': { schema: PaginatedLikeResponseSchema } }
+      description: 'Paginated feed of facts and reposts liked by the user',
+      content: { 'application/json': { schema: PaginatedFeedResponseSchema } }
     },
     401: { description: 'Authentication required' }
   }
@@ -876,6 +868,138 @@ registry.registerPath({
     200: {
       description: 'Flat comments list',
       content: { 'application/json': { schema: PaginatedCommentResponseSchema } }
+    },
+    401: unauthorizedResponse
+  }
+})
+
+// ── Comment Likes (facts) ───────────────────────────────────────────────────
+
+const CommentLikePathParamsSchema = z.object({
+  factId: z.string().uuid().optional(),
+  repostId: z.string().uuid().optional(),
+  commentId: z.string().uuid()
+})
+
+registry.registerPath({
+  method: 'post',
+  path: '/facts/{factId}/comments/{commentId}/likes',
+  summary: 'Like a comment on a fact',
+  operationId: 'likeFactComment',
+  tags: ['Comment Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CommentLikePathParamsSchema
+  },
+  responses: {
+    201: {
+      description: 'Comment like created',
+      content: { 'application/json': { schema: CommentLikeResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse
+  }
+})
+
+registry.registerPath({
+  method: 'delete',
+  path: '/facts/{factId}/comments/{commentId}/likes',
+  summary: 'Remove like from a comment on a fact',
+  operationId: 'unlikeFactComment',
+  tags: ['Comment Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CommentLikePathParamsSchema
+  },
+  responses: {
+    204: { description: 'Comment like removed' },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/facts/{factId}/comments/{commentId}/likes',
+  summary: 'List users who liked a comment on a fact',
+  operationId: 'getFactCommentLikes',
+  tags: ['Comment Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CommentLikePathParamsSchema,
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Paginated list of comment likes, enriched with the user preview',
+      content: { 'application/json': { schema: PaginatedLikePreviewResponseSchema } }
+    },
+    401: unauthorizedResponse
+  }
+})
+
+// ── Comment Likes (reposts) ────────────────────────────────────────────────
+
+registry.registerPath({
+  method: 'post',
+  path: '/reposts/{repostId}/comments/{commentId}/likes',
+  summary: 'Like a comment on a repost',
+  operationId: 'likeRepostComment',
+  tags: ['Comment Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CommentLikePathParamsSchema
+  },
+  responses: {
+    201: {
+      description: 'Comment like created',
+      content: { 'application/json': { schema: CommentLikeResponseSchema } }
+    },
+    400: badRequestResponse,
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse,
+    409: conflictResponse
+  }
+})
+
+registry.registerPath({
+  method: 'delete',
+  path: '/reposts/{repostId}/comments/{commentId}/likes',
+  summary: 'Remove like from a comment on a repost',
+  operationId: 'unlikeRepostComment',
+  tags: ['Comment Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CommentLikePathParamsSchema
+  },
+  responses: {
+    204: { description: 'Comment like removed' },
+    401: unauthorizedResponse,
+    403: forbiddenResponse,
+    404: notFoundResponse
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/reposts/{repostId}/comments/{commentId}/likes',
+  summary: 'List users who liked a comment on a repost',
+  operationId: 'getRepostCommentLikes',
+  tags: ['Comment Likes'],
+  security: [{ bearerAuth: [] }],
+  request: {
+    params: CommentLikePathParamsSchema,
+    query: ListQuerySchema
+  },
+  responses: {
+    200: {
+      description: 'Paginated list of comment likes, enriched with the user preview',
+      content: { 'application/json': { schema: PaginatedLikePreviewResponseSchema } }
     },
     401: unauthorizedResponse
   }

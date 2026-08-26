@@ -292,7 +292,17 @@ registry.register('PaginatedFactResponse', PaginatedFactResponseSchema)
 export const LikeResponseSchema = z.object({
   id: z.string().uuid(),
   userId: z.string(),
-  factId: z.string().uuid(),
+  factId: z.string().uuid().nullable(),
+  repostId: z.string().uuid().nullable(),
+  createdAt: z.string().datetime()
+})
+
+export const CommentLikeResponseSchema = z.object({
+  id: z.string().uuid(),
+  userId: z.string(),
+  commentId: z.string().uuid(),
+  factId: z.string().uuid().nullable(),
+  repostId: z.string().uuid().nullable(),
   createdAt: z.string().datetime()
 })
 
@@ -320,6 +330,7 @@ export const PaginatedLikePreviewResponseSchema = z.object({
 })
 
 registry.register('LikeResponse', LikeResponseSchema)
+registry.register('CommentLikeResponse', CommentLikeResponseSchema)
 registry.register('LikePreview', LikePreviewSchema)
 registry.register('PaginatedLikeResponse', PaginatedLikeResponseSchema)
 registry.register('PaginatedLikePreviewResponse', PaginatedLikePreviewResponseSchema)
@@ -498,7 +509,21 @@ registry.register('PaginatedMentionResponse', PaginatedMentionResponseSchema)
 
 // ── Search ──────────────────────────────────────────────────────────────────
 
-export const GlobalSearchResponseSchema = z.object({
+/**
+ * GET /facts/search response shape depends on the query prefix:
+ * - `@mention` and plain text queries → results: FeedEntry[] (facts + reposts, fully enriched)
+ * - `#hashtag` queries → facts: FactResponse[] (legacy shape, no reposts)
+ */
+export const MentionSearchResponseSchema = z.object({
+  users: z.array(UserSearchResultSchema),
+  results: z.array(FeedEntrySchema).describe('Feed entries (facts and reposts) matching the query'),
+  hashtags: z.array(HashtagPreviewSchema),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  hasMore: z.boolean()
+})
+
+export const HashtagSearchResponseSchema = z.object({
   users: z.array(UserSearchResultSchema),
   facts: z.array(FactResponseSchema),
   hashtags: z.array(HashtagPreviewSchema),
@@ -507,6 +532,10 @@ export const GlobalSearchResponseSchema = z.object({
   hasMore: z.boolean()
 })
 
+export const GlobalSearchResponseSchema = z.union([MentionSearchResponseSchema, HashtagSearchResponseSchema])
+
+registry.register('MentionSearchResponse', MentionSearchResponseSchema)
+registry.register('HashtagSearchResponse', HashtagSearchResponseSchema)
 registry.register('GlobalSearchResponse', GlobalSearchResponseSchema)
 
 // ── Health ──────────────────────────────────────────────────────────────────
