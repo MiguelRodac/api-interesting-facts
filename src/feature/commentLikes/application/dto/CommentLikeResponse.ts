@@ -2,7 +2,8 @@ export interface CommentLikeResponse {
   id: string
   userId: string
   commentId: string
-  factId: string
+  factId: string | null
+  repostId: string | null
   createdAt: string
 }
 

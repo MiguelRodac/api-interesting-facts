@@ -29,7 +29,7 @@ router.post('/facts/:factId/comments/:commentId/likes', requireAuth, requireProf
     const commentId = req.params.commentId as string
     const userId = req.user?.uid as string
 
-    const like = await createCommentLike.execute(factId, commentId, userId)
+    const like = await createCommentLike.execute(commentId, userId, { factId })
     res.status(201).json(like)
   } catch (err) {
     next(err)
@@ -42,7 +42,7 @@ router.delete('/facts/:factId/comments/:commentId/likes', requireAuth, requirePr
     const commentId = req.params.commentId as string
     const userId = req.user?.uid as string
 
-    await deleteCommentLike.execute(factId, commentId, userId)
+    await deleteCommentLike.execute(commentId, userId, { factId })
     res.status(204).send()
   } catch (err) {
     next(err)
@@ -50,6 +50,46 @@ router.delete('/facts/:factId/comments/:commentId/likes', requireAuth, requirePr
 })
 
 router.get('/facts/:factId/comments/:commentId/likes', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
+    const commentId = req.params.commentId as string
+    const result = await getCommentLikesByCommentId.execute(commentId, { page, limit, order_by, order_dir })
+    res.status(200).json(result)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// ─── Repost Comment Likes ───────────────────────────────────────────────────
+
+router.post('/reposts/:repostId/comments/:commentId/likes', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const repostId = req.params.repostId as string
+    const commentId = req.params.commentId as string
+    const userId = req.user?.uid as string
+
+    const like = await createCommentLike.execute(commentId, userId, { repostId })
+    res.status(201).json(like)
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.delete('/reposts/:repostId/comments/:commentId/likes', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const repostId = req.params.repostId as string
+    const commentId = req.params.commentId as string
+    const userId = req.user?.uid as string
+
+    await deleteCommentLike.execute(commentId, userId, { repostId })
+    res.status(204).send()
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.get('/reposts/:repostId/comments/:commentId/likes', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)

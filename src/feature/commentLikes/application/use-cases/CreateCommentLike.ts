@@ -13,11 +13,18 @@ export class CreateCommentLike {
     this.commentRepository = commentRepository
   }
 
-  async execute (factId: string, commentId: string, userId: string): Promise<CommentLikeResponse> {
+  async execute (commentId: string, userId: string, opts: { factId?: string, repostId?: string } = {}): Promise<CommentLikeResponse> {
     const comment = await this.commentRepository.findById(commentId)
 
-    // The comment must exist and be a child of the factId in the URL.
-    if (comment == null || comment.factId !== factId) {
+    if (comment == null) {
+      throw new CommentLikeNotFoundError()
+    }
+
+    // Validate parent matches: fact comment → factId, repost comment → repostId
+    if (opts.factId != null && comment.factId !== opts.factId) {
+      throw new CommentLikeNotFoundError()
+    }
+    if (opts.repostId != null && comment.repostId !== opts.repostId) {
       throw new CommentLikeNotFoundError()
     }
 
@@ -33,7 +40,8 @@ export class CreateCommentLike {
       id: like.id,
       userId: like.userId,
       commentId: like.commentId,
-      factId,
+      factId: comment.factId,
+      repostId: comment.repostId,
       createdAt: like.createdAt.toISOString()
     }
   }

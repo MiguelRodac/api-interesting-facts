@@ -11,10 +11,18 @@ export class DeleteCommentLike {
     this.commentRepository = commentRepository
   }
 
-  async execute (factId: string, commentId: string, userId: string): Promise<void> {
+  async execute (commentId: string, userId: string, opts: { factId?: string, repostId?: string } = {}): Promise<void> {
     const comment = await this.commentRepository.findById(commentId)
 
-    if (comment == null || comment.factId !== factId) {
+    if (comment == null) {
+      throw new CommentLikeNotFoundError()
+    }
+
+    // Validate parent matches: fact comment → factId, repost comment → repostId
+    if (opts.factId != null && comment.factId !== opts.factId) {
+      throw new CommentLikeNotFoundError()
+    }
+    if (opts.repostId != null && comment.repostId !== opts.repostId) {
       throw new CommentLikeNotFoundError()
     }
 
