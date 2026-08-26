@@ -2,6 +2,7 @@ import prisma from '@shared/infrastructure/prisma'
 import { type Like } from '../../domain/entities/Like'
 import { type LikeWithUser } from '../../domain/models/LikeWithUser'
 import { type LikeRepository } from '../../domain/ports/LikeRepository'
+import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 
@@ -175,6 +176,39 @@ export class PrismaLikeRepository implements LikeRepository {
     const result = new Map<string, number>()
     for (const l of likeCounts) {
       if (l.repostId != null) result.set(l.repostId, l._count.repostId)
+    }
+    return result
+  }
+
+  async batchUserRepostLikes (repostIds: string[], viewerId: string): Promise<Set<string>> {
+    if (repostIds.length === 0) return new Set()
+    const userLikes = await prisma.like.findMany({
+      where: { repostId: { in: repostIds }, userId: viewerId },
+      select: { repostId: true }
+    })
+    return new Set(userLikes.map(l => l.repostId).filter((id): id is string => id != null))
+  }
+
+  async batchRecentRepostLikers (repostIds: string[], limit: number = 3): Promise<Map<string, UserAvatarPreview[]>> {
+    if (repostIds.length === 0) return new Map()
+    const likes = await prisma.like.findMany({
+      where: { repostId: { in: repostIds } },
+      orderBy: [{ repostId: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+      include: { user: { select: { username: true, avatarUrl: true, avatarColor: true } } }
+    })
+    const result = new Map<string, UserAvatarPreview[]>()
+    for (const like of likes) {
+      const rid = like.repostId
+      if (rid == null) continue
+      const arr = result.get(rid) ?? []
+      if (arr.length < limit) {
+        arr.push({
+          username: like.user.username,
+          avatarUrl: like.user.avatarUrl,
+          avatarColor: like.user.avatarColor
+        })
+        result.set(rid, arr)
+      }
     }
     return result
   }

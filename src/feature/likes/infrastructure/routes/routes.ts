@@ -3,12 +3,15 @@ import { z } from 'zod'
 import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
 import { PrismaLikeRepository } from '../repositories/PrismaLikeRepository'
 import { PrismaFactRepository } from '../../../facts/infrastructure/repositories/PrismaFactRepository'
+import { PrismaRepostRepository } from '../../../reposts/infrastructure/repositories/PrismaRepostRepository'
+import { PrismaCommentRepository } from '../../../comments/infrastructure/repositories/PrismaCommentRepository'
 import { CreateLike } from '../../application/use-cases/CreateLike'
 import { DeleteLike } from '../../application/use-cases/DeleteLike'
 import { GetLikesByFact } from '../../application/use-cases/GetLikesByFact'
 import { GetLikesByUser } from '../../application/use-cases/GetLikesByUser'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
+import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 
 const ListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
@@ -20,10 +23,12 @@ const ListQuerySchema = z.object({
 const router = Router()
 const likeRepository = new PrismaLikeRepository()
 const factRepository = new PrismaFactRepository()
+const repostRepository = new PrismaRepostRepository()
+const commentRepository = new PrismaCommentRepository()
 const createLike = new CreateLike(likeRepository, factRepository)
 const deleteLike = new DeleteLike(likeRepository)
 const getLikesByFact = new GetLikesByFact(likeRepository)
-const getLikesByUser = new GetLikesByUser(likeRepository)
+const getLikesByUser = new GetLikesByUser(likeRepository, factRepository, repostRepository, commentRepository)
 
 router.post('/facts/:factId/likes', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -61,12 +66,13 @@ router.get('/facts/:factId/likes', requireAuth, async (req: Request, res: Respon
   }
 })
 
-router.get('/users/:userId/likes', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/users/:userId/likes', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     const { page, limit, order_by, order_dir } = ListQuerySchema.parse(req.query)
     const userId = req.params.userId as string
-    const result = await getLikesByUser.execute(userId, { page, limit, order_by, order_dir })
+    const viewerId = req.user?.uid
+    const result = await getLikesByUser.execute(userId, { page, limit, order_by, order_dir }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)

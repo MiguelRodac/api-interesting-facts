@@ -9,12 +9,14 @@ import { PrismaMentionRepository } from '../../../mentions/infrastructure/reposi
 import { CreateRepost } from '../../application/use-cases/CreateRepost'
 import { DeleteRepost } from '../../application/use-cases/DeleteRepost'
 import { GetRepostsByFact } from '../../application/use-cases/GetRepostsByFact'
+import { GetRepostById } from '../../application/use-cases/GetRepostById'
 import { CreateRepostLike } from '../../../likes/application/use-cases/CreateRepostLike'
 import { DeleteRepostLike } from '../../../likes/application/use-cases/DeleteRepostLike'
 import { GetRepostLikes } from '../../../likes/application/use-cases/GetRepostLikes'
 import { CreateRepostComment } from '../../../comments/application/use-cases/CreateRepostComment'
 import { GetRepostComments } from '../../../comments/application/use-cases/GetRepostComments'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
+import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
 const ListQuerySchema = z.object({
@@ -38,6 +40,7 @@ const mentionRepository = new PrismaMentionRepository()
 const createRepost = new CreateRepost(repostRepository, factRepository)
 const deleteRepost = new DeleteRepost(repostRepository)
 const getRepostsByFact = new GetRepostsByFact(repostRepository)
+const getRepostById = new GetRepostById(repostRepository, factRepository, likeRepository, commentRepository)
 const createRepostLike = new CreateRepostLike(likeRepository, repostRepository)
 const deleteRepostLike = new DeleteRepostLike(likeRepository)
 const getRepostLikes = new GetRepostLikes(likeRepository, repostRepository)
@@ -77,6 +80,19 @@ router.get('/facts/:factId/reposts', requireAuth, async (req: Request, res: Resp
     const factId = req.params.factId as string
     const result = await getRepostsByFact.execute(factId, { page, limit, order_by, order_dir })
     res.status(200).json(result)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// ─── Repost Detail ─────────────────────────────────────────────────────────
+
+router.get('/reposts/:repostId', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const repostId = req.params.repostId as string
+    const viewerId = req.user?.uid
+    const repost = await getRepostById.execute(repostId, viewerId)
+    res.status(200).json(repost)
   } catch (err) {
     next(err)
   }

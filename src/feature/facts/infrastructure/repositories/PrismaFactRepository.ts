@@ -107,7 +107,7 @@ async function batchCommentCounts (factIds: string[]): Promise<Map<string, numbe
   return result
 }
 
-async function batchRecentLikers (factIds: string[], limit: number = 1): Promise<Map<string, UserAvatarPreview[]>> {
+async function batchRecentLikers (factIds: string[], limit: number = 3): Promise<Map<string, UserAvatarPreview[]>> {
   if (factIds.length === 0) return new Map()
   const likes = await prisma.like.findMany({
     where: { factId: { in: factIds } },
@@ -313,7 +313,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, viewerLikedSet, viewerRepostedSet, hashtagsMap] = await Promise.all([
       batchLikeCounts([id]),
       batchCommentCounts([id]),
-      batchRecentLikers([id], 1),
+      batchRecentLikers([id], 3),
       batchFirstComment([id]),
       batchRepostCounts([id]),
       batchRecentReposters([id], 2),
@@ -359,7 +359,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -402,7 +402,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -444,7 +444,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -490,7 +490,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -552,7 +552,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -646,7 +646,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -713,7 +713,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
@@ -806,7 +806,7 @@ export class PrismaFactRepository implements FactRepository {
     const [likeCountMap, commentCountMap, likeByMap, commentsDetailsMap, repostCountMap, repostByMap, hashtagsMap] = await Promise.all([
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
-      batchRecentLikers(factIds, 1),
+      batchRecentLikers(factIds, 3),
       batchFirstComment(factIds),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),

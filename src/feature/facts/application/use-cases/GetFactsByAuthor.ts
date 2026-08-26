@@ -38,11 +38,15 @@ export class GetFactsByAuthor {
     const originalFactIds = repostsPage.results.map(r => r.originalFactId)
     const repostIds = repostsPage.results.map(r => r.id)
 
-    const [rawEmbedded, repostLikeCounts, repostCommentCounts, repostFirstComments] = await Promise.all([
+    const [rawEmbedded, repostLikeCounts, repostCommentCounts, repostFirstComments, repostLikeByMap, viewerRepostLikedSet] = await Promise.all([
       this.factRepository.findRawByIds(originalFactIds),
       this.likeRepository.batchLikeCountsByRepostIds(repostIds),
       this.commentRepository.batchCommentCountsByRepostIds(repostIds),
-      this.commentRepository.batchFirstCommentByRepostIds(repostIds)
+      this.commentRepository.batchFirstCommentByRepostIds(repostIds),
+      this.likeRepository.batchRecentRepostLikers(repostIds, 3),
+      viewerId != null
+        ? this.likeRepository.batchUserRepostLikes(repostIds, viewerId)
+        : null
     ])
 
     const enrichedEmbedded = await this.factRepository.batchEnrichFacts(rawEmbedded, await this.factRepository.batchBuildEnrichmentMaps(originalFactIds), viewerId)
@@ -69,6 +73,8 @@ export class GetFactsByAuthor {
           isMe: repost.authorId === viewerId
         },
         repostLikeCount: repostLikeCounts.get(repost.id) ?? 0,
+        liked: viewerRepostLikedSet?.has(repost.id) ?? undefined,
+        likeBy: repostLikeByMap.get(repost.id) ?? [],
         repostCommentCount: repostCommentCounts.get(repost.id) ?? 0,
         repostCommentsDetails: repostFirstComments.get(repost.id) ?? null,
         createdAt: repost.createdAt.toISOString()

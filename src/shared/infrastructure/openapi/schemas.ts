@@ -262,7 +262,7 @@ export const FactResponseSchema = z.object({
   content: z.string(),
   likes: z.number().int(),
   liked: z.boolean().optional(),
-  likeBy: z.array(UserAvatarPreviewSchema).max(2),
+  likeBy: z.array(UserAvatarPreviewSchema).max(3),
   comments: z.number().int(),
   commentsDetails: CommentPreviewSchema.nullable(),
   repostCount: z.number().int(),
@@ -358,6 +358,8 @@ export const RepostInFeedSchema = z.object({
     isMe: z.boolean()
   }).describe('Who reposted this'),
   repostLikeCount: z.number().int().describe('Likes ON this repost'),
+  liked: z.boolean().optional().describe('Did the authenticated user like this repost?'),
+  likeBy: z.array(UserAvatarPreviewSchema).max(3).describe('Recent users who liked this repost'),
   repostCommentCount: z.number().int().describe('Comments ON this repost'),
   repostCommentsDetails: CommentPreviewSchema.nullable().describe('First comment on this repost'),
   createdAt: z.string().datetime().describe('When the repost was created')

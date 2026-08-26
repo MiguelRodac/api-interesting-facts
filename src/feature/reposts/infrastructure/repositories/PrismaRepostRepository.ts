@@ -79,6 +79,17 @@ export class PrismaRepostRepository implements RepostRepository {
     return mapRepost(repost)
   }
 
+  async findByIdWithAuthor (id: string): Promise<RepostWithUser | null> {
+    const repost = await prisma.repost.findUnique({
+      where: { id },
+      include: {
+        author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+      }
+    })
+    if (repost == null) return null
+    return mapRepostWithUser(repost)
+  }
+
   async findByAuthorAndFact (authorId: string, originalFactId: string): Promise<Repost | null> {
     const repost = await prisma.repost.findUnique({
       where: {
@@ -147,6 +158,40 @@ export class PrismaRepostRepository implements RepostRepository {
     ])
 
     return buildPaginatedResult(reposts.map(mapRepostWithFact), total, page, limit)
+  }
+
+  async findByAuthorsWithFact (authorIds: string[], params?: BaseQueryParams): Promise<ResultWithPagination<RepostWithFact>> {
+    if (authorIds.length === 0) {
+      return buildPaginatedResult([], 0, params?.page ?? DEFAULT_PAGE, params?.limit ?? DEFAULT_LIMIT)
+    }
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const { skip, take } = buildPagination(params)
+    const [reposts, total] = await Promise.all([
+      prisma.repost.findMany({
+        where: { authorId: { in: authorIds } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
+      }),
+      prisma.repost.count({ where: { authorId: { in: authorIds } } })
+    ])
+
+    return buildPaginatedResult(reposts.map(mapRepostWithFact), total, page, limit)
+  }
+
+  async findByIdsWithFact (ids: string[]): Promise<RepostWithFact[]> {
+    if (ids.length === 0) return []
+    const reposts = await prisma.repost.findMany({
+      where: { id: { in: ids } },
+      include: {
+        author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+      }
+    })
+    return reposts.map(mapRepostWithFact)
   }
 
   async create (authorId: string, originalFactId: string): Promise<Repost> {

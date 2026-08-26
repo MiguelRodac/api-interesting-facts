@@ -190,10 +190,11 @@ describe('Likes Endpoints', () => {
       expect(res.body.results.length).toBe(0)
     })
 
-    it('should return 401 when not authenticated', async () => {
+    it('should return 200 when not authenticated (optionalAuth)', async () => {
       const res = await request(app).get('/users/test-uid/likes')
 
-      expect(res.status).toBe(401)
+      expect(res.status).toBe(200)
+      expect(Array.isArray(res.body.results)).toBe(true)
     })
   })
 })

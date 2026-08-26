@@ -28,6 +28,16 @@ describe('Reposts Endpoints', () => {
         displayName: 'Other User'
       }
     })
+    await prisma.user.upsert({
+      where: { firebaseUid: 'third-uid' },
+      update: {},
+      create: {
+        firebaseUid: 'third-uid',
+        email: 'third@example.com',
+        username: 'thirduser',
+        displayName: 'Third User'
+      }
+    })
   })
 
   const createFactBy = async (authorId: string): Promise<{ id: string }> => {
@@ -252,5 +262,67 @@ describe('Reposts Endpoints', () => {
       expect(repostEntry).toBeDefined()
       expect(repostEntry.repost.repostedBy.isMe).toBe(true)
     }, 20000)
+  })
+
+  describe('GET /reposts/:repostId', () => {
+    it('should return repost detail with original fact content', async () => {
+      const fact = await createFactBy('other-uid')
+      const repostRes = await request(app)
+        .post(`/facts/${fact.id}/reposts`)
+        .set('Authorization', `Bearer ${validToken}`)
+      const repostId = repostRes.body.id as string
+
+      const res = await request(app)
+        .get(`/reposts/${repostId}`)
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.id).toBe(repostId)
+      expect(res.body.factId).toBe(fact.id)
+      expect(res.body.content).toBe('A fact to be reposted')
+      expect(res.body.author).toBeDefined()
+      expect(res.body.repostedBy).toMatchObject({
+        username: 'testuser',
+        isMe: true
+      })
+      expect(res.body.repostLikeCount).toBe(0)
+      expect(res.body.likeBy).toEqual([])
+      expect(res.body.liked).toBe(false)
+      expect(res.body.createdAt).toBeDefined()
+    }, 20000)
+
+    it('should return liked and likeBy when repost has likes', async () => {
+      const fact = await createFactBy('other-uid')
+      const repostRes = await request(app)
+        .post(`/facts/${fact.id}/reposts`)
+        .set('Authorization', `Bearer ${validToken}`)
+      const repostId = repostRes.body.id as string
+
+      await request(app)
+        .post(`/reposts/${repostId}/likes`)
+        .set('Authorization', `Bearer ${validToken}`)
+      await request(app)
+        .post(`/reposts/${repostId}/likes`)
+        .set('Authorization', `Bearer ${otherToken}`)
+
+      const res = await request(app)
+        .get(`/reposts/${repostId}`)
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      expect(res.body.repostLikeCount).toBe(2)
+      expect(res.body.liked).toBe(true)
+      expect(res.body.likeBy).toHaveLength(2)
+      expect(res.body.likeBy[0]).toHaveProperty('username')
+      expect(res.body.likeBy[0]).toHaveProperty('avatarUrl')
+      expect(res.body.likeBy[0]).toHaveProperty('avatarColor')
+    }, 20000)
+
+    it('should return 404 for non-existent repost', async () => {
+      const res = await request(app)
+        .get('/reposts/non-existent-id')
+
+      expect(res.status).toBe(404)
+    })
   })
 })

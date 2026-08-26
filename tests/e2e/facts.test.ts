@@ -28,6 +28,16 @@ describe('Facts Endpoints', () => {
         displayName: 'Other Author'
       }
     })
+    await prisma.user.upsert({
+      where: { firebaseUid: 'third-uid' },
+      update: {},
+      create: {
+        firebaseUid: 'third-uid',
+        email: 'third@example.com',
+        username: 'thirdauthor',
+        displayName: 'Third Author'
+      }
+    })
   })
 
   describe('POST /facts', () => {
@@ -154,7 +164,7 @@ describe('Facts Endpoints', () => {
         ]
       })
 
-      const res = await request(app).get('/facts/popular')
+      const res = await request(app).get('/facts/popular?limit=100')
 
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
@@ -302,7 +312,7 @@ describe('Facts Endpoints', () => {
   })
 
   describe('FactResponse enrichment — comments + likeBy', () => {
-    // Creates a fact with 2 likes and 1 top-level comment + 1 reply,
+    // Creates a fact with 3 likes and 1 top-level comment + 1 reply,
     // then asserts the enrichment fields across every read path.
     const seedFact = async (): Promise<{ id: string }> => {
       const fact = await prisma.fact.create({
@@ -312,7 +322,8 @@ describe('Facts Endpoints', () => {
       await prisma.like.createMany({
         data: [
           { userId: 'test-uid', factId: fact.id },
-          { userId: 'other-uid', factId: fact.id }
+          { userId: 'other-uid', factId: fact.id },
+          { userId: 'third-uid', factId: fact.id }
         ]
       })
 
@@ -327,7 +338,7 @@ describe('Facts Endpoints', () => {
     }
 
     const assertEnrichment = (fact: { likeBy: unknown[], comments: number, commentsDetails: { replies: number } | null }): void => {
-      expect(fact.likeBy).toHaveLength(1)
+      expect(fact.likeBy).toHaveLength(3)
       expect(fact.comments).toBe(2)
       expect(fact.commentsDetails).not.toBeNull()
       expect(fact.commentsDetails?.replies).toBe(1)
@@ -382,7 +393,8 @@ describe('Facts Endpoints', () => {
       await prisma.like.createMany({
         data: [
           { userId: 'test-uid', factId: fact.id },
-          { userId: 'other-uid', factId: fact.id }
+          { userId: 'other-uid', factId: fact.id },
+          { userId: 'third-uid', factId: fact.id }
         ]
       })
       const topLevel = await prisma.comment.create({
@@ -397,7 +409,7 @@ describe('Facts Endpoints', () => {
         .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(200)
-      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertEnrichment(found)
     })
@@ -410,7 +422,7 @@ describe('Facts Endpoints', () => {
         .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(200)
-      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertEnrichment(found)
     })
@@ -500,7 +512,7 @@ describe('Facts Endpoints', () => {
     it('findPopular — GET /facts/popular (anonymous)', async () => {
       const fact = await seedFact()
 
-      const res = await request(app).get('/facts/popular')
+      const res = await request(app).get('/facts/popular?limit=100')
 
       expect(res.status).toBe(200)
       const found = res.body.results.find((r: { id: string }) => r.id === fact.id)
@@ -526,7 +538,7 @@ describe('Facts Endpoints', () => {
         .set('Authorization', `Bearer ${otherToken}`)
 
       expect(res.status).toBe(200)
-      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertRepostEnrichment(found)
       expect(found.repostedByMe).toBe(true)
@@ -540,7 +552,7 @@ describe('Facts Endpoints', () => {
         .set('Authorization', `Bearer ${otherToken}`)
 
       expect(res.status).toBe(200)
-      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertRepostEnrichment(found)
       expect(found.repostedByMe).toBe(true)

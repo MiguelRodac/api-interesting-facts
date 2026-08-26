@@ -15,6 +15,7 @@ import { GetFacts } from '../../application/use-cases/GetFacts'
 import { GetFactsByAuthor } from '../../application/use-cases/GetFactsByAuthor'
 import { GetPopularFacts } from '../../application/use-cases/GetPopularFacts'
 import { SearchPosts } from '../../application/use-cases/SearchPosts'
+import { type FeedEntry } from '../../application/dto/FeedEntry'
 import { SearchHashtags } from '@hashtag/application/use-cases/SearchHashtags'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
@@ -61,7 +62,7 @@ const deleteFact = new DeleteFact(factRepository)
 const getFacts = new GetFacts(factRepository, repostRepository, likeRepository, commentRepository)
 const getFactsByAuthor = new GetFactsByAuthor(factRepository, repostRepository, likeRepository, commentRepository)
 const getPopularFacts = new GetPopularFacts(factRepository)
-const searchPosts = new SearchPosts(factRepository)
+const searchPosts = new SearchPosts(factRepository, repostRepository, likeRepository, commentRepository)
 const searchHashtags = new SearchHashtags(hashtagRepository)
 
 router.post('/', requireAuth, requireProfile, async (req: Request, res: Response, next: NextFunction) => {
@@ -125,29 +126,25 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
 
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
-      const [users, facts] = await Promise.all([
+      const [users, feedEntries] = await Promise.all([
         userRepository.findBySearch(query, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
         searchPosts.executeByAuthorOrMention(query, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
       ])
 
-      // Paginate merged results
-      const merged = [...users, ...facts]
-      const total = merged.length
+      const total = users.length + feedEntries.length
       const hasMore = total > limit
-      const paged = merged.slice(skip, skip + limit)
-
-      const pagedUsers = paged.filter(item => 'username' in item).map(u => ({
-        id: u.id,
-        username: u.username,
-        displayName: u.displayName,
-        avatarUrl: u.avatarUrl,
-        avatarColor: u.avatarColor
-      }))
-      const pagedFacts = paged.filter(item => 'content' in item)
+      const pagedUsers = users.slice(skip, skip + limit)
+      const pagedEntries = feedEntries.slice(skip, skip + limit)
 
       res.status(200).json({
-        users: pagedUsers,
-        facts: pagedFacts,
+        users: pagedUsers.map(u => ({
+          id: u.id,
+          username: u.username,
+          displayName: u.displayName,
+          avatarUrl: u.avatarUrl,
+          avatarColor: u.avatarColor
+        })),
+        results: pagedEntries,
         hashtags: [],
         page,
         limit,
@@ -183,30 +180,38 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     }
 
     // Plain query — merge all categories
-    const [users, factsByTitleOrHashtag, hashtags, factsByAuthorOrMention] = await Promise.all([
+    const [users, factsByTitleOrHashtag, hashtags, authorMentionEntries] = await Promise.all([
       userRepository.findBySearch(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
       searchPosts.execute(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
       searchHashtags.execute(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
       searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
     ])
 
-    // Merge facts, deduplicating by id
-    const factsMap = new Map<string, typeof factsByTitleOrHashtag[0]>()
-    for (const fact of factsByTitleOrHashtag) {
-      factsMap.set(fact.id, fact)
+    // Wrap title/hashtag facts into FeedEntry[] and merge with author/mention entries
+    const titleHashtagEntries: FeedEntry[] = factsByTitleOrHashtag.map(fact => ({
+      type: 'fact',
+      fact,
+      createdAt: fact.createdAt
+    }))
+
+    const entriesMap = new Map<string, FeedEntry>()
+    for (const entry of titleHashtagEntries) {
+      const key = entry.type === 'fact' ? entry.fact.id : entry.repost.id
+      entriesMap.set(key, entry)
     }
-    for (const fact of factsByAuthorOrMention) {
-      if (!factsMap.has(fact.id)) {
-        factsMap.set(fact.id, fact)
+    for (const entry of authorMentionEntries) {
+      const key = entry.type === 'fact' ? entry.fact.id : entry.repost.id
+      if (!entriesMap.has(key)) {
+        entriesMap.set(key, entry)
       }
     }
-    const mergedFacts = Array.from(factsMap.values())
+    const mergedEntries = Array.from(entriesMap.values())
 
-    // Merge all into one list for pagination: users, hashtags, then facts
+    // Merge all into one list for pagination: users, hashtags, then feed entries
     const allItems: Array<Record<string, unknown>> = [
       ...users.map(u => ({ ...u, __type: 'user' })),
       ...hashtags.map(h => ({ ...h, __type: 'hashtag' })),
-      ...mergedFacts.map(f => ({ ...f, __type: 'fact' }))
+      ...mergedEntries.map(e => ({ ...e, __type: 'entry' }))
     ]
 
     const total = allItems.length
@@ -221,11 +226,11 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
       avatarColor: u.avatarColor
     }))
     const pagedHashtags = paged.filter(item => item.__type === 'hashtag')
-    const pagedFacts = paged.filter(item => item.__type === 'fact')
+    const pagedEntries = paged.filter(item => item.__type === 'entry')
 
     res.status(200).json({
       users: pagedUsers,
-      facts: pagedFacts,
+      results: pagedEntries,
       hashtags: pagedHashtags,
       page,
       limit,

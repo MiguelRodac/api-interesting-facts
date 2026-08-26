@@ -45,10 +45,14 @@ export class GetFacts {
 
     // ── Phase 4: Fetch repost engagement (likes/comments on the repost itself)
     const repostIds = repostsPage.results.map(r => r.id)
-    const [repostLikeCounts, repostCommentCounts, repostFirstComments] = await Promise.all([
+    const [repostLikeCounts, repostCommentCounts, repostFirstComments, repostLikeByMap, viewerRepostLikedSet] = await Promise.all([
       this.likeRepository.batchLikeCountsByRepostIds(repostIds),
       this.commentRepository.batchCommentCountsByRepostIds(repostIds),
-      this.commentRepository.batchFirstCommentByRepostIds(repostIds)
+      this.commentRepository.batchFirstCommentByRepostIds(repostIds),
+      this.likeRepository.batchRecentRepostLikers(repostIds, 3),
+      viewerId != null
+        ? this.likeRepository.batchUserRepostLikes(repostIds, viewerId)
+        : null
     ])
 
     // ── Phase 5: Enrich all facts in memory (no DB calls) ───────────────────
@@ -85,6 +89,8 @@ export class GetFacts {
           isMe: repost.authorId === viewerId
         },
         repostLikeCount: repostLikeCounts.get(repost.id) ?? 0,
+        liked: viewerRepostLikedSet?.has(repost.id) ?? undefined,
+        likeBy: repostLikeByMap.get(repost.id) ?? [],
         repostCommentCount: repostCommentCounts.get(repost.id) ?? 0,
         repostCommentsDetails: repostFirstComments.get(repost.id) ?? null,
         createdAt: repost.createdAt.toISOString()

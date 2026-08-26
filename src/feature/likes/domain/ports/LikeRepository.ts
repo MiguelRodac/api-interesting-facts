@@ -1,5 +1,6 @@
 import { type Like } from '../entities/Like'
 import { type LikeWithUser } from '../models/LikeWithUser'
+import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 import { type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
 
 export interface LikeRepository {
@@ -13,4 +14,6 @@ export interface LikeRepository {
   delete: (userId: string, factId: string) => Promise<void>
   deleteRepostLike: (userId: string, repostId: string) => Promise<void>
   batchLikeCountsByRepostIds: (repostIds: string[]) => Promise<Map<string, number>>
+  batchUserRepostLikes: (repostIds: string[], viewerId: string) => Promise<Set<string>>
+  batchRecentRepostLikers: (repostIds: string[], limit?: number) => Promise<Map<string, UserAvatarPreview[]>>
 }

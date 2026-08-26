@@ -19,6 +19,7 @@ import {
   PaginatedLikeResponseSchema,
   PaginatedLikePreviewResponseSchema,
   RepostResponseSchema,
+  RepostInFeedSchema,
   PaginatedRepostPreviewResponseSchema,
   CommentResponseSchema,
   CreateCommentRequestSchema,
@@ -639,6 +640,24 @@ registry.registerPath({
       content: { 'application/json': { schema: PaginatedRepostPreviewResponseSchema } }
     },
     401: { description: 'Authentication required' }
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/reposts/{repostId}',
+  summary: 'Get repost detail with original fact content',
+  operationId: 'getRepostById',
+  tags: ['Reposts'],
+  request: {
+    params: z.object({ repostId: z.string().uuid() })
+  },
+  responses: {
+    200: {
+      description: 'Repost detail with original fact content, engagement, and viewer context',
+      content: { 'application/json': { schema: RepostInFeedSchema } }
+    },
+    404: notFoundResponse
   }
 })
 
