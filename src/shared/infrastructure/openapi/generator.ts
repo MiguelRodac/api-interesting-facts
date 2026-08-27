@@ -11,7 +11,9 @@ import './routes'
 function injectVersionHeader (spec: ReturnType<OpenApiGeneratorV3['generateDocument']>): void {
   const methods = ['get', 'post', 'put', 'patch', 'delete', 'options', 'head']
 
-  for (const pathItem of Object.values(spec.paths)) {
+  for (const [pathKey, pathItem] of Object.entries(spec.paths)) {
+    if (pathKey === '/ping' || pathKey.startsWith('/ping/')) continue
+
     for (const method of methods) {
       const op: Record<string, unknown> | undefined = (pathItem as Record<string, unknown>)[method] as Record<string, unknown> | undefined
       if (op == null) continue

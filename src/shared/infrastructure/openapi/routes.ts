@@ -3,6 +3,8 @@ import { registry } from './registry'
 import { USERNAME_PATTERN } from '@shared/domain/validation'
 import {
   PingResponseSchema,
+  VersionInfoResponseSchema,
+  RefreshVersionsResponseSchema,
   CreateProfileRequestSchema,
   UserResponseSchema,
   UpdateProfileRequestSchema,
@@ -76,7 +78,7 @@ const validationResponse = {
   content: { 'application/json': { schema: ValidationErrorSchema } }
 }
 
-// ── Health ──────────────────────────────────────────────────────────────────
+// ── Health & Admin ─────────────────────────────────────────────────────────
 
 registry.registerPath({
   method: 'get',
@@ -93,6 +95,60 @@ registry.registerPath({
         'text/html': { schema: z.string() }
       }
     }
+  }
+})
+
+registry.registerPath({
+  method: 'get',
+  path: '/ping/version-info',
+  summary: 'View cached app versions (Admin)',
+  operationId: 'pingVersionInfo',
+  tags: ['Health', 'Admin'],
+  description: 'Returns current in-memory cached app version rules. Requires admin key authorization.',
+  parameters: [
+    {
+      name: 'x-admin-key',
+      in: 'header',
+      required: true,
+      description: 'Admin authorization key',
+      schema: { type: 'string' }
+    }
+  ],
+  responses: {
+    200: {
+      description: 'Cached app versions status',
+      content: {
+        'application/json': { schema: VersionInfoResponseSchema }
+      }
+    },
+    401: unauthorizedResponse
+  }
+})
+
+registry.registerPath({
+  method: 'post',
+  path: '/ping/refresh-versions',
+  summary: 'Refresh cached app versions from DB (Admin)',
+  operationId: 'pingRefreshVersions',
+  tags: ['Health', 'Admin'],
+  description: 'Forces immediate reload of app version rules from PostgreSQL into memory cache. Requires admin key authorization.',
+  parameters: [
+    {
+      name: 'x-admin-key',
+      in: 'header',
+      required: true,
+      description: 'Admin authorization key',
+      schema: { type: 'string' }
+    }
+  ],
+  responses: {
+    200: {
+      description: 'App version cache refreshed successfully',
+      content: {
+        'application/json': { schema: RefreshVersionsResponseSchema }
+      }
+    },
+    401: unauthorizedResponse
   }
 })
 

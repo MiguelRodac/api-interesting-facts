@@ -4253,6 +4253,93 @@ components:
         - uptimeSeconds
         - database
         - documentation
+    VersionInfoResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        cache:
+          type: object
+          properties:
+            source:
+              type: string
+            ttlHours:
+              type: integer
+            lastRefreshed:
+              type: string
+              nullable: true
+              format: date-time
+            versions:
+              type: array
+              items:
+                type: object
+                properties:
+                  platform:
+                    type: string
+                  minVersion:
+                    type: string
+                  recommendedVersion:
+                    type: string
+                    nullable: true
+                  forceUpdate:
+                    type: boolean
+                required:
+                  - platform
+                  - minVersion
+                  - forceUpdate
+          required:
+            - source
+            - ttlHours
+            - lastRefreshed
+            - versions
+      required:
+        - status
+        - cache
+    RefreshVersionsResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        cache:
+          type: object
+          properties:
+            source:
+              type: string
+            ttlHours:
+              type: integer
+            lastRefreshed:
+              type: string
+              nullable: true
+              format: date-time
+            versions:
+              type: array
+              items:
+                type: object
+                properties:
+                  platform:
+                    type: string
+                  minVersion:
+                    type: string
+                  recommendedVersion:
+                    type: string
+                    nullable: true
+                  forceUpdate:
+                    type: boolean
+                required:
+                  - platform
+                  - minVersion
+                  - forceUpdate
+          required:
+            - source
+            - ttlHours
+            - lastRefreshed
+            - versions
+      required:
+        - status
+        - message
+        - cache
   parameters: {}
 paths:
   /ping:
@@ -4261,7 +4348,7 @@ paths:
       operationId: ping
       tags:
         - Health
-      description: Returns server status with database health check. Publicly accessible and exempt from X-App-Version.
+      description: Returns server status with database health check.
       responses:
         '200':
           description: Server is alive
@@ -4272,19 +4359,16 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: ok
                   timestamp:
                     type: string
                     format: date-time
                   uptimeSeconds:
                     type: integer
-                    example: 3600
                   database:
                     type: string
                     enum:
                       - ok
                       - error
-                    example: ok
                   documentation:
                     type: string
                     format: uri
@@ -4322,18 +4406,16 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: ok
                   cache:
                     type: object
                     properties:
                       source:
                         type: string
-                        example: database
                       ttlHours:
                         type: integer
-                        example: 12
                       lastRefreshed:
                         type: string
+                        nullable: true
                         format: date-time
                       versions:
                         type: array
@@ -4342,19 +4424,75 @@ paths:
                           properties:
                             platform:
                               type: string
-                              example: android
                             minVersion:
                               type: string
-                              example: 1.0.0
                             recommendedVersion:
                               type: string
                               nullable: true
-                              example: 1.1.0
                             forceUpdate:
                               type: boolean
-                              example: true
+                          required:
+                            - platform
+                            - minVersion
+                            - forceUpdate
+                    required:
+                      - source
+                      - ttlHours
+                      - lastRefreshed
+                      - versions
+                required:
+                  - status
+                  - cache
         '401':
-          $ref: '#/components/responses/Unauthorized'
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
   /ping/refresh-versions:
     post:
       summary: Refresh cached app versions from DB (Admin)
@@ -4362,7 +4500,9 @@ paths:
       tags:
         - Health
         - Admin
-      description: Forces immediate reload of app version rules from PostgreSQL into memory cache. Requires admin key authorization.
+      description: >-
+        Forces immediate reload of app version rules from PostgreSQL into memory cache. Requires admin key
+        authorization.
       parameters:
         - name: x-admin-key
           in: header
@@ -4380,15 +4520,96 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: ok
                   message:
                     type: string
-                    example: App version cache refreshed successfully
                   cache:
                     type: object
+                    properties:
+                      source:
+                        type: string
+                      ttlHours:
+                        type: integer
+                      lastRefreshed:
+                        type: string
+                        nullable: true
+                        format: date-time
+                      versions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            platform:
+                              type: string
+                            minVersion:
+                              type: string
+                            recommendedVersion:
+                              type: string
+                              nullable: true
+                            forceUpdate:
+                              type: boolean
+                          required:
+                            - platform
+                            - minVersion
+                            - forceUpdate
+                    required:
+                      - source
+                      - ttlHours
+                      - lastRefreshed
+                      - versions
+                required:
+                  - status
+                  - message
+                  - cache
         '401':
-          $ref: '#/components/responses/Unauthorized'
-
+          description: Missing or invalid authentication token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    description: URI reference that identifies the problem type
+                  title:
+                    type: string
+                    description: Short, human-readable summary of the problem
+                  status:
+                    type: integer
+                    description: HTTP status code
+                  detail:
+                    type: string
+                    description: Human-readable explanation specific to this error occurrence
+                  instance:
+                    type: string
+                    description: URI reference of the request that caused the error
+                  trace_id:
+                    type: string
+                    format: uuid
+                    description: Unique trace ID for request tracking
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp when the error occurred
+                  error_code:
+                    type: string
+                    enum:
+                      - UNAUTHORIZED
+                    description: Machine-readable error code
+                  category:
+                    type: string
+                    enum:
+                      - authentication
+                    description: Error category
+                required:
+                  - type
+                  - title
+                  - status
+                  - detail
+                  - instance
+                  - trace_id
+                  - timestamp
+                  - error_code
+                  - category
   /auth/profile:
     post:
       summary: Create user profile (onboarding)

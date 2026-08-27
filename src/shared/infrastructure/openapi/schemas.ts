@@ -538,7 +538,7 @@ registry.register('MentionSearchResponse', MentionSearchResponseSchema)
 registry.register('HashtagSearchResponse', HashtagSearchResponseSchema)
 registry.register('GlobalSearchResponse', GlobalSearchResponseSchema)
 
-// ── Health ──────────────────────────────────────────────────────────────────
+// ── Health & Admin ─────────────────────────────────────────────────────────
 
 export const PingResponseSchema = z.object({
   status: z.string(),
@@ -548,4 +548,31 @@ export const PingResponseSchema = z.object({
   documentation: z.string().url()
 })
 
+export const AppVersionItemSchema = z.object({
+  platform: z.string(),
+  minVersion: z.string(),
+  recommendedVersion: z.string().nullable().optional(),
+  forceUpdate: z.boolean()
+})
+
+export const VersionCacheStatusSchema = z.object({
+  source: z.string(),
+  ttlHours: z.number().int(),
+  lastRefreshed: z.string().datetime().nullable(),
+  versions: z.array(AppVersionItemSchema)
+})
+
+export const VersionInfoResponseSchema = z.object({
+  status: z.string(),
+  cache: VersionCacheStatusSchema
+})
+
+export const RefreshVersionsResponseSchema = z.object({
+  status: z.string(),
+  message: z.string(),
+  cache: VersionCacheStatusSchema
+})
+
 registry.register('PingResponse', PingResponseSchema)
+registry.register('VersionInfoResponse', VersionInfoResponseSchema)
+registry.register('RefreshVersionsResponse', RefreshVersionsResponseSchema)
