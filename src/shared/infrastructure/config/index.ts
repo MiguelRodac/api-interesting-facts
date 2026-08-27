@@ -20,7 +20,8 @@ const REQUIRED: string[] = [
   'RATE_LIMIT_MAX',
   'RATE_LIMIT_WINDOW_MS',
   'AUTOCOMPLETE_RATE_LIMIT',
-  'KEEP_ALIVE_IDLE_THRESHOLD_MS'
+  'KEEP_ALIVE_IDLE_THRESHOLD_MS',
+  'ADMIN_API_KEY'
 ]
 
 // OPTIONAL (intentionally not validated): SENTRY_DSN — when empty or absent, Sentry stays disabled.

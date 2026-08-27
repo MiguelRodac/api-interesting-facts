@@ -108,9 +108,9 @@ app.get('/ping', async (req, res) => {
   const uptimeSeconds = Math.round(process.uptime())
   const version = process.env.npm_package_version ?? '0.0.1'
   const environment = process.env.NODE_ENV as string
-  const cacheStatus = versionCache.getCacheStatus()
 
   const payload = {
+
     status: 'ok',
     timestamp: now,
     uptimeSeconds,
@@ -118,7 +118,6 @@ app.get('/ping', async (req, res) => {
     database: dbStatus,
     dbLatencyMs,
     version,
-    appVersionCache: cacheStatus,
     documentation: `${baseUrl}/api/docs`
   }
 
@@ -128,8 +127,7 @@ app.get('/ping', async (req, res) => {
       dbOk: dbStatus === 'ok',
       uptimeSeconds,
       baseUrl,
-      version,
-      cacheStatus
+      version
     }))
     return
   }
@@ -138,7 +136,39 @@ app.get('/ping', async (req, res) => {
   res.status(200).json(payload)
 })
 
-app.post('/ping/refresh-versions', async (_req, res) => {
+// Admin endpoint — view current cached app versions
+app.get('/ping/version-info', (req, res) => {
+  const adminKey = process.env.ADMIN_API_KEY
+  const providedKey = req.headers['x-admin-key'] ?? req.query.key
+
+  if (providedKey == null || providedKey === '' || providedKey !== adminKey) {
+    res.status(401).json({
+      status: 'error',
+      message: 'Unauthorized: Invalid or missing admin key'
+    })
+    return
+  }
+
+  const cacheStatus = versionCache.getCacheStatus()
+  res.status(200).json({
+    status: 'ok',
+    cache: cacheStatus
+  })
+})
+
+// Admin endpoint — refresh app version cache from DB
+app.post('/ping/refresh-versions', async (req, res) => {
+  const adminKey = process.env.ADMIN_API_KEY
+  const providedKey = req.headers['x-admin-key'] ?? req.query.key ?? (req.body as { key?: string } | undefined)?.key
+
+  if (providedKey == null || providedKey === '' || providedKey !== adminKey) {
+    res.status(401).json({
+      status: 'error',
+      message: 'Unauthorized: Invalid or missing admin key'
+    })
+    return
+  }
+
   try {
     const cacheStatus = await versionCache.refreshCache()
     res.status(200).json({

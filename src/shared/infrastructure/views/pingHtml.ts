@@ -1,8 +1,6 @@
-import { type CacheStatus } from '../cache/versionCache'
-
 /**
  * Ping page HTML — rendered when a browser hits /ping
- * Visual status page: striking but says just enough.
+ * Visual status page + Secure Admin Modal for Version Management.
  */
 
 export interface PingData {
@@ -10,7 +8,6 @@ export interface PingData {
   uptimeSeconds: number
   baseUrl: string
   version: string
-  cacheStatus?: CacheStatus
 }
 
 export function renderPingHtml (data: PingData): string {
@@ -18,8 +15,7 @@ export function renderPingHtml (data: PingData): string {
     dbOk,
     uptimeSeconds,
     baseUrl,
-    version,
-    cacheStatus
+    version
   } = data
 
   const statusColor = dbOk ? '#34d399' : '#fb7185'
@@ -29,13 +25,9 @@ export function renderPingHtml (data: PingData): string {
     : 'Hold tight — the database is unreachable'
 
   const uptimeHuman = formatUptime(uptimeSeconds)
-  const versions = cacheStatus?.versions ?? []
-  const initialChips = versions.length > 0
-    ? versions.map(v => `<div class="chip"><span class="plat">${v.platform}</span><span class="ver">min v${v.minVersion}</span></div>`).join('')
-    : '<div class="chip"><span class="plat">all</span><span class="ver">fallback</span></div>'
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,15 +49,14 @@ export function renderPingHtml (data: PingData): string {
     .card {
       position: relative;
       width: 100%; max-width: 480px;
-      background: rgba(17, 25, 40, 0.72);
+      background: rgba(17, 25, 40, 0.75);
       border: 1px solid rgba(148, 163, 184, 0.14);
       border-radius: 28px;
       padding: 36px;
       overflow: hidden;
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(16px);
       box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
     }
-    /* soft top sheen */
     .card::before {
       content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, transparent, ${statusColor}, transparent);
@@ -107,53 +98,27 @@ export function renderPingHtml (data: PingData): string {
     .ring-label .txt { font-size: 19px; font-weight: 700; color: ${statusColor}; }
     .ring-label .hint { color: #94a3b8; font-size: 13px; margin-top: 4px; }
 
-    /* Version control box */
-    .version-box {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(148, 163, 184, 0.12);
-      border-radius: 16px;
-      padding: 16px;
-      margin-top: 18px;
+    /* Admin Action Button */
+    .admin-bar {
+      margin-top: 16px;
+      display: flex;
+      justify-content: center;
     }
-    .vbox-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px;
-    }
-    .vbox-title {
-      font-size: 12px; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.08em; color: #94a3b8;
-    }
-    .refresh-btn {
-      background: rgba(59, 130, 246, 0.15);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      color: #60a5fa;
+    .btn-admin-open {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #94a3b8;
       font-size: 12px; font-weight: 600;
-      padding: 4px 12px; border-radius: 8px;
+      padding: 8px 16px; border-radius: 12px;
       cursor: pointer;
-      transition: all 0.15s ease;
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: all 0.2s ease;
     }
-    .refresh-btn:hover {
-      background: rgba(59, 130, 246, 0.28);
-      border-color: #60a5fa;
-      color: #93c5fd;
-    }
-    .refresh-btn:disabled {
-      opacity: 0.5; cursor: not-allowed;
-    }
-    .chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(30, 41, 59, 0.7);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 8px; padding: 4px 10px; font-size: 12px;
-    }
-    .chip .plat {
-      font-weight: 700; color: #38bdf8; text-transform: uppercase; font-size: 10px;
-      background: rgba(56, 189, 248, 0.12); padding: 2px 6px; border-radius: 4px;
-    }
-    .chip .ver { color: #cbd5e1; font-family: monospace; font-size: 11px; }
-    .refresh-feedback {
-      font-size: 11px; margin-top: 8px; min-height: 14px; transition: all 0.2s;
+    .btn-admin-open:hover {
+      background: rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+      color: #60a5fa;
+      transform: translateY(-1px);
     }
 
     .footer {
@@ -172,6 +137,118 @@ export function renderPingHtml (data: PingData): string {
     }
     .docs-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(37,99,235,0.5); }
     .foot-note { text-align: center; color: #475569; font-size: 11px; margin-top: 16px; }
+
+    /* Modal Backdrop & Container */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(11, 15, 26, 0.85);
+      backdrop-filter: blur(12px);
+      display: none; align-items: center; justify-content: center;
+      padding: 20px; z-index: 1000;
+      animation: fadeIn 0.2s ease-out forwards;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal-card {
+      width: 100%; max-width: 520px;
+      background: #0f172a;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 24px;
+      padding: 30px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8);
+      position: relative;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; padding-bottom: 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
+    .btn-close {
+      background: transparent; border: none; color: #94a3b8;
+      font-size: 22px; cursor: pointer; line-height: 1;
+      padding: 4px 8px; border-radius: 6px;
+    }
+    .btn-close:hover { color: #f8fafc; background: rgba(255,255,255,0.08); }
+
+    /* Login Form in Modal */
+    .auth-box { text-align: center; padding: 10px 0; }
+    .auth-box p { font-size: 13px; color: #94a3b8; margin-bottom: 16px; }
+    .auth-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    .auth-input {
+      flex: 1; background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 10px; padding: 10px 14px;
+      color: #fff; font-size: 14px; outline: none;
+      transition: border-color 0.2s;
+    }
+    .auth-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
+    .btn-primary {
+      background: #3b82f6; color: #fff; border: none;
+      border-radius: 10px; padding: 10px 18px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .auth-msg { font-size: 12px; min-height: 18px; }
+
+    /* Dashboard Console in Modal */
+    .console-box { display: none; }
+    .session-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(30, 41, 59, 0.4);
+      padding: 8px 12px; border-radius: 10px; margin-bottom: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+    .session-badge { font-size: 12px; color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .btn-logout {
+      background: transparent; border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #f87171; font-size: 11px; font-weight: 600;
+      padding: 3px 8px; border-radius: 6px; cursor: pointer;
+    }
+    .btn-logout:hover { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+    .actions-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
+    }
+    .action-btn {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: #e2e8f0; font-size: 12px; font-weight: 600;
+      padding: 12px 14px; border-radius: 12px; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      transition: all 0.15s; text-align: center;
+    }
+    .action-btn:hover {
+      background: rgba(59, 130, 246, 0.15); border-color: #3b82f6; color: #60a5fa;
+    }
+    .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .action-btn .icon { font-size: 18px; }
+
+    /* Results Viewer */
+    .results-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 14px; padding: 16px;
+    }
+    .results-meta {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; font-size: 11px; color: #94a3b8;
+    }
+    .chips-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 8px; padding: 6px 12px; font-size: 12px;
+    }
+    .chip .plat {
+      font-weight: 700; color: #38bdf8; text-transform: uppercase; font-size: 10px;
+      background: rgba(56, 189, 248, 0.12); padding: 2px 6px; border-radius: 4px;
+    }
+    .chip .ver { color: #cbd5e1; font-family: monospace; font-size: 11px; }
+    .console-feedback {
+      font-size: 12px; margin-top: 10px; min-height: 16px; text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -192,15 +269,10 @@ export function renderPingHtml (data: PingData): string {
       <div class="hint">${statusMessage}</div>
     </div>
 
-    <div class="version-box">
-      <div class="vbox-head">
-        <span class="vbox-title">Allowed App Versions</span>
-        <button id="refreshBtn" class="refresh-btn" onclick="triggerRefresh()">↻ Refresh Cache</button>
-      </div>
-      <div id="chipsContainer" class="chips-row">
-        ${initialChips}
-      </div>
-      <div id="refreshFeedback" class="refresh-feedback"></div>
+    <div class="admin-bar">
+      <button class="btn-admin-open" onclick="openAdminModal()">
+        <span>🔒</span> Consola de Versiones
+      </button>
     </div>
 
     <div class="footer">
@@ -214,43 +286,230 @@ export function renderPingHtml (data: PingData): string {
     <div class="foot-note">API Interesting Facts</div>
   </div>
 
+  <!-- Admin Modal -->
+  <div id="adminModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🔒 Consola de Versiones</h3>
+        <button class="btn-close" onclick="closeAdminModal()">×</button>
+      </div>
+
+      <!-- View 1: Login Form -->
+      <div id="authSection" class="auth-box">
+        <p>Ingresá el <strong>ADMIN_API_KEY</strong> para ver o refrescar las versiones permitidas.</p>
+        <form onsubmit="handleLogin(event)">
+          <div class="auth-input-group">
+            <input type="password" id="adminKeyInput" class="auth-input" placeholder="Admin API Key" autocomplete="off" required>
+            <button type="submit" class="btn-primary">Ingresar</button>
+          </div>
+        </form>
+        <div id="authMsg" class="auth-msg"></div>
+      </div>
+
+      <!-- View 2: Dashboard Console -->
+      <div id="consoleSection" class="console-box">
+        <div class="session-bar">
+          <span class="session-badge">● Sesión Autorizada</span>
+          <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
+        </div>
+
+        <div class="actions-grid">
+          <button id="btnViewVersions" class="action-btn" onclick="fetchVersionInfo()">
+            <span class="icon">👁️</span>
+            <span>Ver Versiones</span>
+          </button>
+          <button id="btnRefreshVersions" class="action-btn" onclick="triggerRefresh()">
+            <span class="icon">↻</span>
+            <span>Refrescar Caché</span>
+          </button>
+        </div>
+
+        <div class="results-card">
+          <div class="results-meta">
+            <span id="resultsSource">Fuente: —</span>
+            <span id="resultsTtl">TTL: —</span>
+          </div>
+          <div id="chipsContainer" class="chips-grid">
+            <span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>
+          </div>
+        </div>
+        <div id="consoleFeedback" class="console-feedback"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    async function triggerRefresh() {
-      const btn = document.getElementById('refreshBtn');
-      const feedback = document.getElementById('refreshFeedback');
-      const container = document.getElementById('chipsContainer');
-      
-      btn.disabled = true;
-      btn.innerText = 'Refreshing...';
-      feedback.style.color = '#94a3b8';
-      feedback.innerText = 'Querying database...';
+    const modal = document.getElementById('adminModal');
+    const authSection = document.getElementById('authSection');
+    const consoleSection = document.getElementById('consoleSection');
+    const adminKeyInput = document.getElementById('adminKeyInput');
+    const authMsg = document.getElementById('authMsg');
+    const consoleFeedback = document.getElementById('consoleFeedback');
+    const chipsContainer = document.getElementById('chipsContainer');
+    const resultsSource = document.getElementById('resultsSource');
+    const resultsTtl = document.getElementById('resultsTtl');
+
+    function openAdminModal() {
+      modal.style.display = 'flex';
+      const key = sessionStorage.getItem('admin_key');
+      if (key) {
+        showConsole();
+        fetchVersionInfo();
+      } else {
+        showLogin();
+      }
+    }
+
+    function closeAdminModal() {
+      modal.style.display = 'none';
+      if (authMsg) authMsg.innerText = '';
+      if (consoleFeedback) consoleFeedback.innerText = '';
+    }
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeAdminModal();
+    });
+
+    function showLogin() {
+      authSection.style.display = 'block';
+      consoleSection.style.display = 'none';
+      adminKeyInput.value = '';
+      adminKeyInput.focus();
+    }
+
+    function showConsole() {
+      authSection.style.display = 'none';
+      consoleSection.style.display = 'block';
+    }
+
+    async function handleLogin(e) {
+      if (e) e.preventDefault();
+      const key = adminKeyInput.value.trim();
+      if (!key) return;
+
+      authMsg.style.color = '#94a3b8';
+      authMsg.innerText = 'Verificando clave...';
 
       try {
-        const res = await fetch('/ping/refresh-versions', { method: 'POST' });
+        const res = await fetch('/ping/version-info', {
+          headers: { 'x-admin-key': key }
+        });
         const data = await res.json();
-        
+
         if (res.ok && data.status === 'ok') {
-          feedback.style.color = '#34d399';
-          feedback.innerText = '✓ Cache refreshed successfully from ' + data.cache.source;
-          
-          if (data.cache.versions && data.cache.versions.length > 0) {
-            container.innerHTML = data.cache.versions.map(v => 
-              '<div class="chip"><span class="plat">' + v.platform + '</span><span class="ver">min v' + v.minVersion + '</span></div>'
-            ).join('');
-          }
+          sessionStorage.setItem('admin_key', key);
+          authMsg.innerText = '';
+          showConsole();
+          renderVersionsData(data.cache);
         } else {
-          feedback.style.color = '#fb7185';
-          feedback.innerText = '✕ Failed to refresh cache: ' + (data.message || 'Unknown error');
+          authMsg.style.color = '#fb7185';
+          authMsg.innerText = '✕ ' + (data.message || 'Clave de administrador incorrecta');
         }
       } catch (err) {
-        feedback.style.color = '#fb7185';
-        feedback.innerText = '✕ Network error while contacting server';
+        authMsg.style.color = '#fb7185';
+        authMsg.innerText = '✕ Error de red al contactar al servidor';
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('admin_key');
+      chipsContainer.innerHTML = '<span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>';
+      resultsSource.innerText = 'Fuente: —';
+      resultsTtl.innerText = 'TTL: —';
+      consoleFeedback.innerText = '';
+      showLogin();
+    }
+
+    async function fetchVersionInfo() {
+      const key = sessionStorage.getItem('admin_key');
+      if (!key) { showLogin(); return; }
+
+      const btn = document.getElementById('btnViewVersions');
+      btn.disabled = true;
+      consoleFeedback.style.color = '#94a3b8';
+      consoleFeedback.innerText = 'Consultando estado del caché...';
+
+      try {
+        const res = await fetch('/ping/version-info', {
+          headers: { 'x-admin-key': key }
+        });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          handleLogout();
+          return;
+        }
+
+        if (res.ok && data.status === 'ok') {
+          renderVersionsData(data.cache);
+          consoleFeedback.style.color = '#34d399';
+          consoleFeedback.innerText = '✓ Información de versiones cargada';
+        } else {
+          consoleFeedback.style.color = '#fb7185';
+          consoleFeedback.innerText = '✕ ' + (data.message || 'Error al obtener versiones');
+        }
+      } catch (err) {
+        consoleFeedback.style.color = '#fb7185';
+        consoleFeedback.innerText = '✕ Error de conexión';
       } finally {
         btn.disabled = false;
-        btn.innerText = '↻ Refresh Cache';
-        setTimeout(() => {
-          if (feedback) feedback.innerText = '';
-        }, 5000);
+        setTimeout(() => { if (consoleFeedback) consoleFeedback.innerText = ''; }, 4000);
+      }
+    }
+
+    async function triggerRefresh() {
+      const key = sessionStorage.getItem('admin_key');
+      if (!key) { showLogin(); return; }
+
+      const btn = document.getElementById('btnRefreshVersions');
+      btn.disabled = true;
+      consoleFeedback.style.color = '#94a3b8';
+      consoleFeedback.innerText = 'Refrescando desde la base de datos...';
+
+      try {
+        const res = await fetch('/ping/refresh-versions', {
+          method: 'POST',
+          headers: { 'x-admin-key': key }
+        });
+        const data = await res.json();
+
+        if (res.status === 401 || res.status === 403) {
+          handleLogout();
+          return;
+        }
+
+        if (res.ok && data.status === 'ok') {
+          renderVersionsData(data.cache);
+          consoleFeedback.style.color = '#34d399';
+          consoleFeedback.innerText = '✓ Caché refrescado exitosamente desde ' + data.cache.source;
+        } else {
+          consoleFeedback.style.color = '#fb7185';
+          consoleFeedback.innerText = '✕ ' + (data.message || 'Error al refrescar caché');
+        }
+      } catch (err) {
+        consoleFeedback.style.color = '#fb7185';
+        consoleFeedback.innerText = '✕ Error de conexión';
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => { if (consoleFeedback) consoleFeedback.innerText = ''; }, 4000);
+      }
+    }
+
+    function renderVersionsData(cache) {
+      if (!cache) return;
+      resultsSource.innerText = 'Fuente: ' + (cache.source === 'database' ? '🗄️ Base de Datos' : '⚙️ Env Fallback');
+      resultsTtl.innerText = 'TTL: ' + cache.ttlHours + 'h';
+
+      if (cache.versions && cache.versions.length > 0) {
+        chipsContainer.innerHTML = cache.versions.map(v => 
+          '<div class="chip">' +
+            '<span class="plat">' + v.platform + '</span>' +
+            '<span class="ver">min v' + v.minVersion + '</span>' +
+            (v.recommendedVersion ? '<span class="ver" style="color:#94a3b8;">(rec v' + v.recommendedVersion + ')</span>' : '') +
+          '</div>'
+        ).join('');
+      } else {
+        chipsContainer.innerHTML = '<span style="color:#f87171; font-size:12px;">No hay versiones registradas.</span>';
       }
     }
   </script>
