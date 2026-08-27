@@ -66,8 +66,11 @@ describe('Mentions Endpoints', () => {
       expect(res.body.results.length).toBe(1)
       const result = res.body.results[0]
       expect(result.type).toBe('fact')
-      expect(result.author.username).toBe('testauthor')
       expect(result.fact.content).toContain('@mentioneduser')
+      expect(result.fact.likes).toBe(0)
+      expect(result.fact.comments).toBe(0)
+      expect(result.fact.repostCount).toBe(0)
+      expect(result.fact.author.username).toBe('testauthor')
       expect(result.createdAt).toBeDefined()
       expect(res.body.page).toBe(1)
       expect(res.body.limit).toBe(20)
@@ -99,7 +102,7 @@ describe('Mentions Endpoints', () => {
       expect(res.body.results[0].type).toBe('fact')
     })
 
-    it('should list a comment where the user was @mentioned', async () => {
+    it('should list a comment where the user was @mentioned along with the parent fact', async () => {
       const factId = await getTestFactId()
 
       const res = await request(app)
@@ -115,8 +118,10 @@ describe('Mentions Endpoints', () => {
 
       expect(mentions.status).toBe(200)
       expect(mentions.body.results.length).toBe(1)
-      expect(mentions.body.results[0].type).toBe('comment')
-      expect(mentions.body.results[0].comment.content).toBe('Replying to mention @mentioneduser')
+      expect(mentions.body.results[0].type).toBe('fact')
+      expect(mentions.body.results[0].fact.id).toBe(factId)
+      expect(mentions.body.results[0].fact.comments).toBe(1)
+      expect(mentions.body.results[0].fact.commentsDetails?.content).toBe('Replying to mention @mentioneduser')
     })
 
     it('should paginate with the given limit', async () => {

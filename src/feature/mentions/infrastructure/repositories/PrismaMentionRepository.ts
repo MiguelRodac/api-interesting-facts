@@ -1,6 +1,8 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type MentionItem } from '../../domain/models/MentionItem'
 import { type MentionRepository } from '../../domain/ports/MentionRepository'
+import { type FactRepository } from '@fact/domain/ports/FactRepository'
+import { PrismaFactRepository } from '@fact/infrastructure/repositories/PrismaFactRepository'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, buildPaginatedResult } from '@shared/domain/types/query-filters'
 
 function buildPagination (params?: BaseQueryParams): { skip: number, take: number } {
@@ -10,52 +12,13 @@ function buildPagination (params?: BaseQueryParams): { skip: number, take: numbe
   return { skip, take: limit }
 }
 
-interface MentionRow {
-  id: string
-  createdAt: Date
-  author: { username: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }
-  fact: { id: string, title: string | null, content: string } | null
-  comment: { id: string, content: string, factId: string | null } | null
-}
-
-function mapMention (mention: MentionRow): MentionItem {
-  const base = {
-    id: mention.id,
-    author: mention.author,
-    createdAt: mention.createdAt
-  }
-
-  if (mention.fact !== null) {
-    return {
-      ...base,
-      type: 'fact' as const,
-      fact: {
-        id: mention.fact.id,
-        title: mention.fact.title,
-        content: mention.fact.content
-      }
-    }
-  }
-
-  if (mention.comment !== null) {
-    return {
-      ...base,
-      type: 'comment' as const,
-      comment: {
-        id: mention.comment.id,
-        content: mention.comment.content,
-        factId: mention.comment.factId
-      }
-    }
-  }
-
-  return {
-    ...base,
-    type: 'fact' as const
-  }
-}
-
 export class PrismaMentionRepository implements MentionRepository {
+  private readonly factRepository: FactRepository
+
+  constructor (factRepository?: FactRepository) {
+    this.factRepository = factRepository ?? new PrismaFactRepository()
+  }
+
   async replaceFactMentions (factId: string, authorId: string, mentionedUserIds: string[]): Promise<void> {
     const uniqueIds = [...new Set(mentionedUserIds)]
 
@@ -82,12 +45,12 @@ export class PrismaMentionRepository implements MentionRepository {
     })
   }
 
-  async findMentionsForUser (mentionedUserId: string, params?: BaseQueryParams): Promise<ResultWithPagination<MentionItem>> {
+  async findMentionsForUser (mentionedUserId: string, params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<MentionItem>> {
     const page = params?.page ?? DEFAULT_PAGE
     const limit = params?.limit ?? DEFAULT_LIMIT
     const { skip, take } = buildPagination(params)
 
-    const [mentions, total] = await Promise.all([
+    const [rawMentions, total] = await Promise.all([
       prisma.mention.findMany({
         where: { mentionedUserId },
         orderBy: { createdAt: 'desc' },
@@ -95,19 +58,117 @@ export class PrismaMentionRepository implements MentionRepository {
         take,
         include: {
           fact: {
-            select: { id: true, title: true, content: true }
+            select: { id: true }
           },
           comment: {
-            select: { id: true, content: true, factId: true }
+            select: {
+              id: true,
+              content: true,
+              factId: true,
+              repostId: true,
+              createdAt: true,
+              author: {
+                select: { firebaseUid: true, username: true, displayName: true, avatarUrl: true, avatarColor: true }
+              },
+              repost: {
+                select: { originalFactId: true }
+              }
+            }
           },
           author: {
-            select: { username: true, displayName: true, avatarUrl: true, avatarColor: true }
+            select: { firebaseUid: true, username: true, displayName: true, avatarUrl: true, avatarColor: true }
           }
         }
       }),
       prisma.mention.count({ where: { mentionedUserId } })
     ])
 
-    return buildPaginatedResult(mentions.map(mapMention), total, page, limit)
+    if (rawMentions.length === 0) {
+      return buildPaginatedResult([], total, page, limit)
+    }
+
+    // Collect all relevant fact IDs to enrich
+    const factIdsToFetch = new Set<string>()
+    for (const m of rawMentions) {
+      if (m.factId != null) {
+        factIdsToFetch.add(m.factId)
+      } else if (m.comment != null) {
+        if (m.comment.factId != null) {
+          factIdsToFetch.add(m.comment.factId)
+        } else if (m.comment.repost?.originalFactId != null) {
+          factIdsToFetch.add(m.comment.repost.originalFactId)
+        }
+      }
+    }
+
+    const enrichedFacts = factIdsToFetch.size > 0
+      ? await this.factRepository.findByIds(Array.from(factIdsToFetch), viewerId)
+      : []
+    const factMap = new Map(enrichedFacts.map(f => [f.id, f]))
+
+    const mapped: MentionItem[] = rawMentions.map(m => {
+      const author = {
+        id: m.author.firebaseUid,
+        username: m.author.username,
+        displayName: m.author.displayName,
+        avatarUrl: m.author.avatarUrl,
+        avatarColor: m.author.avatarColor
+      }
+
+      if (m.comment != null) {
+        const targetFactId = m.comment.factId ?? m.comment.repost?.originalFactId ?? null
+        const rawFact = targetFactId != null ? factMap.get(targetFactId) : undefined
+        const fact = rawFact !== undefined
+          ? {
+              ...rawFact,
+              commentsDetails: {
+                id: m.comment.id,
+                content: m.comment.content,
+                author: {
+                  username: m.comment.author.username,
+                  avatarUrl: m.comment.author.avatarUrl,
+                  avatarColor: m.comment.author.avatarColor
+                },
+                parentCommentId: null,
+                replies: 0,
+                createdAt: m.comment.createdAt.toISOString()
+              }
+            }
+          : undefined
+
+        return {
+          id: m.id,
+          type: 'comment' as const,
+          author,
+          createdAt: m.createdAt,
+          fact,
+          comment: {
+            id: m.comment.id,
+            content: m.comment.content,
+            factId: m.comment.factId,
+            repostId: m.comment.repostId,
+            author: {
+              id: m.comment.author.firebaseUid,
+              username: m.comment.author.username,
+              displayName: m.comment.author.displayName,
+              avatarUrl: m.comment.author.avatarUrl,
+              avatarColor: m.comment.author.avatarColor
+            },
+            createdAt: m.comment.createdAt
+          }
+        }
+      }
+
+      const fact = m.factId != null ? factMap.get(m.factId) : undefined
+      return {
+        id: m.id,
+        type: 'fact' as const,
+        author,
+        createdAt: m.createdAt,
+        fact
+      }
+    })
+
+    return buildPaginatedResult(mapped, total, page, limit)
   }
 }

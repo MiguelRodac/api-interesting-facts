@@ -3,19 +3,28 @@ import { z } from 'zod'
 import { PrismaUserRepository } from '../repositories/PrismaUserRepository'
 import { GetUserByUsername } from '../../application/use-cases/GetUserByUsername'
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
+import { optionalAuth } from '@shared/infrastructure/middleware/optionalAuth'
 import { PrismaAvatarOptionRepository } from '@avatar/infrastructure/repositories/PrismaAvatarOptionRepository'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 import { USERNAME_PATTERN } from '@shared/domain/validation'
 import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
-import { PrismaMentionRepository } from '@mentions/infrastructure/repositories/PrismaMentionRepository'
+import { PrismaFactRepository } from '@fact/infrastructure/repositories/PrismaFactRepository'
+import { PrismaLikeRepository } from '@likes/infrastructure/repositories/PrismaLikeRepository'
+import { PrismaCommentRepository } from '@comments/infrastructure/repositories/PrismaCommentRepository'
 import { GetMentionsByUser } from '@mentions/application/use-cases/GetMentionsByUser'
 
 const router = Router()
 const userRepository = new PrismaUserRepository()
 const avatarOptionRepository = new PrismaAvatarOptionRepository()
 const getUserByUsername = new GetUserByUsername(userRepository)
-const mentionRepository = new PrismaMentionRepository()
-const getMentionsByUser = new GetMentionsByUser(mentionRepository)
+const factRepository = new PrismaFactRepository()
+const likeRepository = new PrismaLikeRepository()
+const commentRepository = new PrismaCommentRepository()
+const getMentionsByUser = new GetMentionsByUser(
+  factRepository,
+  likeRepository,
+  commentRepository
+)
 
 const SearchQuerySchema = z.object({
   q: z.string().min(1, 'Query parameter q is required')
@@ -85,10 +94,11 @@ router.get('/avatar-options', async (_req: Request, res: Response, next: NextFun
   }
 })
 
-// GET /users/:username/mentions — Paginated mention list for a user (public)
-router.get('/:username/mentions', async (req: Request, res: Response, next: NextFunction) => {
+// GET /users/:username/mentions — Paginated mention list for a user (public, optional auth for viewer context)
+router.get('/:username/mentions', optionalAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const username = req.params.username as string
+    const viewerId = req.user?.uid
 
     if (!USERNAME_PATTERN.test(username)) {
       throw new ValidationError('Username must be 3-30 characters and only contain letters, numbers, underscores or dots', [
@@ -98,7 +108,7 @@ router.get('/:username/mentions', async (req: Request, res: Response, next: Next
 
     const { page, limit } = MentionsQuerySchema.parse(req.query)
     const user = await getUserByUsername.execute(username)
-    const result = await getMentionsByUser.execute(user.id, { page, limit })
+    const result = await getMentionsByUser.execute(user.id, user.username, { page, limit }, viewerId)
     res.status(200).json(result)
   } catch (err) {
     next(err)

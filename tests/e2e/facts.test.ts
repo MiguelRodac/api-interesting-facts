@@ -427,6 +427,29 @@ describe('Facts Endpoints', () => {
       assertEnrichment(found)
     })
 
+    it('findByAuthorOrMention — GET /facts/search matches fact with comment mention', async () => {
+      const fact = await prisma.fact.create({
+        data: { authorId: 'other-uid', content: 'Fact without direct author mention in body' }
+      })
+      await prisma.comment.create({
+        data: {
+          content: 'Hey @testauthor check out this fact!',
+          factId: fact.id,
+          authorId: 'other-uid'
+        }
+      })
+
+      const res = await request(app)
+        .get('/facts/search?q=%40testauthor&limit=100')
+        .set('Authorization', `Bearer ${validToken}`)
+
+      expect(res.status).toBe(200)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
+      expect(found).toBeDefined()
+      expect(found.commentsDetails).toBeDefined()
+      expect(found.commentsDetails?.content).toBe('Hey @testauthor check out this fact!')
+    })
+
     it('findByHashtag — GET /facts/search (hashtag)', async () => {
       const fact = await seedFact()
       const hashtag = await prisma.hashtag.upsert({

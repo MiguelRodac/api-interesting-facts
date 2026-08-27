@@ -185,6 +185,137 @@ async function batchFirstComment (factIds: string[]): Promise<Map<string, Commen
   return result
 }
 
+async function batchCommentsDetailsForMention (
+  factIds: string[],
+  authorIds: string[],
+  usernames: string[],
+  query: string
+): Promise<Map<string, CommentPreview | null>> {
+  if (factIds.length === 0) return new Map()
+
+  const commentOrConditions: Array<Record<string, unknown>> = []
+
+  if (authorIds.length > 0) {
+    commentOrConditions.push({ mentions: { some: { mentionedUserId: { in: authorIds } } } })
+  }
+
+  for (const username of usernames) {
+    commentOrConditions.push({ content: { contains: `@${username}`, mode: 'insensitive' } })
+  }
+
+  if (authorIds.length === 0) {
+    commentOrConditions.push({ content: { contains: `@${query}`, mode: 'insensitive' } })
+  }
+
+  const matchingComments = await prisma.comment.findMany({
+    where: {
+      factId: { in: factIds },
+      OR: commentOrConditions
+    },
+    orderBy: [{ factId: 'asc' }, { createdAt: 'desc' }, { id: 'asc' }],
+    include: {
+      author: { select: { username: true, avatarUrl: true, avatarColor: true } }
+    }
+  })
+
+  const missingFactIds = factIds.filter(fid => !matchingComments.some(c => c.factId === fid))
+  let repostMatchingComments: Array<{
+    id: string
+    content: string
+    parentCommentId: string | null
+    createdAt: Date
+    author: { username: string, avatarUrl: string | null, avatarColor: string | null }
+    repost: { originalFactId: string } | null
+  }> = []
+
+  if (missingFactIds.length > 0) {
+    repostMatchingComments = await prisma.comment.findMany({
+      where: {
+        repost: { originalFactId: { in: missingFactIds } },
+        OR: commentOrConditions
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+      include: {
+        author: { select: { username: true, avatarUrl: true, avatarColor: true } },
+        repost: { select: { originalFactId: true } }
+      }
+    })
+  }
+
+  const picked = new Map<string, { id: string, content: string, parentCommentId: string | null, author: UserAvatarPreview, createdAt: Date }>()
+
+  for (const c of matchingComments) {
+    const fid = c.factId
+    if (fid == null) continue
+    if (!picked.has(fid)) {
+      picked.set(fid, {
+        id: c.id,
+        content: c.content,
+        parentCommentId: c.parentCommentId,
+        author: {
+          username: c.author.username,
+          avatarUrl: c.author.avatarUrl,
+          avatarColor: c.author.avatarColor
+        },
+        createdAt: c.createdAt
+      })
+    }
+  }
+
+  for (const c of repostMatchingComments) {
+    const fid = c.repost?.originalFactId
+    if (fid == null) continue
+    if (!picked.has(fid)) {
+      picked.set(fid, {
+        id: c.id,
+        content: c.content,
+        parentCommentId: c.parentCommentId,
+        author: {
+          username: c.author.username,
+          avatarUrl: c.author.avatarUrl,
+          avatarColor: c.author.avatarColor
+        },
+        createdAt: c.createdAt
+      })
+    }
+  }
+
+  const remainingFactIds = factIds.filter(fid => !picked.has(fid))
+  const fallbackMap = remainingFactIds.length > 0 ? await batchFirstComment(remainingFactIds) : new Map<string, CommentPreview | null>()
+
+  const topLevelPickedIds = [...picked.values()].filter(p => p.parentCommentId === null).map(p => p.id)
+  const replyCountMap = new Map<string, number>()
+  if (topLevelPickedIds.length > 0) {
+    const replyRows = await prisma.comment.groupBy({
+      by: ['parentCommentId'],
+      _count: { parentCommentId: true },
+      where: { parentCommentId: { in: topLevelPickedIds } }
+    })
+    for (const row of replyRows) {
+      if (row.parentCommentId == null) continue
+      replyCountMap.set(row.parentCommentId, row._count.parentCommentId)
+    }
+  }
+
+  const result = new Map<string, CommentPreview | null>()
+  for (const [factId, c] of picked) {
+    result.set(factId, {
+      id: c.id,
+      content: c.content,
+      author: c.author,
+      parentCommentId: c.parentCommentId,
+      replies: c.parentCommentId === null ? (replyCountMap.get(c.id) ?? 0) : 0,
+      createdAt: c.createdAt.toISOString()
+    })
+  }
+
+  for (const [factId, preview] of fallbackMap) {
+    result.set(factId, preview)
+  }
+
+  return result
+}
+
 async function batchRepostCounts (factIds: string[]): Promise<Map<string, number>> {
   if (factIds.length === 0) return new Map()
   const rows = await prisma.repost.groupBy({
@@ -568,12 +699,14 @@ export class PrismaFactRepository implements FactRepository {
     const limit = params?.limit ?? 10
     const { skip, take } = buildPagination(params)
 
+    const normalizedQuery = query.startsWith('@') ? query.slice(1) : query
+
     // Find users matching the query to get their firebaseUid
     const matchingUsers = await prisma.user.findMany({
       where: {
         OR: [
-          { username: { startsWith: query, mode: 'insensitive' } },
-          { displayName: { contains: query, mode: 'insensitive' } }
+          { username: { startsWith: normalizedQuery, mode: 'insensitive' } },
+          { displayName: { contains: normalizedQuery, mode: 'insensitive' } }
         ]
       },
       select: { firebaseUid: true, username: true },
@@ -587,7 +720,7 @@ export class PrismaFactRepository implements FactRepository {
     const matchingHashtags = await prisma.factHashtag.findMany({
       where: {
         hashtag: {
-          tag: { contains: query, mode: 'insensitive' }
+          tag: { contains: normalizedQuery, mode: 'insensitive' }
         }
       },
       select: { factId: true },
@@ -595,21 +728,32 @@ export class PrismaFactRepository implements FactRepository {
     })
     const hashtagFactIds = matchingHashtags.map(fh => fh.factId)
 
-    // Build OR conditions: authorId matches OR content contains @username OR hashtag matches
+    // Build OR conditions: authorId matches OR content contains @username OR hashtag matches OR mentioned in comments
     const orConditions: Array<Record<string, unknown>> = []
 
     if (authorIds.length > 0) {
+      // 1. User is author of the fact
       orConditions.push({ authorId: { in: authorIds } })
+      // 2. User is directly mentioned on the fact
+      orConditions.push({ mentions: { some: { mentionedUserId: { in: authorIds } } } })
+      // 3. User is mentioned in comments on the fact
+      orConditions.push({ comments: { some: { mentions: { some: { mentionedUserId: { in: authorIds } } } } } })
+      // 4. User is mentioned in comments on reposts of the fact
+      orConditions.push({ reposts: { some: { comments: { some: { mentions: { some: { mentionedUserId: { in: authorIds } } } } } } } })
     }
 
-    // For mentions, we search for @username patterns in content
+    // For mentions, we search for @username patterns in fact and comment content
     for (const username of usernames) {
       orConditions.push({ content: { contains: `@${username}`, mode: 'insensitive' } })
+      orConditions.push({ comments: { some: { content: { contains: `@${username}`, mode: 'insensitive' } } } })
+      orConditions.push({ reposts: { some: { comments: { some: { content: { contains: `@${username}`, mode: 'insensitive' } } } } } })
     }
 
-    // If no users matched, also try a direct content mention search with the raw query
-    if (orConditions.length === 0) {
-      orConditions.push({ content: { contains: `@${query}`, mode: 'insensitive' } })
+    // If no users matched, also try direct content mention search with the raw query
+    if (authorIds.length === 0) {
+      orConditions.push({ content: { contains: `@${normalizedQuery}`, mode: 'insensitive' } })
+      orConditions.push({ comments: { some: { content: { contains: `@${normalizedQuery}`, mode: 'insensitive' } } } })
+      orConditions.push({ reposts: { some: { comments: { some: { content: { contains: `@${normalizedQuery}`, mode: 'insensitive' } } } } } })
     }
 
     // Add hashtag cross-reference: facts linked to hashtags matching the query
@@ -647,7 +791,7 @@ export class PrismaFactRepository implements FactRepository {
       batchLikeCounts(factIds),
       batchCommentCounts(factIds),
       batchRecentLikers(factIds, 3),
-      batchFirstComment(factIds),
+      batchCommentsDetailsForMention(factIds, authorIds, usernames, normalizedQuery),
       batchRepostCounts(factIds),
       batchRecentReposters(factIds, 2),
       batchHashtags(factIds)
