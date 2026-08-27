@@ -349,21 +349,24 @@ export function renderPingHtml (data: PingData): string {
     const resultsSource = document.getElementById('resultsSource');
     const resultsTtl = document.getElementById('resultsTtl');
 
+    // Strict volatile memory — NEVER saved to sessionStorage or localStorage
+    let currentAdminKey = '';
+
     function openAdminModal() {
       modal.style.display = 'flex';
-      const key = sessionStorage.getItem('admin_key');
-      if (key) {
-        showConsole();
-        fetchVersionInfo();
-      } else {
-        showLogin();
-      }
+      showLogin();
     }
 
     function closeAdminModal() {
       modal.style.display = 'none';
+      // Wipe key from memory immediately on close
+      currentAdminKey = '';
+      if (adminKeyInput) adminKeyInput.value = '';
       if (authMsg) authMsg.innerText = '';
       if (consoleFeedback) consoleFeedback.innerText = '';
+      chipsContainer.innerHTML = '<span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>';
+      resultsSource.innerText = 'Fuente: —';
+      resultsTtl.innerText = 'TTL: —';
     }
 
     modal.addEventListener('click', (e) => {
@@ -397,7 +400,8 @@ export function renderPingHtml (data: PingData): string {
         const data = await res.json();
 
         if (res.ok && data.status === 'ok') {
-          sessionStorage.setItem('admin_key', key);
+          currentAdminKey = key;
+          adminKeyInput.value = '';
           authMsg.innerText = '';
           showConsole();
           renderVersionsData(data.cache);
@@ -412,7 +416,7 @@ export function renderPingHtml (data: PingData): string {
     }
 
     function handleLogout() {
-      sessionStorage.removeItem('admin_key');
+      currentAdminKey = '';
       chipsContainer.innerHTML = '<span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>';
       resultsSource.innerText = 'Fuente: —';
       resultsTtl.innerText = 'TTL: —';
@@ -421,8 +425,7 @@ export function renderPingHtml (data: PingData): string {
     }
 
     async function fetchVersionInfo() {
-      const key = sessionStorage.getItem('admin_key');
-      if (!key) { showLogin(); return; }
+      if (!currentAdminKey) { showLogin(); return; }
 
       const btn = document.getElementById('btnViewVersions');
       btn.disabled = true;
@@ -431,7 +434,7 @@ export function renderPingHtml (data: PingData): string {
 
       try {
         const res = await fetch('/ping/version-info', {
-          headers: { 'x-admin-key': key }
+          headers: { 'x-admin-key': currentAdminKey }
         });
         const data = await res.json();
 
@@ -458,8 +461,7 @@ export function renderPingHtml (data: PingData): string {
     }
 
     async function triggerRefresh() {
-      const key = sessionStorage.getItem('admin_key');
-      if (!key) { showLogin(); return; }
+      if (!currentAdminKey) { showLogin(); return; }
 
       const btn = document.getElementById('btnRefreshVersions');
       btn.disabled = true;
@@ -469,7 +471,7 @@ export function renderPingHtml (data: PingData): string {
       try {
         const res = await fetch('/ping/refresh-versions', {
           method: 'POST',
-          headers: { 'x-admin-key': key }
+          headers: { 'x-admin-key': currentAdminKey }
         });
         const data = await res.json();
 
@@ -494,6 +496,7 @@ export function renderPingHtml (data: PingData): string {
         setTimeout(() => { if (consoleFeedback) consoleFeedback.innerText = ''; }, 4000);
       }
     }
+
 
     function renderVersionsData(cache) {
       if (!cache) return;
