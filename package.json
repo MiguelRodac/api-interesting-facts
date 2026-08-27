@@ -10,6 +10,7 @@
     "tsc": "tsc",
     "test": "jest",
     "seed": "npx ts-node --transpile-only scripts/seed-firestore.ts --env-file=.env",
+    "seed:versions": "npx ts-node --transpile-only scripts/seed-versions.ts --env-file=.env",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",
     "prisma:studio": "prisma studio",

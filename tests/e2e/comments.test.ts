@@ -36,8 +36,8 @@ describe('Comments Endpoints', () => {
     return fact.id
   }
 
-  const createComment = (factId: string, content = 'This is a valid comment', authorId = 'test-uid'): Promise<{ id: string }> =>
-    prisma.comment.create({
+  const createComment = async (factId: string, content = 'This is a valid comment', authorId = 'test-uid'): Promise<{ id: string }> =>
+    await prisma.comment.create({
       data: { content, factId, authorId }
     })
 

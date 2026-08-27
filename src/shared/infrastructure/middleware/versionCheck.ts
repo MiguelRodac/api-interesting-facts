@@ -1,9 +1,7 @@
 import { type Request, type Response, type NextFunction } from 'express'
 import { compareVersions } from '@shared/domain/utils/compareVersions'
+import { versionCache } from '../cache/versionCache'
 import { logger } from '../logger'
-
-// Validated at startup by shared/infrastructure/config — guaranteed present
-const MIN_APP_VERSION = process.env.MIN_APP_VERSION as string
 
 /**
  * Strict by default: requests missing X-App-Version are rejected with 400.
@@ -15,11 +13,12 @@ function isStrict (): boolean {
 
 /**
  * Browser-facing routes that don't require X-App-Version:
- * - /ping        → health checks (UptimeRobot) and status page
- * - /api/docs    → Scalar docs UI (opened directly in a browser)
- * - /favicon.svg → favicon served for the docs/ping pages
+ * - /ping                  → health checks (UptimeRobot) and status page
+ * - /ping/refresh-versions → manual cache bust trigger
+ * - /api/docs              → Scalar docs UI (opened directly in a browser)
+ * - /favicon.svg           → favicon served for the docs/ping pages
  */
-const EXEMPT_PATHS = new Set(['/ping', '/favicon.svg'])
+const EXEMPT_PATHS = new Set(['/ping', '/ping/refresh-versions', '/favicon.svg'])
 
 function isExempt (path: string): boolean {
   if (EXEMPT_PATHS.has(path)) return true
@@ -27,13 +26,13 @@ function isExempt (path: string): boolean {
 }
 
 /**
- * Middleware that checks the X-App-Version header against MIN_APP_VERSION on
+ * Middleware that checks the X-App-Version header against dynamic minimum version on
  * EVERY endpoint. Applied globally via app.use() before all routes.
  *
  * Behavior:
  * - Missing X-App-Version header → 400 APP_VERSION_MISSING (unless strict mode disabled)
- * - Version older than MIN_APP_VERSION → 426 APP_VERSION_OUTDATED
- * - Exempt: /ping, /api/docs, /favicon.svg (accessed directly from a browser)
+ * - Version older than min version → 426 APP_VERSION_OUTDATED
+ * - Exempt: /ping, /ping/refresh-versions, /api/docs, /favicon.svg (accessed directly from a browser)
  *
  * Error bodies never disclose the minimum supported version.
  */
@@ -69,9 +68,12 @@ export function versionCheck (req: Request, res: Response, next: NextFunction): 
     return
   }
 
-  if (compareVersions(clientVersion, MIN_APP_VERSION) === -1) {
+  const clientPlatform = (req.headers['x-app-platform'] ?? req.headers['x-platform']) as string | undefined
+  const minVersion = versionCache.getMinVersion(clientPlatform)
+
+  if (compareVersions(clientVersion, minVersion) === -1) {
     logger.warn(
-      { clientVersion, minVersion: MIN_APP_VERSION, path: req.path },
+      { clientVersion, clientPlatform, minVersion, path: req.path },
       'App version too old — blocking request'
     )
 

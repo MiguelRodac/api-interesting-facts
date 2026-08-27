@@ -15,12 +15,17 @@ import repostRoutes from '@reposts/infrastructure/routes/routes'
 import hashtagRoutes from '@hashtag/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
 import { versionCheck } from '@shared/infrastructure/middleware/versionCheck'
+import { versionCache } from '@shared/infrastructure/cache/versionCache'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
+import { logger } from '@shared/infrastructure/logger'
 import prisma from '@shared/infrastructure/prisma'
 import { renderPingHtml } from '@shared/infrastructure/views/pingHtml'
 import { faviconSvg } from '@shared/infrastructure/views/faviconSvg'
 
 const app = express()
+
+// Initialize dynamic version cache in the background
+void versionCache.init()
 
 // Trust Vercel's proxy to get real client IP
 app.set('trust proxy', 1)
@@ -38,7 +43,7 @@ if (!isDev) {
     max: RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/ping',
+    skip: (req) => req.path === '/ping' || req.path === '/ping/refresh-versions',
     message: (req: Request) => ({
       status: 429,
       error: 'Too Many Requests',
@@ -71,7 +76,7 @@ if (!isDev) {
 const corsOptions: cors.CorsOptions = {
   origin: process.env.CORS_ORIGIN as string,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Trace-Id', 'X-App-Version'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Trace-Id', 'X-App-Version', 'X-App-Platform', 'X-Platform'],
   credentials: true
 }
 app.use(cors(corsOptions))
@@ -103,6 +108,7 @@ app.get('/ping', async (req, res) => {
   const uptimeSeconds = Math.round(process.uptime())
   const version = process.env.npm_package_version ?? '0.0.1'
   const environment = process.env.NODE_ENV as string
+  const cacheStatus = versionCache.getCacheStatus()
 
   const payload = {
     status: 'ok',
@@ -112,6 +118,7 @@ app.get('/ping', async (req, res) => {
     database: dbStatus,
     dbLatencyMs,
     version,
+    appVersionCache: cacheStatus,
     documentation: `${baseUrl}/api/docs`
   }
 
@@ -121,13 +128,31 @@ app.get('/ping', async (req, res) => {
       dbOk: dbStatus === 'ok',
       uptimeSeconds,
       baseUrl,
-      version
+      version,
+      cacheStatus
     }))
     return
   }
 
   res.setHeader('Content-Type', 'application/json')
   res.status(200).json(payload)
+})
+
+app.post('/ping/refresh-versions', async (_req, res) => {
+  try {
+    const cacheStatus = await versionCache.refreshCache()
+    res.status(200).json({
+      status: 'ok',
+      message: 'App version cache refreshed successfully',
+      cache: cacheStatus
+    })
+  } catch (err) {
+    logger.error({ err }, 'Failed to refresh version cache via ping endpoint')
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to refresh version cache'
+    })
+  }
 })
 
 // Scalar API docs (open, no auth)

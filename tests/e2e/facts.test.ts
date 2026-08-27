@@ -356,7 +356,7 @@ describe('Facts Endpoints', () => {
     it('findByAuthorId — GET /facts/author/:authorId', async () => {
       const fact = await seedFact()
 
-      const res = await request(app).get(`/facts/author/test-uid`)
+      const res = await request(app).get('/facts/author/test-uid')
 
       expect(res.status).toBe(200)
       const found = res.body.results.find((r: { type: string, fact: { id: string } }) => r.type === 'fact' && r.fact.id === fact.id)?.fact

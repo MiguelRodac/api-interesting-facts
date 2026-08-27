@@ -164,3 +164,17 @@ model Mention {
   @@index([authorId, createdAt(sort: Desc)])
   @@map("mentions")
 }
+
+model AppVersion {
+  id                 String   @id @default(uuid())
+  platform           String   @default("all")
+  minVersion         String   @map("min_version")
+  recommendedVersion String?  @map("recommended_version")
+  forceUpdate        Boolean  @default(true) @map("force_update")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@unique([platform])
+  @@map("app_versions")
+}
