@@ -14,12 +14,14 @@ import commentLikeRoutes from '@commentLikes/infrastructure/routes/routes'
 import repostRoutes from '@reposts/infrastructure/routes/routes'
 import hashtagRoutes from '@hashtag/infrastructure/routes/routes'
 import { errorHandler } from '@shared/infrastructure/middleware/errorHandler'
+import { UnauthorizedError } from '@shared/domain/errors/app-errors'
 import { versionCheck } from '@shared/infrastructure/middleware/versionCheck'
+
 import { versionCache } from '@shared/infrastructure/cache/versionCache'
 import { httpLogger } from '@shared/infrastructure/logger/pino-http'
-import { logger } from '@shared/infrastructure/logger'
 import prisma from '@shared/infrastructure/prisma'
 import { renderPingHtml } from '@shared/infrastructure/views/pingHtml'
+
 import { faviconSvg } from '@shared/infrastructure/views/faviconSvg'
 
 const app = express()
@@ -43,7 +45,7 @@ if (!isDev) {
     max: RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => req.path === '/ping' || req.path === '/ping/refresh-versions',
+    skip: (req) => req.path.startsWith('/ping'),
     message: (req: Request) => ({
       status: 429,
       error: 'Too Many Requests',
@@ -76,7 +78,7 @@ if (!isDev) {
 const corsOptions: cors.CorsOptions = {
   origin: process.env.CORS_ORIGIN as string,
   methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Trace-Id', 'X-App-Version', 'X-App-Platform', 'X-Platform'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Trace-Id', 'X-App-Version', 'X-App-Platform', 'X-Platform', 'X-Admin-Key', 'x-admin-key'],
   credentials: true
 }
 app.use(cors(corsOptions))
@@ -137,39 +139,37 @@ app.get('/ping', async (req, res) => {
 })
 
 // Admin endpoint — view current cached app versions
-app.get('/ping/version-info', (req, res) => {
-  const adminKey = process.env.ADMIN_API_KEY
-  const providedKey = req.headers['x-admin-key'] ?? req.query.key
+app.get('/ping/version-info', (req, res, next) => {
+  try {
+    const adminKey = process.env.ADMIN_API_KEY?.trim()
+    const rawKey = req.headers['x-admin-key'] ?? req.query.key
+    const providedKey = typeof rawKey === 'string' ? rawKey.trim() : Array.isArray(rawKey) ? (rawKey[0] as string)?.trim() : undefined
 
-  if (providedKey == null || providedKey === '' || providedKey !== adminKey) {
-    res.status(401).json({
-      status: 'error',
-      message: 'Unauthorized: Invalid or missing admin key'
+    if (providedKey == null || providedKey === '' || providedKey !== adminKey) {
+      throw new UnauthorizedError('Invalid or missing admin authorization key')
+    }
+
+    const cacheStatus = versionCache.getCacheStatus()
+    res.status(200).json({
+      status: 'ok',
+      cache: cacheStatus
     })
-    return
+  } catch (err) {
+    next(err)
   }
-
-  const cacheStatus = versionCache.getCacheStatus()
-  res.status(200).json({
-    status: 'ok',
-    cache: cacheStatus
-  })
 })
 
 // Admin endpoint — refresh app version cache from DB
-app.post('/ping/refresh-versions', async (req, res) => {
-  const adminKey = process.env.ADMIN_API_KEY
-  const providedKey = req.headers['x-admin-key'] ?? req.query.key ?? (req.body as { key?: string } | undefined)?.key
-
-  if (providedKey == null || providedKey === '' || providedKey !== adminKey) {
-    res.status(401).json({
-      status: 'error',
-      message: 'Unauthorized: Invalid or missing admin key'
-    })
-    return
-  }
-
+app.post('/ping/refresh-versions', async (req, res, next) => {
   try {
+    const adminKey = process.env.ADMIN_API_KEY?.trim()
+    const rawKey = req.headers['x-admin-key'] ?? req.query.key ?? (req.body as { key?: string } | undefined)?.key
+    const providedKey = typeof rawKey === 'string' ? rawKey.trim() : Array.isArray(rawKey) ? (rawKey[0] as string)?.trim() : undefined
+
+    if (providedKey == null || providedKey === '' || providedKey !== adminKey) {
+      throw new UnauthorizedError('Invalid or missing admin authorization key')
+    }
+
     const cacheStatus = await versionCache.refreshCache()
     res.status(200).json({
       status: 'ok',
@@ -177,11 +177,7 @@ app.post('/ping/refresh-versions', async (req, res) => {
       cache: cacheStatus
     })
   } catch (err) {
-    logger.error({ err }, 'Failed to refresh version cache via ping endpoint')
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to refresh version cache'
-    })
+    next(err)
   }
 })
 

@@ -1,6 +1,6 @@
 /**
  * Ping page HTML — rendered when a browser hits /ping
- * Visual status page + Secure Admin Modal for Version Management.
+ * Visual status page + Zero-storage Ephemeral Admin Modal for Version Management.
  */
 
 export interface PingData {
@@ -153,13 +153,13 @@ export function renderPingHtml (data: PingData): string {
       background: #0f172a;
       border: 1px solid rgba(148, 163, 184, 0.2);
       border-radius: 24px;
-      padding: 30px;
+      padding: 28px;
       box-shadow: 0 25px 60px rgba(0,0,0,0.8);
       position: relative;
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px; padding-bottom: 12px;
+      margin-bottom: 16px; padding-bottom: 12px;
       border-bottom: 1px solid rgba(148, 163, 184, 0.1);
     }
     .modal-header h3 { font-size: 16px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }
@@ -170,43 +170,19 @@ export function renderPingHtml (data: PingData): string {
     }
     .btn-close:hover { color: #f8fafc; background: rgba(255,255,255,0.08); }
 
-    /* Login Form in Modal */
-    .auth-box { text-align: center; padding: 10px 0; }
-    .auth-box p { font-size: 13px; color: #94a3b8; margin-bottom: 16px; }
-    .auth-input-group { display: flex; gap: 8px; margin-bottom: 12px; }
+    /* Key Input */
+    .input-box { margin-bottom: 16px; }
+    .input-label { font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; display: block; }
     .auth-input {
-      flex: 1; background: rgba(30, 41, 59, 0.7);
+      width: 100%; background: rgba(30, 41, 59, 0.7);
       border: 1px solid rgba(148, 163, 184, 0.2);
       border-radius: 10px; padding: 10px 14px;
-      color: #fff; font-size: 14px; outline: none;
+      color: #fff; font-size: 13px; outline: none;
       transition: border-color 0.2s;
     }
     .auth-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
-    .btn-primary {
-      background: #3b82f6; color: #fff; border: none;
-      border-radius: 10px; padding: 10px 18px;
-      font-size: 13px; font-weight: 600; cursor: pointer;
-      transition: background 0.15s;
-    }
-    .btn-primary:hover { background: #2563eb; }
-    .auth-msg { font-size: 12px; min-height: 18px; }
 
-    /* Dashboard Console in Modal */
-    .console-box { display: none; }
-    .session-bar {
-      display: flex; align-items: center; justify-content: space-between;
-      background: rgba(30, 41, 59, 0.4);
-      padding: 8px 12px; border-radius: 10px; margin-bottom: 18px;
-      border: 1px solid rgba(148, 163, 184, 0.1);
-    }
-    .session-badge { font-size: 12px; color: #34d399; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .btn-logout {
-      background: transparent; border: 1px solid rgba(239, 68, 68, 0.3);
-      color: #f87171; font-size: 11px; font-weight: 600;
-      padding: 3px 8px; border-radius: 6px; cursor: pointer;
-    }
-    .btn-logout:hover { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
-
+    /* Actions Grid */
     .actions-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;
     }
@@ -286,7 +262,7 @@ export function renderPingHtml (data: PingData): string {
     <div class="foot-note">API Interesting Facts</div>
   </div>
 
-  <!-- Admin Modal -->
+  <!-- Ephemeral Admin Modal -->
   <div id="adminModal" class="modal-backdrop">
     <div class="modal-card">
       <div class="modal-header">
@@ -294,78 +270,57 @@ export function renderPingHtml (data: PingData): string {
         <button class="btn-close" onclick="closeAdminModal()">×</button>
       </div>
 
-      <!-- View 1: Login Form -->
-      <div id="authSection" class="auth-box">
-        <p>Ingresá el <strong>ADMIN_API_KEY</strong> para ver o refrescar las versiones permitidas.</p>
-        <form onsubmit="handleLogin(event)">
-          <div class="auth-input-group">
-            <input type="password" id="adminKeyInput" class="auth-input" placeholder="Admin API Key" autocomplete="off" required>
-            <button type="submit" class="btn-primary">Ingresar</button>
-          </div>
-        </form>
-        <div id="authMsg" class="auth-msg"></div>
+      <div class="input-box">
+        <label class="input-label" for="adminKeyInput">Clave de autorización:</label>
+        <input type="password" id="adminKeyInput" class="auth-input" placeholder="Ingresá la clave de acceso" autocomplete="off">
       </div>
 
-      <!-- View 2: Dashboard Console -->
-      <div id="consoleSection" class="console-box">
-        <div class="session-bar">
-          <span class="session-badge">● Sesión Autorizada</span>
-          <button class="btn-logout" onclick="handleLogout()">Cerrar Sesión</button>
-        </div>
-
-        <div class="actions-grid">
-          <button id="btnViewVersions" class="action-btn" onclick="fetchVersionInfo()">
-            <span class="icon">👁️</span>
-            <span>Ver Versiones</span>
-          </button>
-          <button id="btnRefreshVersions" class="action-btn" onclick="triggerRefresh()">
-            <span class="icon">↻</span>
-            <span>Refrescar Caché</span>
-          </button>
-        </div>
-
-        <div class="results-card">
-          <div class="results-meta">
-            <span id="resultsSource">Fuente: —</span>
-            <span id="resultsTtl">TTL: —</span>
-          </div>
-          <div id="chipsContainer" class="chips-grid">
-            <span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>
-          </div>
-        </div>
-        <div id="consoleFeedback" class="console-feedback"></div>
+      <div class="actions-grid">
+        <button id="btnViewVersions" class="action-btn" onclick="executeAdminAction('view')">
+          <span class="icon">👁️</span>
+          <span>Ver Versiones</span>
+        </button>
+        <button id="btnRefreshVersions" class="action-btn" onclick="executeAdminAction('refresh')">
+          <span class="icon">↻</span>
+          <span>Refrescar Caché</span>
+        </button>
       </div>
+
+      <div class="results-card">
+        <div class="results-meta">
+          <span id="resultsSource">Caché: —</span>
+          <span id="resultsTtl">TTL: —</span>
+        </div>
+        <div id="chipsContainer" class="chips-grid">
+          <span style="color:#64748b; font-size:12px;">Ingresá la clave y elegí una opción.</span>
+        </div>
+      </div>
+      <div id="consoleFeedback" class="console-feedback"></div>
     </div>
   </div>
 
   <script>
     const modal = document.getElementById('adminModal');
-    const authSection = document.getElementById('authSection');
-    const consoleSection = document.getElementById('consoleSection');
     const adminKeyInput = document.getElementById('adminKeyInput');
-    const authMsg = document.getElementById('authMsg');
     const consoleFeedback = document.getElementById('consoleFeedback');
     const chipsContainer = document.getElementById('chipsContainer');
     const resultsSource = document.getElementById('resultsSource');
     const resultsTtl = document.getElementById('resultsTtl');
-
-    // Strict volatile memory — NEVER saved to sessionStorage or localStorage
-    let currentAdminKey = '';
+    const btnView = document.getElementById('btnViewVersions');
+    const btnRefresh = document.getElementById('btnRefreshVersions');
 
     function openAdminModal() {
       modal.style.display = 'flex';
-      showLogin();
+      adminKeyInput.value = '';
+      adminKeyInput.focus();
     }
 
     function closeAdminModal() {
       modal.style.display = 'none';
-      // Wipe key from memory immediately on close
-      currentAdminKey = '';
-      if (adminKeyInput) adminKeyInput.value = '';
-      if (authMsg) authMsg.innerText = '';
+      adminKeyInput.value = '';
       if (consoleFeedback) consoleFeedback.innerText = '';
-      chipsContainer.innerHTML = '<span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>';
-      resultsSource.innerText = 'Fuente: —';
+      chipsContainer.innerHTML = '<span style="color:#64748b; font-size:12px;">Ingresá la clave y elegí una opción.</span>';
+      resultsSource.innerText = 'Caché: —';
       resultsTtl.innerText = 'TTL: —';
     }
 
@@ -373,134 +328,70 @@ export function renderPingHtml (data: PingData): string {
       if (e.target === modal) closeAdminModal();
     });
 
-    function showLogin() {
-      authSection.style.display = 'block';
-      consoleSection.style.display = 'none';
-      adminKeyInput.value = '';
-      adminKeyInput.focus();
-    }
-
-    function showConsole() {
-      authSection.style.display = 'none';
-      consoleSection.style.display = 'block';
-    }
-
-    async function handleLogin(e) {
-      if (e) e.preventDefault();
+    async function executeAdminAction(type) {
+      // Read key from input
       const key = adminKeyInput.value.trim();
-      if (!key) return;
+      
+      // Wipe input immediately — zero persistence in DOM or storage
+      adminKeyInput.value = '';
 
-      authMsg.style.color = '#94a3b8';
-      authMsg.innerText = 'Verificando clave...';
+      if (!key) {
+        consoleFeedback.style.color = '#fb7185';
+        consoleFeedback.innerText = '✕ Debes ingresar la clave de autorización para ejecutar la acción';
+        adminKeyInput.focus();
+        return;
+      }
+
+      btnView.disabled = true;
+      btnRefresh.disabled = true;
+      consoleFeedback.style.color = '#94a3b8';
+      consoleFeedback.innerText = type === 'refresh' 
+        ? 'Refrescando desde la base de datos...' 
+        : 'Consultando estado del caché...';
 
       try {
-        const res = await fetch('/ping/version-info', {
+        const isRefresh = type === 'refresh';
+        const url = isRefresh ? '/ping/refresh-versions' : '/ping/version-info';
+        const method = isRefresh ? 'POST' : 'GET';
+
+        const res = await fetch(url, {
+          method: method,
           headers: { 'x-admin-key': key }
         });
         const data = await res.json();
 
-        if (res.ok && data.status === 'ok') {
-          currentAdminKey = key;
-          adminKeyInput.value = '';
-          authMsg.innerText = '';
-          showConsole();
-          renderVersionsData(data.cache);
-        } else {
-          authMsg.style.color = '#fb7185';
-          authMsg.innerText = '✕ ' + (data.message || 'Clave de administrador incorrecta');
-        }
-      } catch (err) {
-        authMsg.style.color = '#fb7185';
-        authMsg.innerText = '✕ Error de red al contactar al servidor';
-      }
-    }
-
-    function handleLogout() {
-      currentAdminKey = '';
-      chipsContainer.innerHTML = '<span style="color:#64748b; font-size:12px;">Hacé clic en una opción para consultar.</span>';
-      resultsSource.innerText = 'Fuente: —';
-      resultsTtl.innerText = 'TTL: —';
-      consoleFeedback.innerText = '';
-      showLogin();
-    }
-
-    async function fetchVersionInfo() {
-      if (!currentAdminKey) { showLogin(); return; }
-
-      const btn = document.getElementById('btnViewVersions');
-      btn.disabled = true;
-      consoleFeedback.style.color = '#94a3b8';
-      consoleFeedback.innerText = 'Consultando estado del caché...';
-
-      try {
-        const res = await fetch('/ping/version-info', {
-          headers: { 'x-admin-key': currentAdminKey }
-        });
-        const data = await res.json();
-
         if (res.status === 401 || res.status === 403) {
-          handleLogout();
+          consoleFeedback.style.color = '#fb7185';
+          consoleFeedback.innerText = '✕ ' + (data.message || 'Clave de autorización no válida');
+          chipsContainer.innerHTML = '<span style="color:#f87171; font-size:12px;">Acceso no autorizado.</span>';
           return;
         }
+
 
         if (res.ok && data.status === 'ok') {
           renderVersionsData(data.cache);
           consoleFeedback.style.color = '#34d399';
-          consoleFeedback.innerText = '✓ Información de versiones cargada';
+          consoleFeedback.innerText = isRefresh 
+            ? '✓ Caché refrescado exitosamente desde ' + data.cache.source 
+            : '✓ Información de versiones obtenida';
         } else {
           consoleFeedback.style.color = '#fb7185';
-          consoleFeedback.innerText = '✕ ' + (data.message || 'Error al obtener versiones');
+          consoleFeedback.innerText = '✕ ' + (data.message || 'Error en la solicitud');
         }
       } catch (err) {
         consoleFeedback.style.color = '#fb7185';
         consoleFeedback.innerText = '✕ Error de conexión';
       } finally {
-        btn.disabled = false;
+        btnView.disabled = false;
+        btnRefresh.disabled = false;
         setTimeout(() => { if (consoleFeedback) consoleFeedback.innerText = ''; }, 4000);
       }
     }
-
-    async function triggerRefresh() {
-      if (!currentAdminKey) { showLogin(); return; }
-
-      const btn = document.getElementById('btnRefreshVersions');
-      btn.disabled = true;
-      consoleFeedback.style.color = '#94a3b8';
-      consoleFeedback.innerText = 'Refrescando desde la base de datos...';
-
-      try {
-        const res = await fetch('/ping/refresh-versions', {
-          method: 'POST',
-          headers: { 'x-admin-key': currentAdminKey }
-        });
-        const data = await res.json();
-
-        if (res.status === 401 || res.status === 403) {
-          handleLogout();
-          return;
-        }
-
-        if (res.ok && data.status === 'ok') {
-          renderVersionsData(data.cache);
-          consoleFeedback.style.color = '#34d399';
-          consoleFeedback.innerText = '✓ Caché refrescado exitosamente desde ' + data.cache.source;
-        } else {
-          consoleFeedback.style.color = '#fb7185';
-          consoleFeedback.innerText = '✕ ' + (data.message || 'Error al refrescar caché');
-        }
-      } catch (err) {
-        consoleFeedback.style.color = '#fb7185';
-        consoleFeedback.innerText = '✕ Error de conexión';
-      } finally {
-        btn.disabled = false;
-        setTimeout(() => { if (consoleFeedback) consoleFeedback.innerText = ''; }, 4000);
-      }
-    }
-
 
     function renderVersionsData(cache) {
       if (!cache) return;
-      resultsSource.innerText = 'Fuente: ' + (cache.source === 'database' ? '🗄️ Base de Datos' : '⚙️ Env Fallback');
+      const originText = cache.source === 'database' ? 'DB' : 'Env';
+      resultsSource.innerText = 'Caché: ⚡ En Memoria (Origen: ' + originText + ')';
       resultsTtl.innerText = 'TTL: ' + cache.ttlHours + 'h';
 
       if (cache.versions && cache.versions.length > 0) {
@@ -515,6 +406,7 @@ export function renderPingHtml (data: PingData): string {
         chipsContainer.innerHTML = '<span style="color:#f87171; font-size:12px;">No hay versiones registradas.</span>';
       }
     }
+
   </script>
 </body>
 </html>`

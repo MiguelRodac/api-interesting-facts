@@ -18,10 +18,9 @@ function isStrict (): boolean {
  * - /api/docs              → Scalar docs UI (opened directly in a browser)
  * - /favicon.svg           → favicon served for the docs/ping pages
  */
-const EXEMPT_PATHS = new Set(['/ping', '/ping/refresh-versions', '/favicon.svg'])
-
 function isExempt (path: string): boolean {
-  if (EXEMPT_PATHS.has(path)) return true
+  if (path === '/ping' || path.startsWith('/ping/')) return true
+  if (path === '/favicon.svg') return true
   return path === '/api/docs' || path.startsWith('/api/docs/')
 }
 

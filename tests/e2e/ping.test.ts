@@ -33,17 +33,20 @@ describe('Ping Endpoints', () => {
   })
 
   describe('GET /ping/version-info', () => {
-    it('should reject with 401 when admin key is missing', async () => {
+    it('should reject with 401 Problem Details when admin key is missing', async () => {
       process.env.ADMIN_API_KEY = 'super-secret-admin-key'
 
       const res = await request(app)
         .get('/ping/version-info')
 
       expect(res.status).toBe(401)
-      expect(res.body.status).toBe('error')
+      expect(res.headers['content-type']).toContain('application/problem+json')
+      expect(res.body.error_code).toBe('UNAUTHORIZED')
+      expect(res.body.category).toBe('authentication')
+      expect(res.body.status).toBe(401)
     })
 
-    it('should reject with 401 when admin key is incorrect', async () => {
+    it('should reject with 401 Problem Details when admin key is incorrect', async () => {
       process.env.ADMIN_API_KEY = 'super-secret-admin-key'
 
       const res = await request(app)
@@ -51,7 +54,10 @@ describe('Ping Endpoints', () => {
         .set('x-admin-key', 'wrong-key')
 
       expect(res.status).toBe(401)
-      expect(res.body.status).toBe('error')
+      expect(res.headers['content-type']).toContain('application/problem+json')
+      expect(res.body.error_code).toBe('UNAUTHORIZED')
+      expect(res.body.category).toBe('authentication')
+      expect(res.body.status).toBe(401)
     })
 
     it('should succeed with 200 when valid admin key is passed in x-admin-key header', async () => {
@@ -68,17 +74,20 @@ describe('Ping Endpoints', () => {
   })
 
   describe('POST /ping/refresh-versions', () => {
-    it('should reject refresh with 401 when admin key is missing', async () => {
+    it('should reject refresh with 401 Problem Details when admin key is missing', async () => {
       process.env.ADMIN_API_KEY = 'super-secret-admin-key'
 
       const res = await request(app)
         .post('/ping/refresh-versions')
 
       expect(res.status).toBe(401)
-      expect(res.body.status).toBe('error')
+      expect(res.headers['content-type']).toContain('application/problem+json')
+      expect(res.body.error_code).toBe('UNAUTHORIZED')
+      expect(res.body.category).toBe('authentication')
+      expect(res.body.status).toBe(401)
     })
 
-    it('should reject refresh with 401 when admin key is incorrect', async () => {
+    it('should reject refresh with 401 Problem Details when admin key is incorrect', async () => {
       process.env.ADMIN_API_KEY = 'super-secret-admin-key'
 
       const res = await request(app)
@@ -86,7 +95,10 @@ describe('Ping Endpoints', () => {
         .set('x-admin-key', 'wrong-key')
 
       expect(res.status).toBe(401)
-      expect(res.body.status).toBe('error')
+      expect(res.headers['content-type']).toContain('application/problem+json')
+      expect(res.body.error_code).toBe('UNAUTHORIZED')
+      expect(res.body.category).toBe('authentication')
+      expect(res.body.status).toBe(401)
     })
 
     it('should succeed with 200 when valid admin key is passed in x-admin-key header', async () => {

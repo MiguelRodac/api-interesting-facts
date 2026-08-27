@@ -4261,7 +4261,7 @@ paths:
       operationId: ping
       tags:
         - Health
-      description: Returns server status with database health check.
+      description: Returns server status with database health check. Publicly accessible and exempt from X-App-Version.
       responses:
         '200':
           description: Server is alive
@@ -4272,16 +4272,19 @@ paths:
                 properties:
                   status:
                     type: string
+                    example: ok
                   timestamp:
                     type: string
                     format: date-time
                   uptimeSeconds:
                     type: integer
+                    example: 3600
                   database:
                     type: string
                     enum:
                       - ok
                       - error
+                    example: ok
                   documentation:
                     type: string
                     format: uri
@@ -4294,15 +4297,98 @@ paths:
             text/html:
               schema:
                 type: string
+  /ping/version-info:
+    get:
+      summary: View cached app versions (Admin)
+      operationId: pingVersionInfo
+      tags:
+        - Health
+        - Admin
+      description: Returns current in-memory cached app version rules. Requires admin key authorization.
       parameters:
-        - name: X-App-Version
+        - name: x-admin-key
           in: header
           required: true
-          description: Client app version (semver). Requests without it are rejected with 400; outdated versions get 426.
-          example: 1.2.0
+          description: Admin authorization key
           schema:
             type: string
-            pattern: ^\d+\.\d+\.\d+$
+      responses:
+        '200':
+          description: Cached app versions status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  cache:
+                    type: object
+                    properties:
+                      source:
+                        type: string
+                        example: database
+                      ttlHours:
+                        type: integer
+                        example: 12
+                      lastRefreshed:
+                        type: string
+                        format: date-time
+                      versions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            platform:
+                              type: string
+                              example: android
+                            minVersion:
+                              type: string
+                              example: 1.0.0
+                            recommendedVersion:
+                              type: string
+                              nullable: true
+                              example: 1.1.0
+                            forceUpdate:
+                              type: boolean
+                              example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /ping/refresh-versions:
+    post:
+      summary: Refresh cached app versions from DB (Admin)
+      operationId: pingRefreshVersions
+      tags:
+        - Health
+        - Admin
+      description: Forces immediate reload of app version rules from PostgreSQL into memory cache. Requires admin key authorization.
+      parameters:
+        - name: x-admin-key
+          in: header
+          required: true
+          description: Admin authorization key
+          schema:
+            type: string
+      responses:
+        '200':
+          description: App version cache refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  message:
+                    type: string
+                    example: App version cache refreshed successfully
+                  cache:
+                    type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /auth/profile:
     post:
       summary: Create user profile (onboarding)
