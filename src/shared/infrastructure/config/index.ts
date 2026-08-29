@@ -15,7 +15,6 @@ const REQUIRED: string[] = [
   'TRACE_ID_HEADER',
   'CORS_ORIGIN',
   'BASE_URL',
-  'MIN_APP_VERSION',
   'STRICT_VERSION_CHECK',
   'RATE_LIMIT_MAX',
   'RATE_LIMIT_WINDOW_MS',
@@ -59,8 +58,7 @@ const config = {
   keepAlive: {
     // Fire a DB ping after this many ms of idle (protects external DBs that sleep, e.g. Render free tier)
     idleThresholdMs: Number(process.env.KEEP_ALIVE_IDLE_THRESHOLD_MS)
-  },
-  minAppVersion: process.env.MIN_APP_VERSION as string
+  }
 }
 
 export default config

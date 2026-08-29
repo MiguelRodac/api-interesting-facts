@@ -2,29 +2,19 @@ import { versionCache } from '@shared/infrastructure/cache/versionCache'
 import prisma from '@shared/infrastructure/prisma'
 
 describe('VersionCacheService', () => {
-  const originalEnvVersion = process.env.MIN_APP_VERSION
-
-  beforeEach(() => {
-    process.env.MIN_APP_VERSION = '1.0.0'
-  })
-
-  afterAll(() => {
-    process.env.MIN_APP_VERSION = originalEnvVersion
-  })
-
-  it('should fall back to process.env.MIN_APP_VERSION when database is empty', async () => {
+  it('should fall back to baseline default 0.0.1 when database is empty', async () => {
     jest.spyOn(prisma.appVersion, 'findMany').mockResolvedValueOnce([])
 
     const status = await versionCache.refreshCache()
-    expect(status.source).toBe('env_fallback')
+    expect(status.source).toBe('default_fallback')
     expect(status.ttlHours).toBe(12)
     expect(status.versions).toHaveLength(1)
     expect(status.versions[0].platform).toBe('all')
-    expect(status.versions[0].minVersion).toBe('1.0.0')
+    expect(status.versions[0].minVersion).toBe('0.0.1')
 
-    expect(versionCache.getMinVersion()).toBe('1.0.0')
-    expect(versionCache.getMinVersion('android')).toBe('1.0.0')
-    expect(versionCache.getMinVersion('ios')).toBe('1.0.0')
+    expect(versionCache.getMinVersion()).toBe('0.0.1')
+    expect(versionCache.getMinVersion('android')).toBe('0.0.1')
+    expect(versionCache.getMinVersion('ios')).toBe('0.0.1')
   })
 
   it('should populate cache from database when records exist', async () => {
@@ -73,13 +63,13 @@ describe('VersionCacheService', () => {
     expect(versionCache.getMinVersion()).toBe('1.0.0')
   })
 
-  it('should gracefully handle database errors and fallback to .env', async () => {
+  it('should gracefully handle database errors and fallback to baseline default', async () => {
     jest.spyOn(prisma.appVersion, 'findMany').mockRejectedValueOnce(new Error('DB Connection Lost'))
 
     const status = await versionCache.refreshCache()
-    expect(status.source).toBe('env_fallback')
-    expect(status.versions[0].minVersion).toBe('1.0.0')
-    expect(versionCache.getMinVersion('android')).toBe('1.0.0')
+    expect(status.source).toBe('default_fallback')
+    expect(status.versions[0].minVersion).toBe('0.0.1')
+    expect(versionCache.getMinVersion('android')).toBe('0.0.1')
   })
 
   it('should return valid diagnostic cache status', async () => {
@@ -90,6 +80,6 @@ describe('VersionCacheService', () => {
     expect(status.lastFetchedAt).not.toBeNull()
     expect(status.nextRefreshAt).not.toBeNull()
     expect(status.ttlHours).toBe(12)
-    expect(status.source).toBe('env_fallback')
+    expect(status.source).toBe('default_fallback')
   })
 })

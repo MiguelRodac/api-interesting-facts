@@ -390,7 +390,7 @@ export function renderPingHtml (data: PingData): string {
 
     function renderVersionsData(cache) {
       if (!cache) return;
-      const originText = cache.source === 'database' ? 'DB' : 'Env';
+      const originText = cache.source === 'database' ? 'DB' : 'Por Defecto';
       resultsSource.innerText = 'Caché: ⚡ En Memoria (Origen: ' + originText + ')';
       resultsTtl.innerText = 'TTL: ' + cache.ttlHours + 'h';
 

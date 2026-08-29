@@ -15,17 +15,18 @@ export interface CacheStatus {
   lastFetchedAt: string | null
   nextRefreshAt: string | null
   ttlHours: number
-  source: 'database' | 'env_fallback'
+  source: 'database' | 'default_fallback'
   versions: AppVersionRecord[]
 }
 
 const TTL_HOURS = 12
 const TTL_MS = TTL_HOURS * 60 * 60 * 1000
+const DEFAULT_MIN_VERSION = '0.0.1'
 
 class VersionCacheService {
   private readonly cache = new Map<string, AppVersionRecord>()
   private lastFetchedAt: Date | null = null
-  private source: 'database' | 'env_fallback' = 'env_fallback'
+  private source: 'database' | 'default_fallback' = 'default_fallback'
   private refreshTimer: NodeJS.Timeout | null = null
 
   /**
@@ -49,11 +50,9 @@ class VersionCacheService {
   }
 
   /**
-   * Refreshes the in-memory cache directly from the database with .env fallback.
+   * Refreshes the in-memory cache directly from the database.
    */
   async refreshCache (): Promise<CacheStatus> {
-    const envFallback = process.env.MIN_APP_VERSION ?? '0.0.1'
-
     try {
       const records = await prisma.appVersion.findMany({
         where: { isActive: true }
@@ -80,18 +79,18 @@ class VersionCacheService {
           'App version cache refreshed from database'
         )
       } else {
-        // Table is empty -> Fallback to .env
-        this.setFallback(envFallback)
+        // Table is empty -> Fallback to baseline default
+        this.setFallback(DEFAULT_MIN_VERSION)
         logger.warn(
-          { fallbackVersion: envFallback },
-          'app_versions table is empty — using MIN_APP_VERSION from .env as fallback'
+          { fallbackVersion: DEFAULT_MIN_VERSION },
+          'app_versions table is empty — defaulting minimum version to 0.0.1'
         )
       }
     } catch (err) {
-      this.setFallback(envFallback)
+      this.setFallback(DEFAULT_MIN_VERSION)
       logger.error(
-        { err, fallbackVersion: envFallback },
-        'Failed to load app_versions from database — falling back to .env'
+        { err, fallbackVersion: DEFAULT_MIN_VERSION },
+        'Failed to load app_versions from database — using baseline default'
       )
     }
 
@@ -108,7 +107,7 @@ class VersionCacheService {
       isActive: true,
       updatedAt: new Date()
     })
-    this.source = 'env_fallback'
+    this.source = 'default_fallback'
     this.lastFetchedAt = new Date()
   }
 
@@ -116,10 +115,8 @@ class VersionCacheService {
    * Returns the minimum allowed version for the requested platform (or 'all').
    */
   getMinVersion (platform?: string): string {
-    const defaultMin = process.env.MIN_APP_VERSION ?? '0.0.1'
-
     if (this.cache.size === 0) {
-      return defaultMin
+      return DEFAULT_MIN_VERSION
     }
 
     if (platform != null && platform.trim() !== '') {
@@ -135,7 +132,7 @@ class VersionCacheService {
       return allRecord.minVersion
     }
 
-    return defaultMin
+    return DEFAULT_MIN_VERSION
   }
 
   /**

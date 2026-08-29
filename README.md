@@ -95,7 +95,7 @@ The API runs on `http://localhost:3000`. API docs at `http://localhost:3000/api/
 | `TRACE_ID_HEADER` | Header name for request trace ID |
 | `CORS_ORIGIN` | Allowed origin for CORS |
 | `BASE_URL` | Base URL for RFC9457 error `type` fields |
-| `MIN_APP_VERSION` | Minimum app version accepted (semver) — older clients get 426 |
+| `ADMIN_API_KEY` | Secret key for administrative endpoints (`/ping/version-info`, `/ping/refresh-versions`) |
 | `STRICT_VERSION_CHECK` | `true` = reject requests missing `X-App-Version` with 400. `false` only for local debugging / e2e tests |
 | `RATE_LIMIT_MAX` | Max requests per window per IP (production only) |
 | `RATE_LIMIT_WINDOW_MS` | Rate limit window in ms (e.g. `900000` / 15 min) |
@@ -138,9 +138,9 @@ Externally hosted databases (e.g. Render's free Postgres tier) go to sleep after
 
 Configure with `KEEP_ALIVE_IDLE_THRESHOLD_MS` (in milliseconds). Set it below your DB's sleep threshold (Render free tier ≈ 30 min → default 20 min is safe).
 
-## Deploy to Vercel
+## Deploy to Production (e.g. Render / Vercel)
 
-Vercel builds and runs the Docker image directly. Ensure these environment variables are set in your Vercel project:
+Ensure these environment variables are set in your deployment project:
 
 - `DATABASE_URL`
 - `FIREBASE_PROJECT_ID`
@@ -149,13 +149,14 @@ Vercel builds and runs the Docker image directly. Ensure these environment varia
 - `FIREBASE_API_KEY`
 - `CORS_ORIGIN`
 - `BASE_URL`
-- `MIN_APP_VERSION`
+- `ADMIN_API_KEY`
 - `STRICT_VERSION_CHECK=true`
 - `RATE_LIMIT_MAX`
 - `RATE_LIMIT_WINDOW_MS`
 - `AUTOCOMPLETE_RATE_LIMIT`
 - `KEEP_ALIVE_IDLE_THRESHOLD_MS`
 - `PINO_LOG_LEVEL`, `TRACE_ID_HEADER`, `NODE_ENV=production`
+
 
 > **All of the above are required** — the API aborts startup if any is missing. See [Environment variables](#environment-variables).
 
@@ -319,12 +320,12 @@ The feed (`GET /facts`) returns a mixed stream of facts and reposts. Each entry 
 
 ## Versioning
 
-Clients send `X-App-Version: <semver>` on every request.
+Clients send `X-App-Version: <semver>` on every request. Minimum versions per platform (`android`, `ios`, `web`, `all`) are stored in the PostgreSQL `app_versions` table and cached in memory for 12 hours.
 
-- Version older than `MIN_APP_VERSION` → **426** `APP_VERSION_OUTDATED`
-- Missing header → **400** `APP_VERSION_MISSING` (default behavior)
+- Version older than platform minimum in DB → **426** `APP_VERSION_OUTDATED`
+- Missing header → **400** `APP_VERSION_MISSING` (when `STRICT_VERSION_CHECK=true`)
 
-Exempt: `/ping`, `/api/docs`, `/favicon.svg` (browser-facing). Error responses never disclose the minimum supported version (security).
+Exempt: `/ping/*`, `/api/docs`, `/favicon.svg` (browser-facing). Error responses never disclose the minimum supported version (security).
 
 ## Security
 
@@ -336,7 +337,8 @@ Exempt: `/ping`, `/api/docs`, `/favicon.svg` (browser-facing). Error responses n
 | Auth | Firebase ID tokens (JWT, cryptographically verified) |
 | CORS | Configurable origin whitelist |
 | Body size | Limited to `1mb` to prevent payload floods |
-| Version check | `X-App-Version` header validated against `MIN_APP_VERSION` (426 outdated, 400 missing in strict mode) |
+| Version check | `X-App-Version` header validated against dynamic DB `app_versions` cache (426 outdated, 400 missing in strict mode) |
+
 
 ## Monitoring
 
