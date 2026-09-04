@@ -155,22 +155,19 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
 
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
-      const [hashtags, facts] = await Promise.all([
+      const [hashtags, feedEntries] = await Promise.all([
         searchHashtags.execute(query, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
         searchPosts.executeByHashtag(query, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
       ])
 
-      const merged = [...hashtags, ...facts]
-      const total = merged.length
+      const total = hashtags.length + feedEntries.length
       const hasMore = total > limit
-      const paged = merged.slice(skip, skip + limit)
-
-      const pagedHashtags = paged.filter(item => 'tag' in item)
-      const pagedFacts = paged.filter(item => 'content' in item)
+      const pagedHashtags = hashtags.slice(skip, skip + limit)
+      const pagedEntries = feedEntries.slice(skip, skip + limit)
 
       res.status(200).json({
         users: [],
-        facts: pagedFacts,
+        results: pagedEntries,
         hashtags: pagedHashtags,
         page,
         limit,
@@ -180,22 +177,15 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     }
 
     // Plain query — merge all categories
-    const [users, factsByTitleOrHashtag, hashtags, authorMentionEntries] = await Promise.all([
+    const [users, factsAndRepostsByTitleOrHashtag, hashtags, authorMentionEntries] = await Promise.all([
       userRepository.findBySearch(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
       searchPosts.execute(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
       searchHashtags.execute(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
       searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
     ])
 
-    // Wrap title/hashtag facts into FeedEntry[] and merge with author/mention entries
-    const titleHashtagEntries: FeedEntry[] = factsByTitleOrHashtag.map(fact => ({
-      type: 'fact',
-      fact,
-      createdAt: fact.createdAt
-    }))
-
     const entriesMap = new Map<string, FeedEntry>()
-    for (const entry of titleHashtagEntries) {
+    for (const entry of factsAndRepostsByTitleOrHashtag) {
       const key = entry.type === 'fact' ? entry.fact.id : entry.repost.id
       entriesMap.set(key, entry)
     }

@@ -183,6 +183,29 @@ export class PrismaRepostRepository implements RepostRepository {
     return buildPaginatedResult(reposts.map(mapRepostWithFact), total, page, limit)
   }
 
+  async findByFactIdsWithFact (factIds: string[], params?: BaseQueryParams): Promise<ResultWithPagination<RepostWithFact>> {
+    if (factIds.length === 0) {
+      return buildPaginatedResult([], 0, params?.page ?? DEFAULT_PAGE, params?.limit ?? DEFAULT_LIMIT)
+    }
+    const page = params?.page ?? DEFAULT_PAGE
+    const limit = params?.limit ?? DEFAULT_LIMIT
+    const { skip, take } = buildPagination(params)
+    const [reposts, total] = await Promise.all([
+      prisma.repost.findMany({
+        where: { originalFactId: { in: factIds } },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: {
+          author: { select: { username: true, displayName: true, avatarUrl: true, avatarColor: true } }
+        }
+      }),
+      prisma.repost.count({ where: { originalFactId: { in: factIds } } })
+    ])
+
+    return buildPaginatedResult(reposts.map(mapRepostWithFact), total, page, limit)
+  }
+
   async findByIdsWithFact (ids: string[]): Promise<RepostWithFact[]> {
     if (ids.length === 0) return []
     const reposts = await prisma.repost.findMany({

@@ -2991,7 +2991,7 @@ components:
         - page
         - limit
         - nextPage
-    MentionSearchResponse:
+    GlobalSearchResponse:
       type: object
       properties:
         users:
@@ -3399,836 +3399,6 @@ components:
         - page
         - limit
         - hasMore
-    HashtagSearchResponse:
-      type: object
-      properties:
-        users:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-              username:
-                type: string
-              displayName:
-                type: string
-              avatarUrl:
-                type: string
-                nullable: true
-              avatarColor:
-                type: string
-                nullable: true
-            required:
-              - id
-              - username
-              - displayName
-              - avatarUrl
-              - avatarColor
-        facts:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                format: uuid
-              author:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  username:
-                    type: string
-                  email:
-                    type: string
-                    format: email
-                  displayName:
-                    type: string
-                  avatarUrl:
-                    type: string
-                    nullable: true
-                  avatarColor:
-                    type: string
-                    nullable: true
-                required:
-                  - id
-                  - username
-                  - email
-                  - displayName
-                  - avatarUrl
-                  - avatarColor
-              title:
-                type: string
-                nullable: true
-              content:
-                type: string
-              likes:
-                type: integer
-              liked:
-                type: boolean
-              likeBy:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    username:
-                      type: string
-                    avatarUrl:
-                      type: string
-                      nullable: true
-                    avatarColor:
-                      type: string
-                      nullable: true
-                  required:
-                    - username
-                    - avatarUrl
-                    - avatarColor
-                maxItems: 3
-              comments:
-                type: integer
-              commentsDetails:
-                type: object
-                nullable: true
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-                  content:
-                    type: string
-                  author:
-                    type: object
-                    properties:
-                      username:
-                        type: string
-                      avatarUrl:
-                        type: string
-                        nullable: true
-                      avatarColor:
-                        type: string
-                        nullable: true
-                    required:
-                      - username
-                      - avatarUrl
-                      - avatarColor
-                  parentCommentId:
-                    type: string
-                    nullable: true
-                    format: uuid
-                  replies:
-                    type: integer
-                  createdAt:
-                    type: string
-                    format: date-time
-                required:
-                  - id
-                  - content
-                  - author
-                  - parentCommentId
-                  - replies
-                  - createdAt
-              repostCount:
-                type: integer
-              repostedByMe:
-                type: boolean
-              repostBy:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    username:
-                      type: string
-                    avatarUrl:
-                      type: string
-                      nullable: true
-                    avatarColor:
-                      type: string
-                      nullable: true
-                  required:
-                    - username
-                    - avatarUrl
-                    - avatarColor
-                maxItems: 2
-              hashtags:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    tag:
-                      type: string
-                  required:
-                    - id
-                    - tag
-              createdAt:
-                type: string
-                format: date-time
-              updatedAt:
-                type: string
-                format: date-time
-            required:
-              - id
-              - author
-              - title
-              - content
-              - likes
-              - likeBy
-              - comments
-              - commentsDetails
-              - repostCount
-              - repostBy
-              - hashtags
-              - createdAt
-              - updatedAt
-        hashtags:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-              tag:
-                type: string
-            required:
-              - id
-              - tag
-        page:
-          type: integer
-          minimum: 0
-          exclusiveMinimum: true
-        limit:
-          type: integer
-          minimum: 0
-          exclusiveMinimum: true
-        hasMore:
-          type: boolean
-      required:
-        - users
-        - facts
-        - hashtags
-        - page
-        - limit
-        - hasMore
-    GlobalSearchResponse:
-      anyOf:
-        - type: object
-          properties:
-            users:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  username:
-                    type: string
-                  displayName:
-                    type: string
-                  avatarUrl:
-                    type: string
-                    nullable: true
-                  avatarColor:
-                    type: string
-                    nullable: true
-                required:
-                  - id
-                  - username
-                  - displayName
-                  - avatarUrl
-                  - avatarColor
-            results:
-              type: array
-              items:
-                oneOf:
-                  - type: object
-                    properties:
-                      type:
-                        type: string
-                        enum:
-                          - fact
-                      fact:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                          author:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                              username:
-                                type: string
-                              email:
-                                type: string
-                                format: email
-                              displayName:
-                                type: string
-                              avatarUrl:
-                                type: string
-                                nullable: true
-                              avatarColor:
-                                type: string
-                                nullable: true
-                            required:
-                              - id
-                              - username
-                              - email
-                              - displayName
-                              - avatarUrl
-                              - avatarColor
-                          title:
-                            type: string
-                            nullable: true
-                          content:
-                            type: string
-                          likes:
-                            type: integer
-                          liked:
-                            type: boolean
-                          likeBy:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                username:
-                                  type: string
-                                avatarUrl:
-                                  type: string
-                                  nullable: true
-                                avatarColor:
-                                  type: string
-                                  nullable: true
-                              required:
-                                - username
-                                - avatarUrl
-                                - avatarColor
-                            maxItems: 3
-                          comments:
-                            type: integer
-                          commentsDetails:
-                            type: object
-                            nullable: true
-                            properties:
-                              id:
-                                type: string
-                                format: uuid
-                              content:
-                                type: string
-                              author:
-                                type: object
-                                properties:
-                                  username:
-                                    type: string
-                                  avatarUrl:
-                                    type: string
-                                    nullable: true
-                                  avatarColor:
-                                    type: string
-                                    nullable: true
-                                required:
-                                  - username
-                                  - avatarUrl
-                                  - avatarColor
-                              parentCommentId:
-                                type: string
-                                nullable: true
-                                format: uuid
-                              replies:
-                                type: integer
-                              createdAt:
-                                type: string
-                                format: date-time
-                            required:
-                              - id
-                              - content
-                              - author
-                              - parentCommentId
-                              - replies
-                              - createdAt
-                          repostCount:
-                            type: integer
-                          repostedByMe:
-                            type: boolean
-                          repostBy:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                username:
-                                  type: string
-                                avatarUrl:
-                                  type: string
-                                  nullable: true
-                                avatarColor:
-                                  type: string
-                                  nullable: true
-                              required:
-                                - username
-                                - avatarUrl
-                                - avatarColor
-                            maxItems: 2
-                          hashtags:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                id:
-                                  type: string
-                                tag:
-                                  type: string
-                              required:
-                                - id
-                                - tag
-                          createdAt:
-                            type: string
-                            format: date-time
-                          updatedAt:
-                            type: string
-                            format: date-time
-                        required:
-                          - id
-                          - author
-                          - title
-                          - content
-                          - likes
-                          - likeBy
-                          - comments
-                          - commentsDetails
-                          - repostCount
-                          - repostBy
-                          - hashtags
-                          - createdAt
-                          - updatedAt
-                      createdAt:
-                        type: string
-                        format: date-time
-                    required:
-                      - type
-                      - fact
-                      - createdAt
-                  - type: object
-                    properties:
-                      type:
-                        type: string
-                        enum:
-                          - repost
-                      repost:
-                        type: object
-                        properties:
-                          id:
-                            type: string
-                            format: uuid
-                            description: Repost UUID — use for like/comment on the repost
-                          factId:
-                            type: string
-                            format: uuid
-                            description: Original fact UUID — use for reposting the original fact
-                          author:
-                            type: object
-                            properties:
-                              id:
-                                type: string
-                              username:
-                                type: string
-                              email:
-                                type: string
-                                format: email
-                              displayName:
-                                type: string
-                              avatarUrl:
-                                type: string
-                                nullable: true
-                              avatarColor:
-                                type: string
-                                nullable: true
-                            required:
-                              - id
-                              - username
-                              - email
-                              - displayName
-                              - avatarUrl
-                              - avatarColor
-                            description: Author of the original fact
-                          title:
-                            type: string
-                            nullable: true
-                            description: Title of the original fact
-                          content:
-                            type: string
-                            description: Content of the original fact
-                          hashtags:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                id:
-                                  type: string
-                                tag:
-                                  type: string
-                              required:
-                                - id
-                                - tag
-                          repostCount:
-                            type: integer
-                            description: Total reposts of the original fact
-                          repostedBy:
-                            type: object
-                            properties:
-                              username:
-                                type: string
-                              displayName:
-                                type: string
-                              avatarUrl:
-                                type: string
-                                nullable: true
-                              avatarColor:
-                                type: string
-                                nullable: true
-                              isMe:
-                                type: boolean
-                            required:
-                              - username
-                              - displayName
-                              - avatarUrl
-                              - avatarColor
-                              - isMe
-                            description: Who reposted this
-                          repostLikeCount:
-                            type: integer
-                            description: Likes ON this repost
-                          liked:
-                            type: boolean
-                            description: Did the authenticated user like this repost?
-                          likeBy:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                username:
-                                  type: string
-                                avatarUrl:
-                                  type: string
-                                  nullable: true
-                                avatarColor:
-                                  type: string
-                                  nullable: true
-                              required:
-                                - username
-                                - avatarUrl
-                                - avatarColor
-                            maxItems: 3
-                            description: Recent users who liked this repost
-                          repostCommentCount:
-                            type: integer
-                            description: Comments ON this repost
-                          repostCommentsDetails:
-                            type: object
-                            nullable: true
-                            properties:
-                              id:
-                                type: string
-                                format: uuid
-                              content:
-                                type: string
-                              author:
-                                type: object
-                                properties:
-                                  username:
-                                    type: string
-                                  avatarUrl:
-                                    type: string
-                                    nullable: true
-                                  avatarColor:
-                                    type: string
-                                    nullable: true
-                                required:
-                                  - username
-                                  - avatarUrl
-                                  - avatarColor
-                              parentCommentId:
-                                type: string
-                                nullable: true
-                                format: uuid
-                              replies:
-                                type: integer
-                              createdAt:
-                                type: string
-                                format: date-time
-                            required:
-                              - id
-                              - content
-                              - author
-                              - parentCommentId
-                              - replies
-                              - createdAt
-                            description: First comment on this repost
-                          createdAt:
-                            type: string
-                            format: date-time
-                            description: When the repost was created
-                        required:
-                          - id
-                          - factId
-                          - author
-                          - title
-                          - content
-                          - hashtags
-                          - repostCount
-                          - repostedBy
-                          - repostLikeCount
-                          - likeBy
-                          - repostCommentCount
-                          - repostCommentsDetails
-                          - createdAt
-                      createdAt:
-                        type: string
-                        format: date-time
-                    required:
-                      - type
-                      - repost
-                      - createdAt
-              description: Feed entries (facts and reposts) matching the query
-            hashtags:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  tag:
-                    type: string
-                required:
-                  - id
-                  - tag
-            page:
-              type: integer
-              minimum: 0
-              exclusiveMinimum: true
-            limit:
-              type: integer
-              minimum: 0
-              exclusiveMinimum: true
-            hasMore:
-              type: boolean
-          required:
-            - users
-            - results
-            - hashtags
-            - page
-            - limit
-            - hasMore
-        - type: object
-          properties:
-            users:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  username:
-                    type: string
-                  displayName:
-                    type: string
-                  avatarUrl:
-                    type: string
-                    nullable: true
-                  avatarColor:
-                    type: string
-                    nullable: true
-                required:
-                  - id
-                  - username
-                  - displayName
-                  - avatarUrl
-                  - avatarColor
-            facts:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    format: uuid
-                  author:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                      username:
-                        type: string
-                      email:
-                        type: string
-                        format: email
-                      displayName:
-                        type: string
-                      avatarUrl:
-                        type: string
-                        nullable: true
-                      avatarColor:
-                        type: string
-                        nullable: true
-                    required:
-                      - id
-                      - username
-                      - email
-                      - displayName
-                      - avatarUrl
-                      - avatarColor
-                  title:
-                    type: string
-                    nullable: true
-                  content:
-                    type: string
-                  likes:
-                    type: integer
-                  liked:
-                    type: boolean
-                  likeBy:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        username:
-                          type: string
-                        avatarUrl:
-                          type: string
-                          nullable: true
-                        avatarColor:
-                          type: string
-                          nullable: true
-                      required:
-                        - username
-                        - avatarUrl
-                        - avatarColor
-                    maxItems: 3
-                  comments:
-                    type: integer
-                  commentsDetails:
-                    type: object
-                    nullable: true
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                      content:
-                        type: string
-                      author:
-                        type: object
-                        properties:
-                          username:
-                            type: string
-                          avatarUrl:
-                            type: string
-                            nullable: true
-                          avatarColor:
-                            type: string
-                            nullable: true
-                        required:
-                          - username
-                          - avatarUrl
-                          - avatarColor
-                      parentCommentId:
-                        type: string
-                        nullable: true
-                        format: uuid
-                      replies:
-                        type: integer
-                      createdAt:
-                        type: string
-                        format: date-time
-                    required:
-                      - id
-                      - content
-                      - author
-                      - parentCommentId
-                      - replies
-                      - createdAt
-                  repostCount:
-                    type: integer
-                  repostedByMe:
-                    type: boolean
-                  repostBy:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        username:
-                          type: string
-                        avatarUrl:
-                          type: string
-                          nullable: true
-                        avatarColor:
-                          type: string
-                          nullable: true
-                      required:
-                        - username
-                        - avatarUrl
-                        - avatarColor
-                    maxItems: 2
-                  hashtags:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        tag:
-                          type: string
-                      required:
-                        - id
-                        - tag
-                  createdAt:
-                    type: string
-                    format: date-time
-                  updatedAt:
-                    type: string
-                    format: date-time
-                required:
-                  - id
-                  - author
-                  - title
-                  - content
-                  - likes
-                  - likeBy
-                  - comments
-                  - commentsDetails
-                  - repostCount
-                  - repostBy
-                  - hashtags
-                  - createdAt
-                  - updatedAt
-            hashtags:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  tag:
-                    type: string
-                required:
-                  - id
-                  - tag
-            page:
-              type: integer
-              minimum: 0
-              exclusiveMinimum: true
-            limit:
-              type: integer
-              minimum: 0
-              exclusiveMinimum: true
-            hasMore:
-              type: boolean
-          required:
-            - users
-            - facts
-            - hashtags
-            - page
-            - limit
-            - hasMore
     PingResponse:
       type: object
       properties:
@@ -6986,18 +6156,13 @@ paths:
         - Facts
       security:
         - bearerAuth: []
-      description: >-
-        Search across users, posts, and hashtags in a single request.
+      description: |-
+        Unified search across users, posts (facts and reposts), and hashtags in a single request.
 
-
-        Response shape depends on the query prefix:
-
-        - `@mention` queries: returns users matching the mention AND `results` with FeedEntry[] (facts + reposts, fully
-        enriched).
-
-        - Plain text queries: same as mentions — merged results in `results` as FeedEntry[].
-
-        - `#hashtag` queries: returns hashtags plus legacy `facts` array (FactResponse[], no reposts).
+        All query types (@mention, #hashtag, and plain text) return the exact same standardized response shape:
+        - `users`: UserSearchResult[] matching users (@mention or text query)
+        - `hashtags`: HashtagPreview[] matching hashtags (#hashtag or text query)
+        - `results`: FeedEntry[] matching facts and reposts, fully enriched
       parameters:
         - name: X-App-Version
           in: header
@@ -7049,518 +6214,62 @@ paths:
           in: query
       responses:
         '200':
-          description: Combined search results (shape varies by query prefix — see description)
+          description: Standardized search results (users, hashtags, and enriched feed results)
           content:
             application/json:
               schema:
-                anyOf:
-                  - type: object
-                    properties:
-                      users:
-                        type: array
-                        items:
-                          type: object
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        username:
+                          type: string
+                        displayName:
+                          type: string
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
+                      required:
+                        - id
+                        - username
+                        - displayName
+                        - avatarUrl
+                        - avatarColor
+                  results:
+                    type: array
+                    items:
+                      oneOf:
+                        - type: object
                           properties:
-                            id:
+                            type:
                               type: string
-                            username:
-                              type: string
-                            displayName:
-                              type: string
-                            avatarUrl:
-                              type: string
-                              nullable: true
-                            avatarColor:
-                              type: string
-                              nullable: true
-                          required:
-                            - id
-                            - username
-                            - displayName
-                            - avatarUrl
-                            - avatarColor
-                      results:
-                        type: array
-                        items:
-                          oneOf:
-                            - type: object
-                              properties:
-                                type:
-                                  type: string
-                                  enum:
-                                    - fact
-                                fact:
-                                  type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                    author:
-                                      type: object
-                                      properties:
-                                        id:
-                                          type: string
-                                        username:
-                                          type: string
-                                        email:
-                                          type: string
-                                          format: email
-                                        displayName:
-                                          type: string
-                                        avatarUrl:
-                                          type: string
-                                          nullable: true
-                                        avatarColor:
-                                          type: string
-                                          nullable: true
-                                      required:
-                                        - id
-                                        - username
-                                        - email
-                                        - displayName
-                                        - avatarUrl
-                                        - avatarColor
-                                    title:
-                                      type: string
-                                      nullable: true
-                                    content:
-                                      type: string
-                                    likes:
-                                      type: integer
-                                    liked:
-                                      type: boolean
-                                    likeBy:
-                                      type: array
-                                      items:
-                                        type: object
-                                        properties:
-                                          username:
-                                            type: string
-                                          avatarUrl:
-                                            type: string
-                                            nullable: true
-                                          avatarColor:
-                                            type: string
-                                            nullable: true
-                                        required:
-                                          - username
-                                          - avatarUrl
-                                          - avatarColor
-                                      maxItems: 3
-                                    comments:
-                                      type: integer
-                                    commentsDetails:
-                                      type: object
-                                      nullable: true
-                                      properties:
-                                        id:
-                                          type: string
-                                          format: uuid
-                                        content:
-                                          type: string
-                                        author:
-                                          type: object
-                                          properties:
-                                            username:
-                                              type: string
-                                            avatarUrl:
-                                              type: string
-                                              nullable: true
-                                            avatarColor:
-                                              type: string
-                                              nullable: true
-                                          required:
-                                            - username
-                                            - avatarUrl
-                                            - avatarColor
-                                        parentCommentId:
-                                          type: string
-                                          nullable: true
-                                          format: uuid
-                                        replies:
-                                          type: integer
-                                        createdAt:
-                                          type: string
-                                          format: date-time
-                                      required:
-                                        - id
-                                        - content
-                                        - author
-                                        - parentCommentId
-                                        - replies
-                                        - createdAt
-                                    repostCount:
-                                      type: integer
-                                    repostedByMe:
-                                      type: boolean
-                                    repostBy:
-                                      type: array
-                                      items:
-                                        type: object
-                                        properties:
-                                          username:
-                                            type: string
-                                          avatarUrl:
-                                            type: string
-                                            nullable: true
-                                          avatarColor:
-                                            type: string
-                                            nullable: true
-                                        required:
-                                          - username
-                                          - avatarUrl
-                                          - avatarColor
-                                      maxItems: 2
-                                    hashtags:
-                                      type: array
-                                      items:
-                                        type: object
-                                        properties:
-                                          id:
-                                            type: string
-                                          tag:
-                                            type: string
-                                        required:
-                                          - id
-                                          - tag
-                                    createdAt:
-                                      type: string
-                                      format: date-time
-                                    updatedAt:
-                                      type: string
-                                      format: date-time
-                                  required:
-                                    - id
-                                    - author
-                                    - title
-                                    - content
-                                    - likes
-                                    - likeBy
-                                    - comments
-                                    - commentsDetails
-                                    - repostCount
-                                    - repostBy
-                                    - hashtags
-                                    - createdAt
-                                    - updatedAt
-                                createdAt:
-                                  type: string
-                                  format: date-time
-                              required:
-                                - type
+                              enum:
                                 - fact
-                                - createdAt
-                            - type: object
-                              properties:
-                                type:
-                                  type: string
-                                  enum:
-                                    - repost
-                                repost:
-                                  type: object
-                                  properties:
-                                    id:
-                                      type: string
-                                      format: uuid
-                                      description: Repost UUID — use for like/comment on the repost
-                                    factId:
-                                      type: string
-                                      format: uuid
-                                      description: Original fact UUID — use for reposting the original fact
-                                    author:
-                                      type: object
-                                      properties:
-                                        id:
-                                          type: string
-                                        username:
-                                          type: string
-                                        email:
-                                          type: string
-                                          format: email
-                                        displayName:
-                                          type: string
-                                        avatarUrl:
-                                          type: string
-                                          nullable: true
-                                        avatarColor:
-                                          type: string
-                                          nullable: true
-                                      required:
-                                        - id
-                                        - username
-                                        - email
-                                        - displayName
-                                        - avatarUrl
-                                        - avatarColor
-                                      description: Author of the original fact
-                                    title:
-                                      type: string
-                                      nullable: true
-                                      description: Title of the original fact
-                                    content:
-                                      type: string
-                                      description: Content of the original fact
-                                    hashtags:
-                                      type: array
-                                      items:
-                                        type: object
-                                        properties:
-                                          id:
-                                            type: string
-                                          tag:
-                                            type: string
-                                        required:
-                                          - id
-                                          - tag
-                                    repostCount:
-                                      type: integer
-                                      description: Total reposts of the original fact
-                                    repostedBy:
-                                      type: object
-                                      properties:
-                                        username:
-                                          type: string
-                                        displayName:
-                                          type: string
-                                        avatarUrl:
-                                          type: string
-                                          nullable: true
-                                        avatarColor:
-                                          type: string
-                                          nullable: true
-                                        isMe:
-                                          type: boolean
-                                      required:
-                                        - username
-                                        - displayName
-                                        - avatarUrl
-                                        - avatarColor
-                                        - isMe
-                                      description: Who reposted this
-                                    repostLikeCount:
-                                      type: integer
-                                      description: Likes ON this repost
-                                    liked:
-                                      type: boolean
-                                      description: Did the authenticated user like this repost?
-                                    likeBy:
-                                      type: array
-                                      items:
-                                        type: object
-                                        properties:
-                                          username:
-                                            type: string
-                                          avatarUrl:
-                                            type: string
-                                            nullable: true
-                                          avatarColor:
-                                            type: string
-                                            nullable: true
-                                        required:
-                                          - username
-                                          - avatarUrl
-                                          - avatarColor
-                                      maxItems: 3
-                                      description: Recent users who liked this repost
-                                    repostCommentCount:
-                                      type: integer
-                                      description: Comments ON this repost
-                                    repostCommentsDetails:
-                                      type: object
-                                      nullable: true
-                                      properties:
-                                        id:
-                                          type: string
-                                          format: uuid
-                                        content:
-                                          type: string
-                                        author:
-                                          type: object
-                                          properties:
-                                            username:
-                                              type: string
-                                            avatarUrl:
-                                              type: string
-                                              nullable: true
-                                            avatarColor:
-                                              type: string
-                                              nullable: true
-                                          required:
-                                            - username
-                                            - avatarUrl
-                                            - avatarColor
-                                        parentCommentId:
-                                          type: string
-                                          nullable: true
-                                          format: uuid
-                                        replies:
-                                          type: integer
-                                        createdAt:
-                                          type: string
-                                          format: date-time
-                                      required:
-                                        - id
-                                        - content
-                                        - author
-                                        - parentCommentId
-                                        - replies
-                                        - createdAt
-                                      description: First comment on this repost
-                                    createdAt:
-                                      type: string
-                                      format: date-time
-                                      description: When the repost was created
-                                  required:
-                                    - id
-                                    - factId
-                                    - author
-                                    - title
-                                    - content
-                                    - hashtags
-                                    - repostCount
-                                    - repostedBy
-                                    - repostLikeCount
-                                    - likeBy
-                                    - repostCommentCount
-                                    - repostCommentsDetails
-                                    - createdAt
-                                createdAt:
-                                  type: string
-                                  format: date-time
-                              required:
-                                - type
-                                - repost
-                                - createdAt
-                        description: Feed entries (facts and reposts) matching the query
-                      hashtags:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                            tag:
-                              type: string
-                          required:
-                            - id
-                            - tag
-                      page:
-                        type: integer
-                        minimum: 0
-                        exclusiveMinimum: true
-                      limit:
-                        type: integer
-                        minimum: 0
-                        exclusiveMinimum: true
-                      hasMore:
-                        type: boolean
-                    required:
-                      - users
-                      - results
-                      - hashtags
-                      - page
-                      - limit
-                      - hasMore
-                  - type: object
-                    properties:
-                      users:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                            username:
-                              type: string
-                            displayName:
-                              type: string
-                            avatarUrl:
-                              type: string
-                              nullable: true
-                            avatarColor:
-                              type: string
-                              nullable: true
-                          required:
-                            - id
-                            - username
-                            - displayName
-                            - avatarUrl
-                            - avatarColor
-                      facts:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                              format: uuid
-                            author:
+                            fact:
                               type: object
-                              properties:
-                                id:
-                                  type: string
-                                username:
-                                  type: string
-                                email:
-                                  type: string
-                                  format: email
-                                displayName:
-                                  type: string
-                                avatarUrl:
-                                  type: string
-                                  nullable: true
-                                avatarColor:
-                                  type: string
-                                  nullable: true
-                              required:
-                                - id
-                                - username
-                                - email
-                                - displayName
-                                - avatarUrl
-                                - avatarColor
-                            title:
-                              type: string
-                              nullable: true
-                            content:
-                              type: string
-                            likes:
-                              type: integer
-                            liked:
-                              type: boolean
-                            likeBy:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  username:
-                                    type: string
-                                  avatarUrl:
-                                    type: string
-                                    nullable: true
-                                  avatarColor:
-                                    type: string
-                                    nullable: true
-                                required:
-                                  - username
-                                  - avatarUrl
-                                  - avatarColor
-                              maxItems: 3
-                            comments:
-                              type: integer
-                            commentsDetails:
-                              type: object
-                              nullable: true
                               properties:
                                 id:
                                   type: string
                                   format: uuid
-                                content:
-                                  type: string
                                 author:
                                   type: object
                                   properties:
+                                    id:
+                                      type: string
                                     username:
+                                      type: string
+                                    email:
+                                      type: string
+                                      format: email
+                                    displayName:
                                       type: string
                                     avatarUrl:
                                       type: string
@@ -7569,108 +6278,353 @@ paths:
                                       type: string
                                       nullable: true
                                   required:
+                                    - id
                                     - username
+                                    - email
+                                    - displayName
                                     - avatarUrl
                                     - avatarColor
-                                parentCommentId:
+                                title:
                                   type: string
                                   nullable: true
-                                  format: uuid
-                                replies:
+                                content:
+                                  type: string
+                                likes:
                                   type: integer
+                                liked:
+                                  type: boolean
+                                likeBy:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      username:
+                                        type: string
+                                      avatarUrl:
+                                        type: string
+                                        nullable: true
+                                      avatarColor:
+                                        type: string
+                                        nullable: true
+                                    required:
+                                      - username
+                                      - avatarUrl
+                                      - avatarColor
+                                  maxItems: 3
+                                comments:
+                                  type: integer
+                                commentsDetails:
+                                  type: object
+                                  nullable: true
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                    content:
+                                      type: string
+                                    author:
+                                      type: object
+                                      properties:
+                                        username:
+                                          type: string
+                                        avatarUrl:
+                                          type: string
+                                          nullable: true
+                                        avatarColor:
+                                          type: string
+                                          nullable: true
+                                      required:
+                                        - username
+                                        - avatarUrl
+                                        - avatarColor
+                                    parentCommentId:
+                                      type: string
+                                      nullable: true
+                                      format: uuid
+                                    replies:
+                                      type: integer
+                                    createdAt:
+                                      type: string
+                                      format: date-time
+                                  required:
+                                    - id
+                                    - content
+                                    - author
+                                    - parentCommentId
+                                    - replies
+                                    - createdAt
+                                repostCount:
+                                  type: integer
+                                repostedByMe:
+                                  type: boolean
+                                repostBy:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      username:
+                                        type: string
+                                      avatarUrl:
+                                        type: string
+                                        nullable: true
+                                      avatarColor:
+                                        type: string
+                                        nullable: true
+                                    required:
+                                      - username
+                                      - avatarUrl
+                                      - avatarColor
+                                  maxItems: 2
+                                hashtags:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      id:
+                                        type: string
+                                      tag:
+                                        type: string
+                                    required:
+                                      - id
+                                      - tag
                                 createdAt:
+                                  type: string
+                                  format: date-time
+                                updatedAt:
                                   type: string
                                   format: date-time
                               required:
                                 - id
-                                - content
                                 - author
-                                - parentCommentId
-                                - replies
+                                - title
+                                - content
+                                - likes
+                                - likeBy
+                                - comments
+                                - commentsDetails
+                                - repostCount
+                                - repostBy
+                                - hashtags
                                 - createdAt
-                            repostCount:
-                              type: integer
-                            repostedByMe:
-                              type: boolean
-                            repostBy:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  username:
-                                    type: string
-                                  avatarUrl:
-                                    type: string
-                                    nullable: true
-                                  avatarColor:
-                                    type: string
-                                    nullable: true
-                                required:
-                                  - username
-                                  - avatarUrl
-                                  - avatarColor
-                              maxItems: 2
-                            hashtags:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  id:
-                                    type: string
-                                  tag:
-                                    type: string
-                                required:
-                                  - id
-                                  - tag
+                                - updatedAt
                             createdAt:
                               type: string
                               format: date-time
-                            updatedAt:
+                          required:
+                            - type
+                            - fact
+                            - createdAt
+                        - type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - repost
+                            repost:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                  description: Repost UUID — use for like/comment on the repost
+                                factId:
+                                  type: string
+                                  format: uuid
+                                  description: Original fact UUID — use for reposting the original fact
+                                author:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                    username:
+                                      type: string
+                                    email:
+                                      type: string
+                                      format: email
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type: string
+                                      nullable: true
+                                    avatarColor:
+                                      type: string
+                                      nullable: true
+                                  required:
+                                    - id
+                                    - username
+                                    - email
+                                    - displayName
+                                    - avatarUrl
+                                    - avatarColor
+                                  description: Author of the original fact
+                                title:
+                                  type: string
+                                  nullable: true
+                                  description: Title of the original fact
+                                content:
+                                  type: string
+                                  description: Content of the original fact
+                                hashtags:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      id:
+                                        type: string
+                                      tag:
+                                        type: string
+                                    required:
+                                      - id
+                                      - tag
+                                repostCount:
+                                  type: integer
+                                  description: Total reposts of the original fact
+                                repostedBy:
+                                  type: object
+                                  properties:
+                                    username:
+                                      type: string
+                                    displayName:
+                                      type: string
+                                    avatarUrl:
+                                      type: string
+                                      nullable: true
+                                    avatarColor:
+                                      type: string
+                                      nullable: true
+                                    isMe:
+                                      type: boolean
+                                  required:
+                                    - username
+                                    - displayName
+                                    - avatarUrl
+                                    - avatarColor
+                                    - isMe
+                                  description: Who reposted this
+                                repostLikeCount:
+                                  type: integer
+                                  description: Likes ON this repost
+                                liked:
+                                  type: boolean
+                                  description: Did the authenticated user like this repost?
+                                likeBy:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      username:
+                                        type: string
+                                      avatarUrl:
+                                        type: string
+                                        nullable: true
+                                      avatarColor:
+                                        type: string
+                                        nullable: true
+                                    required:
+                                      - username
+                                      - avatarUrl
+                                      - avatarColor
+                                  maxItems: 3
+                                  description: Recent users who liked this repost
+                                repostCommentCount:
+                                  type: integer
+                                  description: Comments ON this repost
+                                repostCommentsDetails:
+                                  type: object
+                                  nullable: true
+                                  properties:
+                                    id:
+                                      type: string
+                                      format: uuid
+                                    content:
+                                      type: string
+                                    author:
+                                      type: object
+                                      properties:
+                                        username:
+                                          type: string
+                                        avatarUrl:
+                                          type: string
+                                          nullable: true
+                                        avatarColor:
+                                          type: string
+                                          nullable: true
+                                      required:
+                                        - username
+                                        - avatarUrl
+                                        - avatarColor
+                                    parentCommentId:
+                                      type: string
+                                      nullable: true
+                                      format: uuid
+                                    replies:
+                                      type: integer
+                                    createdAt:
+                                      type: string
+                                      format: date-time
+                                  required:
+                                    - id
+                                    - content
+                                    - author
+                                    - parentCommentId
+                                    - replies
+                                    - createdAt
+                                  description: First comment on this repost
+                                createdAt:
+                                  type: string
+                                  format: date-time
+                                  description: When the repost was created
+                              required:
+                                - id
+                                - factId
+                                - author
+                                - title
+                                - content
+                                - hashtags
+                                - repostCount
+                                - repostedBy
+                                - repostLikeCount
+                                - likeBy
+                                - repostCommentCount
+                                - repostCommentsDetails
+                                - createdAt
+                            createdAt:
                               type: string
                               format: date-time
                           required:
-                            - id
-                            - author
-                            - title
-                            - content
-                            - likes
-                            - likeBy
-                            - comments
-                            - commentsDetails
-                            - repostCount
-                            - repostBy
-                            - hashtags
+                            - type
+                            - repost
                             - createdAt
-                            - updatedAt
-                      hashtags:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            id:
-                              type: string
-                            tag:
-                              type: string
-                          required:
-                            - id
-                            - tag
-                      page:
-                        type: integer
-                        minimum: 0
-                        exclusiveMinimum: true
-                      limit:
-                        type: integer
-                        minimum: 0
-                        exclusiveMinimum: true
-                      hasMore:
-                        type: boolean
-                    required:
-                      - users
-                      - facts
-                      - hashtags
-                      - page
-                      - limit
-                      - hasMore
+                    description: Feed entries (facts and reposts) matching the query
+                  hashtags:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        tag:
+                          type: string
+                      required:
+                        - id
+                        - tag
+                  page:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  limit:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  hasMore:
+                    type: boolean
+                required:
+                  - users
+                  - results
+                  - hashtags
+                  - page
+                  - limit
+                  - hasMore
         '400':
           description: Malformed request or validation error
           content:

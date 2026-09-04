@@ -510,11 +510,12 @@ registry.register('PaginatedMentionResponse', PaginatedMentionResponseSchema)
 // ── Search ──────────────────────────────────────────────────────────────────
 
 /**
- * GET /facts/search response shape depends on the query prefix:
- * - `@mention` and plain text queries → results: FeedEntry[] (facts + reposts, fully enriched)
- * - `#hashtag` queries → facts: FactResponse[] (legacy shape, no reposts)
+ * GET /facts/search unified response shape across all queries (@mention, #hashtag, and plain text):
+ * - users: UserSearchResult[]
+ * - results: FeedEntry[] (facts and reposts, fully enriched)
+ * - hashtags: HashtagPreview[]
  */
-export const MentionSearchResponseSchema = z.object({
+export const GlobalSearchResponseSchema = z.object({
   users: z.array(UserSearchResultSchema),
   results: z.array(FeedEntrySchema).describe('Feed entries (facts and reposts) matching the query'),
   hashtags: z.array(HashtagPreviewSchema),
@@ -523,19 +524,6 @@ export const MentionSearchResponseSchema = z.object({
   hasMore: z.boolean()
 })
 
-export const HashtagSearchResponseSchema = z.object({
-  users: z.array(UserSearchResultSchema),
-  facts: z.array(FactResponseSchema),
-  hashtags: z.array(HashtagPreviewSchema),
-  page: z.number().int().positive(),
-  limit: z.number().int().positive(),
-  hasMore: z.boolean()
-})
-
-export const GlobalSearchResponseSchema = z.union([MentionSearchResponseSchema, HashtagSearchResponseSchema])
-
-registry.register('MentionSearchResponse', MentionSearchResponseSchema)
-registry.register('HashtagSearchResponse', HashtagSearchResponseSchema)
 registry.register('GlobalSearchResponse', GlobalSearchResponseSchema)
 
 // ── Health & Admin ─────────────────────────────────────────────────────────

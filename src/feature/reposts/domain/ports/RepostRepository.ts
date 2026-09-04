@@ -11,7 +11,9 @@ export interface RepostRepository {
   findAllWithFact: (params?: BaseQueryParams) => Promise<ResultWithPagination<RepostWithFact>>
   findByAuthorWithFact: (authorId: string, params?: BaseQueryParams) => Promise<ResultWithPagination<RepostWithFact>>
   findByAuthorsWithFact: (authorIds: string[], params?: BaseQueryParams) => Promise<ResultWithPagination<RepostWithFact>>
+  findByFactIdsWithFact: (factIds: string[], params?: BaseQueryParams) => Promise<ResultWithPagination<RepostWithFact>>
   findByIdsWithFact: (ids: string[]) => Promise<RepostWithFact[]>
+
   create: (authorId: string, originalFactId: string) => Promise<Repost>
   delete: (authorId: string, originalFactId: string) => Promise<void>
 }

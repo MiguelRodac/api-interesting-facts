@@ -392,19 +392,19 @@ registry.registerPath({
   tags: ['Facts'],
   security: [{ bearerAuth: [] }],
   description: [
-    'Search across users, posts, and hashtags in a single request.',
+    'Unified search across users, posts (facts and reposts), and hashtags in a single request.',
     '',
-    'Response shape depends on the query prefix:',
-    '- `@mention` queries: returns users matching the mention AND `results` with FeedEntry[] (facts + reposts, fully enriched).',
-    '- Plain text queries: same as mentions — merged results in `results` as FeedEntry[].',
-    '- `#hashtag` queries: returns hashtags plus legacy `facts` array (FactResponse[], no reposts).'
+    'All query types (@mention, #hashtag, and plain text) return the exact same standardized response shape:',
+    '- `users`: UserSearchResult[] matching users (@mention or text query)',
+    '- `hashtags`: HashtagPreview[] matching hashtags (#hashtag or text query)',
+    '- `results`: FeedEntry[] matching facts and reposts, fully enriched'
   ].join('\n'),
   request: {
     query: SearchQuerySchema
   },
   responses: {
     200: {
-      description: 'Combined search results (shape varies by query prefix — see description)',
+      description: 'Standardized search results (users, hashtags, and enriched feed results)',
       content: { 'application/json': { schema: GlobalSearchResponseSchema } }
     },
     400: badRequestResponse,

@@ -464,7 +464,7 @@ describe('Facts Endpoints', () => {
         .set('Authorization', `Bearer ${validToken}`)
 
       expect(res.status).toBe(200)
-      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertEnrichment(found)
 
@@ -595,10 +595,14 @@ describe('Facts Endpoints', () => {
         .set('Authorization', `Bearer ${otherToken}`)
 
       expect(res.status).toBe(200)
-      const found = res.body.facts.find((r: { id: string }) => r.id === fact.id)
+      const found = res.body.results.find((r: { type: string, fact?: { id: string } }) => r.type === 'fact' && r.fact?.id === fact.id)?.fact
       expect(found).toBeDefined()
       assertRepostEnrichment(found)
       expect(found.repostedByMe).toBe(true)
+
+      // Also verify that the repost of the fact with this hashtag is returned as a repost entry
+      const foundRepost = res.body.results.find((r: { type: string, repost?: { factId: string } }) => r.type === 'repost' && r.repost?.factId === fact.id)?.repost
+      expect(foundRepost).toBeDefined()
 
       // Clean up the test-created hashtag fixture so it doesn't persist in the DB.
       await prisma.factHashtag.deleteMany({ where: { hashtagId: hashtag.id } })
