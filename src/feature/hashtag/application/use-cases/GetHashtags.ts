@@ -1,6 +1,11 @@
 import { type PrismaHashtagRepository } from '../../infrastructure/repositories/PrismaHashtagRepository'
 import { type HashtagWithUsage } from '../dto/HashtagWithUsage'
 
+export interface GetHashtagsResult {
+  results: HashtagWithUsage[]
+  hasMore: boolean
+}
+
 export class GetHashtags {
   private readonly hashtagRepository: PrismaHashtagRepository
 
@@ -8,7 +13,7 @@ export class GetHashtags {
     this.hashtagRepository = hashtagRepository
   }
 
-  async execute (query?: string, limit: number = 10): Promise<HashtagWithUsage[]> {
-    return await this.hashtagRepository.findPopular(query, limit)
+  async execute (query?: string, page: number = 1, limit: number = 10): Promise<GetHashtagsResult> {
+    return await this.hashtagRepository.findPopular(query, page, limit)
   }
 }

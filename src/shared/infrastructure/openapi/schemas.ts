@@ -186,6 +186,13 @@ export const UserSearchResultSchema = z.object({
   avatarColor: z.string().nullable()
 })
 
+export const PaginatedUserSearchResultSchema = z.object({
+  results: z.array(UserSearchResultSchema),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  hasMore: z.boolean()
+})
+
 export const CheckUsernameResponseSchema = z.object({
   available: z.boolean()
 })
@@ -203,6 +210,7 @@ registry.register('UpdateProfileRequest', UpdateProfileRequestSchema)
 registry.register('UserResponse', UserResponseSchema)
 registry.register('PublicUserResponse', PublicUserResponseSchema)
 registry.register('UserSearchResult', UserSearchResultSchema)
+registry.register('PaginatedUserSearchResult', PaginatedUserSearchResultSchema)
 registry.register('CheckUsernameResponse', CheckUsernameResponseSchema)
 registry.register('AvatarOptionResponse', AvatarOptionResponseSchema)
 
@@ -227,6 +235,13 @@ export const HashtagWithUsageSchema = z.object({
   id: z.string(),
   tag: z.string(),
   usageCount: z.number().int()
+})
+
+export const PaginatedHashtagWithUsageSchema = z.object({
+  results: z.array(HashtagWithUsageSchema),
+  page: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  hasMore: z.boolean()
 })
 
 export const FactAuthorPreviewSchema = z.object({
@@ -284,6 +299,7 @@ registry.register('CreateFactRequest', CreateFactRequestSchema)
 registry.register('UpdateFactRequest', UpdateFactRequestSchema)
 registry.register('HashtagPreview', HashtagPreviewSchema)
 registry.register('HashtagWithUsage', HashtagWithUsageSchema)
+registry.register('PaginatedHashtagWithUsage', PaginatedHashtagWithUsageSchema)
 registry.register('FactResponse', FactResponseSchema)
 registry.register('PaginatedFactResponse', PaginatedFactResponseSchema)
 

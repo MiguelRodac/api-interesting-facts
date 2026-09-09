@@ -100,10 +100,21 @@ export class PrismaHashtagRepository {
     return buildPaginatedResult(mapped, total, page, limit)
   }
 
-  async findPopular (query?: string, limit: number = 10): Promise<HashtagWithUsage[]> {
-    const where = query != null && query.length > 0
-      ? { tag: { contains: query.toLowerCase() } }
-      : {}
+  async findPopular (query?: string, page: number = 1, limit: number = 10): Promise<{ results: HashtagWithUsage[], hasMore: boolean }> {
+    const normalized = query?.trim().toLowerCase()
+    const cleanTag = normalized?.startsWith('#') === true ? normalized.slice(1) : normalized
+
+    const where = (cleanTag != null && cleanTag.length > 0)
+      ? {
+          tag: { contains: cleanTag },
+          factHashtags: { some: {} }
+        }
+      : {
+          factHashtags: { some: {} }
+        }
+
+    const skip = (page - 1) * limit
+    const fetchLimit = limit + 1
 
     const hashtags = await prisma.hashtag.findMany({
       where,
@@ -115,16 +126,21 @@ export class PrismaHashtagRepository {
       orderBy: {
         factHashtags: { _count: 'desc' }
       },
-      take: Math.min(limit, 20)
+      skip,
+      take: fetchLimit
     })
 
-    return hashtags
-      .filter(h => h._count.factHashtags > 0)
-      .map(h => ({
+    const hasMore = hashtags.length > limit
+    const pageResults = hashtags.slice(0, limit)
+
+    return {
+      results: pageResults.map(h => ({
         id: h.id,
         tag: h.tag,
         usageCount: h._count.factHashtags
-      }))
+      })),
+      hasMore
+    }
   }
 
   async extractHashtags (content: string): Promise<string[]> {

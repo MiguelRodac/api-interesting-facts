@@ -8,7 +8,7 @@ import {
   CreateProfileRequestSchema,
   UserResponseSchema,
   UpdateProfileRequestSchema,
-  UserSearchResultSchema,
+  PaginatedUserSearchResultSchema,
   CheckUsernameResponseSchema,
   AvatarOptionResponseSchema,
   PublicUserResponseSchema,
@@ -28,7 +28,7 @@ import {
   UpdateCommentRequestSchema,
   PaginatedCommentResponseSchema,
   PaginatedMentionResponseSchema,
-  HashtagWithUsageSchema,
+  PaginatedHashtagWithUsageSchema,
   ValidationErrorSchema,
   BadRequestErrorSchema,
   UnauthorizedErrorSchema,
@@ -229,12 +229,16 @@ registry.registerPath({
   tags: ['Users'],
   security: [{ bearerAuth: [] }],
   request: {
-    query: z.object({ q: z.string().min(1) })
+    query: z.object({
+      q: z.string().min(1).describe('Search query to filter users'),
+      page: z.coerce.number().int().positive().default(1).optional().describe('Page number (default 1)'),
+      limit: z.coerce.number().int().positive().max(50).default(10).optional().describe('Max results (default 10, max 50)')
+    })
   },
   responses: {
     200: {
-      description: 'Matching users (max 10 results)',
-      content: { 'application/json': { schema: z.array(UserSearchResultSchema) } }
+      description: 'Paginated list of matching users',
+      content: { 'application/json': { schema: PaginatedUserSearchResultSchema } }
     },
     400: badRequestResponse,
     401: unauthorizedResponse,
@@ -520,17 +524,16 @@ registry.registerPath({
   request: {
     query: z.object({
       q: z.string().optional().describe('Search query to filter hashtags'),
-      limit: z.coerce.number().int().positive().max(20).default(10).optional().describe('Max results (default 10, max 20)')
+      page: z.coerce.number().int().positive().default(1).optional().describe('Page number (default 1)'),
+      limit: z.coerce.number().int().positive().max(50).default(10).optional().describe('Max results (default 10, max 50)')
     })
   },
   responses: {
     200: {
-      description: 'List of matching hashtags with usage counts',
+      description: 'Paginated list of matching hashtags with usage counts',
       content: {
         'application/json': {
-          schema: z.object({
-            results: z.array(HashtagWithUsageSchema)
-          })
+          schema: PaginatedHashtagWithUsageSchema
         }
       }
     },

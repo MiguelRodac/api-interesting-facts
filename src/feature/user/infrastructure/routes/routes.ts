@@ -9,10 +9,12 @@ import { requireProfile } from '@shared/infrastructure/middleware/requireProfile
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 import { ConflictError } from '@shared/domain/errors/ConflictError'
 import { USERNAME_PATTERN, EMAIL_PATTERN, EMAIL_MAX_LENGTH, DISPLAY_NAME_MAX_LENGTH } from '@shared/domain/validation'
+import { DEFAULT_PAGE, DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
 
 const MentionQuerySchema = z.object({
   q: z.string().min(1, 'q is required').max(50),
-  limit: z.coerce.number().int().positive().max(20).default(10)
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(50).default(DEFAULT_LIMIT)
 }).strict()
 
 const router = Router()
@@ -137,16 +139,31 @@ router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Respo
 // GET /users?q= — Mention autocomplete for composing facts
 router.get('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { q, limit } = MentionQuerySchema.parse(req.query)
-    const { results: users } = await userRepository.findBySearch(q.trim(), { order_by: 'popular', order_dir: 'desc', limit })
+    const { q, page, limit } = MentionQuerySchema.parse(req.query)
+    const skip = (page - 1) * limit
+    const fetchLimit = limit + 1
+
+    const { results: users } = await userRepository.findBySearch(q.trim(), {
+      skip,
+      limit: fetchLimit,
+      order_by: 'popular',
+      order_dir: 'desc'
+    })
+
+    const hasMore = users.length > limit
+    const pageResults = users.slice(0, limit)
+
     res.status(200).json({
-      results: users.map(u => ({
+      results: pageResults.map(u => ({
         id: u.id,
         username: u.username,
         displayName: u.displayName,
         avatarUrl: u.avatarUrl,
         avatarColor: u.avatarColor
-      }))
+      })),
+      page,
+      limit,
+      hasMore
     })
   } catch (err) {
     next(err)

@@ -27,7 +27,9 @@ const getMentionsByUser = new GetMentionsByUser(
 )
 
 const SearchQuerySchema = z.object({
-  q: z.string().min(1, 'Query parameter q is required')
+  q: z.string().min(1, 'Query parameter q is required'),
+  page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
+  limit: z.coerce.number().int().positive().max(50).default(DEFAULT_LIMIT)
 }).strict()
 
 const CheckUsernameQuerySchema = z.object({
@@ -42,7 +44,7 @@ const MentionsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT)
 })
 
-// GET /users/search?q={query} — Search users for @mention autocomplete (auth required)
+// GET /users/search?q={query}&page={page}&limit={limit} — Search users for @mention autocomplete (auth required)
 router.get('/search', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const parsed = SearchQuerySchema.safeParse(req.query)
@@ -50,10 +52,21 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
       throw new ValidationError('q parameter is required', [{ field: 'q', message: 'Query parameter q is required' }])
     }
 
-    const { q } = parsed.data
-    const { results: users } = await userRepository.findBySearch(q)
+    const { q, page, limit } = parsed.data
+    const skip = (page - 1) * limit
+    const fetchLimit = limit + 1
 
-    const response = users.map(user => ({
+    const { results: users } = await userRepository.findBySearch(q, {
+      skip,
+      limit: fetchLimit,
+      order_by: 'popular',
+      order_dir: 'desc'
+    })
+
+    const hasMore = users.length > limit
+    const pageResults = users.slice(0, limit)
+
+    const response = pageResults.map(user => ({
       id: user.id,
       username: user.username,
       displayName: user.displayName,
@@ -61,7 +74,12 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
       avatarColor: user.avatarColor
     }))
 
-    res.status(200).json(response)
+    res.status(200).json({
+      results: response,
+      page,
+      limit,
+      hasMore
+    })
   } catch (err) {
     next(err)
   }

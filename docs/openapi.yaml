@@ -714,6 +714,47 @@ components:
         - displayName
         - avatarUrl
         - avatarColor
+    PaginatedUserSearchResult:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              username:
+                type: string
+              displayName:
+                type: string
+              avatarUrl:
+                type: string
+                nullable: true
+              avatarColor:
+                type: string
+                nullable: true
+            required:
+              - id
+              - username
+              - displayName
+              - avatarUrl
+              - avatarColor
+        page:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        limit:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        hasMore:
+          type: boolean
+      required:
+        - results
+        - page
+        - limit
+        - hasMore
     CheckUsernameResponse:
       type: object
       properties:
@@ -783,6 +824,39 @@ components:
         - id
         - tag
         - usageCount
+    PaginatedHashtagWithUsage:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              tag:
+                type: string
+              usageCount:
+                type: integer
+            required:
+              - id
+              - tag
+              - usageCount
+        page:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        limit:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        hasMore:
+          type: boolean
+      required:
+        - results
+        - page
+        - limit
+        - hasMore
     FactResponse:
       type: object
       properties:
@@ -4549,37 +4623,78 @@ paths:
         - schema:
             type: string
             minLength: 1
+            description: Search query to filter users
           required: true
+          description: Search query to filter users
           name: q
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            default: 1
+            description: Page number (default 1)
+          required: false
+          description: Page number (default 1)
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 50
+            default: 10
+            description: Max results (default 10, max 50)
+          required: false
+          description: Max results (default 10, max 50)
+          name: limit
           in: query
       responses:
         '200':
-          description: Matching users (max 10 results)
+          description: Paginated list of matching users
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                    username:
-                      type: string
-                    displayName:
-                      type: string
-                    avatarUrl:
-                      type: string
-                      nullable: true
-                    avatarColor:
-                      type: string
-                      nullable: true
-                  required:
-                    - id
-                    - username
-                    - displayName
-                    - avatarUrl
-                    - avatarColor
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        username:
+                          type: string
+                        displayName:
+                          type: string
+                        avatarUrl:
+                          type: string
+                          nullable: true
+                        avatarColor:
+                          type: string
+                          nullable: true
+                      required:
+                        - id
+                        - username
+                        - displayName
+                        - avatarUrl
+                        - avatarColor
+                  page:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  limit:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  hasMore:
+                    type: boolean
+                required:
+                  - results
+                  - page
+                  - limit
+                  - hasMore
         '400':
           description: Malformed request or validation error
           content:
@@ -8558,16 +8673,26 @@ paths:
             type: integer
             minimum: 0
             exclusiveMinimum: true
-            maximum: 20
-            default: 10
-            description: Max results (default 10, max 20)
+            default: 1
+            description: Page number (default 1)
           required: false
-          description: Max results (default 10, max 20)
+          description: Page number (default 1)
+          name: page
+          in: query
+        - schema:
+            type: integer
+            minimum: 0
+            exclusiveMinimum: true
+            maximum: 50
+            default: 10
+            description: Max results (default 10, max 50)
+          required: false
+          description: Max results (default 10, max 50)
           name: limit
           in: query
       responses:
         '200':
-          description: List of matching hashtags with usage counts
+          description: Paginated list of matching hashtags with usage counts
           content:
             application/json:
               schema:
@@ -8588,8 +8713,21 @@ paths:
                         - id
                         - tag
                         - usageCount
+                  page:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  limit:
+                    type: integer
+                    minimum: 0
+                    exclusiveMinimum: true
+                  hasMore:
+                    type: boolean
                 required:
                   - results
+                  - page
+                  - limit
+                  - hasMore
         '400':
           description: Malformed request or validation error
           content:
