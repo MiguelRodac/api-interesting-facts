@@ -452,6 +452,7 @@ describe('Facts Endpoints', () => {
         expect(resPage2.status).toBe(200)
         expect(resPage2.body.users).toHaveLength(1)
         expect(resPage2.body.users[0].id).not.toBe(resPage1.body.users[0].id)
+        expect(resPage2.body.hasMore).toBe(false)
       } finally {
         await prisma.user.deleteMany({
           where: { firebaseUid: { in: [u1.firebaseUid, u2.firebaseUid] } }

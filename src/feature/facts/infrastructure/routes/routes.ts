@@ -195,7 +195,11 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     }
     const mergedEntries = Array.from(entriesMap.values())
 
-    const hasMore = users.length > limit || hashtags.length > limit || mergedEntries.length > limit
+    const hasMoreUsers = users.length > limit
+    const hasMoreHashtags = hashtags.length > limit
+    const hasMoreFacts = factsAndRepostsByTitleOrHashtag.length > limit || authorMentionEntries.length > limit
+    const hasMore = hasMoreUsers || hasMoreHashtags || hasMoreFacts
+
     const pagedUsers = users.slice(0, limit)
     const pagedHashtags = hashtags.slice(0, limit)
     const pagedEntries = mergedEntries.slice(0, limit)
