@@ -127,8 +127,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
       const [users, feedEntries] = await Promise.all([
-        userRepository.findBySearch(query, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
-        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
+        userRepository.findBySearch(query, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+        searchPosts.executeByAuthorOrMention(query, viewerId, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
       ])
 
       const hasMore = users.length > limit || feedEntries.length > limit
@@ -155,8 +155,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
       const [hashtags, feedEntries] = await Promise.all([
-        searchHashtags.execute(query, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
-        searchPosts.executeByHashtag(query, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
+        searchHashtags.execute(query, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+        searchPosts.executeByHashtag(query, viewerId, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
       ])
 
       const hasMore = hashtags.length > limit || feedEntries.length > limit
@@ -176,10 +176,10 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
 
     // Plain query — merge all categories
     const [users, factsAndRepostsByTitleOrHashtag, hashtags, authorMentionEntries] = await Promise.all([
-      userRepository.findBySearch(sanitized, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
-      searchPosts.execute(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
-      searchHashtags.execute(sanitized, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
-      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
+      userRepository.findBySearch(sanitized, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+      searchPosts.execute(sanitized, viewerId, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+      searchHashtags.execute(sanitized, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { page, order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
     ])
 
     const entriesMap = new Map<string, FeedEntry>()

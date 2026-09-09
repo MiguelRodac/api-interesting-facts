@@ -82,7 +82,7 @@ export class SearchPosts {
 
   async execute (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FeedEntry[]> {
     const limit = orderParams?.limit ?? 10
-    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const page = orderParams?.page ?? 1
     const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page, limit }, viewerId, orderParams)
 
     const factEntries: FeedEntry[] = facts.map(fact => ({
@@ -102,7 +102,7 @@ export class SearchPosts {
 
   async executeByAuthorOrMention (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FeedEntry[]> {
     const limit = orderParams?.limit ?? 10
-    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const page = orderParams?.page ?? 1
     const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page, limit }, viewerId, orderParams)
 
     const factEntries: FeedEntry[] = facts.map(fact => ({
@@ -123,7 +123,7 @@ export class SearchPosts {
 
   async executeByHashtag (tag: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FeedEntry[]> {
     const limit = orderParams?.limit ?? 10
-    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const page = orderParams?.page ?? 1
     const { results: facts } = await this.factRepository.findByHashtag(tag, { page, limit }, viewerId, orderParams)
 
     const factEntries: FeedEntry[] = facts.map(fact => ({
