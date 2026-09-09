@@ -129,8 +129,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         searchPosts.executeByAuthorOrMention(query, viewerId, orderParams)
       ])
 
-      const hasMore = (usersResult.nextPage !== null) || feedResult.hasMore || feedResult.results.length > limit
-      const pagedEntries = feedResult.results.slice(0, limit)
+      const hasMore = (usersResult.nextPage !== null) || feedResult.hasMore
+      const pagedEntries = feedResult.results
 
       res.status(200).json({
         users: usersResult.results.map(u => ({
@@ -156,8 +156,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         searchPosts.executeByHashtag(query, viewerId, orderParams)
       ])
 
-      const hasMore = hashtagsResult.hasMore || feedResult.hasMore || feedResult.results.length > limit
-      const pagedEntries = feedResult.results.slice(0, limit)
+      const hasMore = hashtagsResult.hasMore || feedResult.hasMore
+      const pagedEntries = feedResult.results
 
       res.status(200).json({
         users: [],

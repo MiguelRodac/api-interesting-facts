@@ -1,6 +1,6 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type Fact, type CreateFactData, type UpdateFactData } from '../../domain/entities/Fact'
-import { type FactRepository } from '../../domain/ports/FactRepository'
+import { type FactRepository, type FeedPaginationEntry } from '../../domain/ports/FactRepository'
 import { type FactView } from '../../domain/models/FactView'
 import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 import { type CommentPreview } from '@comments/application/dto/CommentPreview'
@@ -993,5 +993,155 @@ export class PrismaFactRepository implements FactRepository {
       batchViewerRepostedSet(factIds, viewerId)
     ])
     return { viewerLikedSet, viewerRepostedSet }
+  }
+
+  async findFeedPagination (params: { skip: number, take: number }): Promise<FeedPaginationEntry[]> {
+    return await prisma.viewFactsRepostPagination.findMany({
+      orderBy: { createdAt: 'desc' },
+      skip: params.skip,
+      take: params.take
+    })
+  }
+
+  async findAuthorFeedPagination (authorId: string, params: { skip: number, take: number }): Promise<FeedPaginationEntry[]> {
+    return await prisma.viewFactsRepostPagination.findMany({
+      where: { authorId },
+      orderBy: { createdAt: 'desc' },
+      skip: params.skip,
+      take: params.take
+    })
+  }
+
+  async findFactIdsByQuery (query: string): Promise<string[]> {
+    const matchingHashtags = await prisma.factHashtag.findMany({
+      where: {
+        hashtag: {
+          tag: { contains: query, mode: 'insensitive' }
+        }
+      },
+      select: { factId: true },
+      distinct: ['factId']
+    })
+    const hashtagFactIds = matchingHashtags.map(fh => fh.factId)
+
+    const where = {
+      OR: [
+        { title: { contains: query, mode: 'insensitive' as const } },
+        ...(hashtagFactIds.length > 0 ? [{ id: { in: hashtagFactIds } }] : [])
+      ]
+    }
+
+    const facts = await prisma.fact.findMany({
+      where,
+      select: { id: true }
+    })
+    return facts.map(f => f.id)
+  }
+
+  async findFactIdsByHashtag (tag: string): Promise<string[]> {
+    const matchingHashtags = await prisma.hashtag.findMany({
+      where: { tag: { startsWith: tag.toLowerCase() } },
+      select: { id: true }
+    })
+    if (matchingHashtags.length === 0) return []
+
+    const hashtagIds = matchingHashtags.map(h => h.id)
+    const factHashtags = await prisma.factHashtag.findMany({
+      where: { hashtagId: { in: hashtagIds } },
+      select: { factId: true }
+    })
+    return factHashtags.map(fh => fh.factId)
+  }
+
+  async findMentionSearchTargets (query: string): Promise<{ authorIds: string[], factIds: string[] }> {
+    const normalizedQuery = query.startsWith('@') ? query.slice(1) : query
+
+    const matchingUsers = await prisma.user.findMany({
+      where: {
+        OR: [
+          { username: { startsWith: normalizedQuery, mode: 'insensitive' } },
+          { displayName: { contains: normalizedQuery, mode: 'insensitive' } }
+        ]
+      },
+      select: { firebaseUid: true, username: true },
+      take: 10
+    })
+
+    const authorIds = matchingUsers.map(u => u.firebaseUid)
+    const usernames = matchingUsers.map(u => u.username)
+
+    const matchingHashtags = await prisma.factHashtag.findMany({
+      where: {
+        hashtag: {
+          tag: { contains: normalizedQuery, mode: 'insensitive' }
+        }
+      },
+      select: { factId: true },
+      distinct: ['factId']
+    })
+    const hashtagFactIds = matchingHashtags.map(fh => fh.factId)
+
+    const orConditions: Array<Record<string, unknown>> = []
+
+    if (authorIds.length > 0) {
+      orConditions.push({ authorId: { in: authorIds } })
+      orConditions.push({ mentions: { some: { mentionedUserId: { in: authorIds } } } })
+      orConditions.push({ comments: { some: { mentions: { some: { mentionedUserId: { in: authorIds } } } } } })
+      orConditions.push({ reposts: { some: { comments: { some: { mentions: { some: { mentionedUserId: { in: authorIds } } } } } } } })
+    }
+
+    for (const username of usernames) {
+      orConditions.push({ content: { contains: `@${username}`, mode: 'insensitive' } })
+      orConditions.push({ comments: { some: { content: { contains: `@${username}`, mode: 'insensitive' } } } })
+      orConditions.push({ reposts: { some: { comments: { some: { content: { contains: `@${username}`, mode: 'insensitive' } } } } } })
+    }
+
+    if (authorIds.length === 0) {
+      orConditions.push({ content: { contains: `@${normalizedQuery}`, mode: 'insensitive' } })
+      orConditions.push({ comments: { some: { content: { contains: `@${normalizedQuery}`, mode: 'insensitive' } } } })
+      orConditions.push({ reposts: { some: { comments: { some: { content: { contains: `@${normalizedQuery}`, mode: 'insensitive' } } } } } })
+    }
+
+    if (hashtagFactIds.length > 0) {
+      orConditions.push({ id: { in: hashtagFactIds } })
+    }
+
+    const facts = await prisma.fact.findMany({
+      where: { OR: orConditions },
+      select: { id: true }
+    })
+
+    return {
+      authorIds,
+      factIds: facts.map(f => f.id)
+    }
+  }
+
+  async findFeedPaginationByFactIds (factIds: string[], params: { skip: number, take: number }): Promise<FeedPaginationEntry[]> {
+    if (factIds.length === 0) return []
+    return await prisma.viewFactsRepostPagination.findMany({
+      where: { originalFactId: { in: factIds } },
+      orderBy: { createdAt: 'desc' },
+      skip: params.skip,
+      take: params.take
+    })
+  }
+
+  async findFeedPaginationByAuthorsOrFactIds (authorIds: string[], factIds: string[], params: { skip: number, take: number }): Promise<FeedPaginationEntry[]> {
+    const orConditions: Array<Record<string, unknown>> = []
+    if (authorIds.length > 0) {
+      orConditions.push({ authorId: { in: authorIds } })
+    }
+    if (factIds.length > 0) {
+      orConditions.push({ originalFactId: { in: factIds } })
+    }
+    if (orConditions.length === 0) return []
+
+    return await prisma.viewFactsRepostPagination.findMany({
+      where: { OR: orConditions },
+      orderBy: { createdAt: 'desc' },
+      skip: params.skip,
+      take: params.take
+    })
   }
 }

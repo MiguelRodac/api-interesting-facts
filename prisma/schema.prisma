@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["views"]
 }
 
 datasource db {
@@ -177,4 +178,14 @@ model AppVersion {
 
   @@unique([platform])
   @@map("app_versions")
+}
+
+view ViewFactsRepostPagination {
+  id             String   @unique
+  type           String   // "fact" | "repost"
+  originalFactId String   @map("original_fact_id")
+  authorId       String   @map("author_id")
+  createdAt      DateTime @map("created_at")
+
+  @@map("view_facts_repost_pagination")
 }

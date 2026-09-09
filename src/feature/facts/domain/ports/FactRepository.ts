@@ -14,6 +14,14 @@ export interface EnrichmentMaps {
   hashtagsMap: Map<string, Array<{ id: string, tag: string }>>
 }
 
+export interface FeedPaginationEntry {
+  id: string
+  type: string
+  originalFactId: string
+  authorId: string
+  createdAt: Date
+}
+
 export interface FactRepository {
   findById: (id: string, viewerId?: string) => Promise<FactView | null>
   findByIds: (ids: string[], viewerId?: string) => Promise<FactView[]>
@@ -32,4 +40,12 @@ export interface FactRepository {
   batchBuildEnrichmentMaps: (factIds: string[]) => Promise<EnrichmentMaps>
   batchEnrichFacts: (facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>, enrichmentMaps: EnrichmentMaps, viewerId?: string) => Promise<FactView[]>
   batchViewerContext: (factIds: string[], viewerId: string) => Promise<{ viewerLikedSet: Set<string>, viewerRepostedSet: Set<string> }>
+
+  findFeedPagination: (params: { skip: number, take: number }) => Promise<FeedPaginationEntry[]>
+  findAuthorFeedPagination: (authorId: string, params: { skip: number, take: number }) => Promise<FeedPaginationEntry[]>
+  findFactIdsByQuery: (query: string) => Promise<string[]>
+  findFactIdsByHashtag: (tag: string) => Promise<string[]>
+  findMentionSearchTargets: (query: string) => Promise<{ authorIds: string[], factIds: string[] }>
+  findFeedPaginationByFactIds: (factIds: string[], params: { skip: number, take: number }) => Promise<FeedPaginationEntry[]>
+  findFeedPaginationByAuthorsOrFactIds: (authorIds: string[], factIds: string[], params: { skip: number, take: number }) => Promise<FeedPaginationEntry[]>
 }

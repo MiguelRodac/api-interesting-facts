@@ -3,10 +3,8 @@ import { type RepostRepository } from '@reposts/domain/ports/RepostRepository'
 import { type LikeRepository } from '@likes/domain/ports/LikeRepository'
 import { type CommentRepository } from '@comments/domain/ports/CommentRepository'
 import { type FeedEntry } from '../dto/FeedEntry'
-import { type RepostResponse } from '../dto/RepostResponse'
-import { mapFactViewToResponse } from '../mappers/factMapper'
+import { FeedHydrator } from '../services/FeedHydrator'
 import { type SearchOrderParams } from '@shared/domain/types/query-filters'
-import { type RepostWithFact } from '@reposts/domain/models/RepostWithFact'
 
 export interface SearchPostsResult {
   results: FeedEntry[]
@@ -15,164 +13,76 @@ export interface SearchPostsResult {
 
 export class SearchPosts {
   private readonly factRepository: FactRepository
-  private readonly repostRepository: RepostRepository
-  private readonly likeRepository: LikeRepository
-  private readonly commentRepository: CommentRepository
+  private readonly hydrator: FeedHydrator
 
   constructor (factRepository: FactRepository, repostRepository: RepostRepository, likeRepository: LikeRepository, commentRepository: CommentRepository) {
     this.factRepository = factRepository
-    this.repostRepository = repostRepository
-    this.likeRepository = likeRepository
-    this.commentRepository = commentRepository
-  }
-
-  private async enrichReposts (reposts: RepostWithFact[], viewerId?: string): Promise<FeedEntry[]> {
-    if (reposts.length === 0) return []
-
-    const originalFactIds = reposts.map(r => r.originalFactId)
-    const repostIds = reposts.map(r => r.id)
-
-    const [rawEmbedded, repostLikeCounts, repostCommentCounts, repostFirstComments, repostLikeByMap, viewerRepostLikedSet] = await Promise.all([
-      this.factRepository.findRawByIds(originalFactIds),
-      this.likeRepository.batchLikeCountsByRepostIds(repostIds),
-      this.commentRepository.batchCommentCountsByRepostIds(repostIds),
-      this.commentRepository.batchFirstCommentByRepostIds(repostIds),
-      this.likeRepository.batchRecentRepostLikers(repostIds, 3),
-      viewerId != null
-        ? this.likeRepository.batchUserRepostLikes(repostIds, viewerId)
-        : null
-    ])
-
-    const enrichmentMaps = await this.factRepository.batchBuildEnrichmentMaps(originalFactIds)
-    const enrichedEmbedded = await this.factRepository.batchEnrichFacts(rawEmbedded, enrichmentMaps, viewerId)
-    const embeddedMap = new Map(enrichedEmbedded.map(f => [f.id, f]))
-
-    const repostEntries: FeedEntry[] = []
-    for (const repost of reposts) {
-      const originalFact = embeddedMap.get(repost.originalFactId)
-      if (originalFact === undefined) continue
-
-      const repostResponse: RepostResponse = {
-        id: repost.id,
-        factId: repost.originalFactId,
-        author: originalFact.author,
-        title: originalFact.title,
-        content: originalFact.content,
-        hashtags: originalFact.hashtags,
-        repostCount: originalFact.repostCount,
-        repostedBy: {
-          username: repost.username,
-          displayName: repost.displayName,
-          avatarUrl: repost.avatarUrl,
-          avatarColor: repost.avatarColor,
-          isMe: repost.authorId === viewerId
-        },
-        repostLikeCount: repostLikeCounts.get(repost.id) ?? 0,
-        liked: viewerRepostLikedSet?.has(repost.id) ?? undefined,
-        likeBy: repostLikeByMap.get(repost.id) ?? [],
-        repostCommentCount: repostCommentCounts.get(repost.id) ?? 0,
-        repostCommentsDetails: repostFirstComments.get(repost.id) ?? null,
-        createdAt: repost.createdAt.toISOString()
-      }
-
-      repostEntries.push({
-        type: 'repost',
-        repost: repostResponse,
-        createdAt: repost.createdAt.toISOString()
-      })
-    }
-
-    return repostEntries
+    this.hydrator = new FeedHydrator(factRepository, repostRepository, likeRepository, commentRepository)
   }
 
   async execute (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<SearchPostsResult> {
     const limit = orderParams?.limit ?? 10
     const page = orderParams?.page ?? 1
-    const factsResult = await this.factRepository.findByTitleOrHashtag(query, { page, limit }, viewerId, orderParams)
-    const { results: facts } = factsResult
+    const skip = orderParams?.skip ?? (page - 1) * limit
+    const take = limit + 1
 
-    const factEntries: FeedEntry[] = facts.map(fact => ({
-      type: 'fact',
-      fact: mapFactViewToResponse(fact),
-      createdAt: fact.createdAt.toISOString()
-    }))
-
-    const factIds = facts.map(f => f.id)
+    const factIds = await this.factRepository.findFactIdsByQuery(query)
     if (factIds.length === 0) {
-      return {
-        results: factEntries,
-        hasMore: factsResult.nextPage !== null
-      }
+      return { results: [], hasMore: false }
     }
 
-    const repostsResult = await this.repostRepository.findByFactIdsWithFact(factIds, { page, limit })
-    const { results: reposts } = repostsResult
-    const repostEntries = await this.enrichReposts(reposts, viewerId)
+    const entries = await this.factRepository.findFeedPaginationByFactIds(factIds, { skip, take })
+    const hasMore = entries.length > limit
+    const pageEntries = entries.slice(0, limit)
+    const results = await this.hydrator.hydrate(pageEntries, viewerId)
 
     return {
-      results: [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-      hasMore: (factsResult.nextPage !== null) || (repostsResult.nextPage !== null)
+      results,
+      hasMore
     }
   }
 
   async executeByAuthorOrMention (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<SearchPostsResult> {
     const limit = orderParams?.limit ?? 10
     const page = orderParams?.page ?? 1
-    const factsResult = await this.factRepository.findByAuthorOrMention(query, { page, limit }, viewerId, orderParams)
-    const { results: facts } = factsResult
+    const skip = orderParams?.skip ?? (page - 1) * limit
+    const take = limit + 1
 
-    const factEntries: FeedEntry[] = facts.map(fact => ({
-      type: 'fact',
-      fact: mapFactViewToResponse(fact),
-      createdAt: fact.createdAt.toISOString()
-    }))
-
-    // Collect unique author IDs from matched facts to fetch their reposts
-    const authorIds = [...new Set(facts.map(f => f.authorId))]
-    if (authorIds.length === 0) {
-      return {
-        results: factEntries,
-        hasMore: factsResult.nextPage !== null
-      }
+    const { authorIds, factIds } = await this.factRepository.findMentionSearchTargets(query)
+    if (authorIds.length === 0 && factIds.length === 0) {
+      return { results: [], hasMore: false }
     }
 
-    const repostsResult = await this.repostRepository.findByAuthorsWithFact(authorIds, { page, limit })
-    const { results: reposts } = repostsResult
-    const repostEntries = await this.enrichReposts(reposts, viewerId)
+    const entries = await this.factRepository.findFeedPaginationByAuthorsOrFactIds(authorIds, factIds, { skip, take })
+    const hasMore = entries.length > limit
+    const pageEntries = entries.slice(0, limit)
+    const results = await this.hydrator.hydrate(pageEntries, viewerId)
 
     return {
-      results: [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-      hasMore: (factsResult.nextPage !== null) || (repostsResult.nextPage !== null)
+      results,
+      hasMore
     }
   }
 
   async executeByHashtag (tag: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<SearchPostsResult> {
     const limit = orderParams?.limit ?? 10
     const page = orderParams?.page ?? 1
-    const factsResult = await this.factRepository.findByHashtag(tag, { page, limit }, viewerId, orderParams)
-    const { results: facts } = factsResult
+    const skip = orderParams?.skip ?? (page - 1) * limit
+    const take = limit + 1
 
-    const factEntries: FeedEntry[] = facts.map(fact => ({
-      type: 'fact',
-      fact: mapFactViewToResponse(fact),
-      createdAt: fact.createdAt.toISOString()
-    }))
-
-    const factIds = facts.map(f => f.id)
+    const factIds = await this.factRepository.findFactIdsByHashtag(tag)
     if (factIds.length === 0) {
-      return {
-        results: factEntries,
-        hasMore: factsResult.nextPage !== null
-      }
+      return { results: [], hasMore: false }
     }
 
-    const repostsResult = await this.repostRepository.findByFactIdsWithFact(factIds, { page, limit })
-    const { results: reposts } = repostsResult
-    const repostEntries = await this.enrichReposts(reposts, viewerId)
+    const entries = await this.factRepository.findFeedPaginationByFactIds(factIds, { skip, take })
+    const hasMore = entries.length > limit
+    const pageEntries = entries.slice(0, limit)
+    const results = await this.hydrator.hydrate(pageEntries, viewerId)
 
     return {
-      results: [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-      hasMore: (factsResult.nextPage !== null) || (repostsResult.nextPage !== null)
+      results,
+      hasMore
     }
   }
 }
