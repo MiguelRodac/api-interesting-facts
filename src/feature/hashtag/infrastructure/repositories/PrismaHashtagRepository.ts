@@ -77,6 +77,8 @@ export class PrismaHashtagRepository {
     const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
     const limit = orderParams?.limit ?? 10
 
+    const skip = orderParams?.skip ?? (orderParams?.page != null ? (orderParams.page - 1) * limit : 0)
+
     const hashtags = await prisma.hashtag.findMany({
       where: {
         tag: { contains: normalizedQuery }
@@ -89,6 +91,7 @@ export class PrismaHashtagRepository {
       orderBy: orderBy === 'recent'
         ? { createdAt: dir }
         : { factHashtags: { _count: dir } },
+      skip,
       take: limit
     })
 

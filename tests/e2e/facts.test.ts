@@ -427,6 +427,38 @@ describe('Facts Endpoints', () => {
       assertEnrichment(found)
     })
 
+    it('findBySearch — GET /facts/search user pagination across pages', async () => {
+      // Create additional test users matching the prefix
+      const u1 = await prisma.user.create({
+        data: { firebaseUid: 'paginated-user-1', email: 'p1@test.com', username: 'pagtestuser1', displayName: 'Pag Test 1' }
+      })
+      const u2 = await prisma.user.create({
+        data: { firebaseUid: 'paginated-user-2', email: 'p2@test.com', username: 'pagtestuser2', displayName: 'Pag Test 2' }
+      })
+
+      try {
+        const resPage1 = await request(app)
+          .get('/facts/search?q=%40pagtest&page=1&limit=1')
+          .set('Authorization', `Bearer ${validToken}`)
+
+        expect(resPage1.status).toBe(200)
+        expect(resPage1.body.users).toHaveLength(1)
+        expect(resPage1.body.hasMore).toBe(true)
+
+        const resPage2 = await request(app)
+          .get('/facts/search?q=%40pagtest&page=2&limit=1')
+          .set('Authorization', `Bearer ${validToken}`)
+
+        expect(resPage2.status).toBe(200)
+        expect(resPage2.body.users).toHaveLength(1)
+        expect(resPage2.body.users[0].id).not.toBe(resPage1.body.users[0].id)
+      } finally {
+        await prisma.user.deleteMany({
+          where: { firebaseUid: { in: [u1.firebaseUid, u2.firebaseUid] } }
+        })
+      }
+    })
+
     it('findByAuthorOrMention — GET /facts/search matches fact with comment mention', async () => {
       const fact = await prisma.fact.create({
         data: { authorId: 'other-uid', content: 'Fact without direct author mention in body' }

@@ -127,14 +127,13 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('@')) {
       const query = sanitized.slice(1)
       const [users, feedEntries] = await Promise.all([
-        userRepository.findBySearch(query, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
-        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
+        userRepository.findBySearch(query, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+        searchPosts.executeByAuthorOrMention(query, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
       ])
 
-      const total = users.length + feedEntries.length
-      const hasMore = total > limit
-      const pagedUsers = users.slice(skip, skip + limit)
-      const pagedEntries = feedEntries.slice(skip, skip + limit)
+      const hasMore = users.length > limit || feedEntries.length > limit
+      const pagedUsers = users.slice(0, limit)
+      const pagedEntries = feedEntries.slice(0, limit)
 
       res.status(200).json({
         users: pagedUsers.map(u => ({
@@ -156,14 +155,13 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     if (sanitized.startsWith('#')) {
       const query = sanitized.slice(1)
       const [hashtags, feedEntries] = await Promise.all([
-        searchHashtags.execute(query, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
-        searchPosts.executeByHashtag(query, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
+        searchHashtags.execute(query, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+        searchPosts.executeByHashtag(query, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
       ])
 
-      const total = hashtags.length + feedEntries.length
-      const hasMore = total > limit
-      const pagedHashtags = hashtags.slice(skip, skip + limit)
-      const pagedEntries = feedEntries.slice(skip, skip + limit)
+      const hasMore = hashtags.length > limit || feedEntries.length > limit
+      const pagedHashtags = hashtags.slice(0, limit)
+      const pagedEntries = feedEntries.slice(0, limit)
 
       res.status(200).json({
         users: [],
@@ -178,10 +176,10 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
 
     // Plain query — merge all categories
     const [users, factsAndRepostsByTitleOrHashtag, hashtags, authorMentionEntries] = await Promise.all([
-      userRepository.findBySearch(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
-      searchPosts.execute(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
-      searchHashtags.execute(sanitized, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit }),
-      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, limit: fetchLimit })
+      userRepository.findBySearch(sanitized, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+      searchPosts.execute(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+      searchHashtags.execute(sanitized, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit }),
+      searchPosts.executeByAuthorOrMention(sanitized, viewerId, { order_by: orderBy, order_dir: orderDir, skip, limit: fetchLimit })
     ])
 
     const entriesMap = new Map<string, FeedEntry>()
@@ -197,29 +195,19 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     }
     const mergedEntries = Array.from(entriesMap.values())
 
-    // Merge all into one list for pagination: users, hashtags, then feed entries
-    const allItems: Array<Record<string, unknown>> = [
-      ...users.map(u => ({ ...u, __type: 'user' })),
-      ...hashtags.map(h => ({ ...h, __type: 'hashtag' })),
-      ...mergedEntries.map(e => ({ ...e, __type: 'entry' }))
-    ]
-
-    const total = allItems.length
-    const hasMore = total > limit
-    const paged = allItems.slice(skip, skip + limit)
-
-    const pagedUsers = paged.filter(item => item.__type === 'user').map(u => ({
-      id: u.id,
-      username: u.username,
-      displayName: u.displayName,
-      avatarUrl: u.avatarUrl,
-      avatarColor: u.avatarColor
-    }))
-    const pagedHashtags = paged.filter(item => item.__type === 'hashtag')
-    const pagedEntries = paged.filter(item => item.__type === 'entry')
+    const hasMore = users.length > limit || hashtags.length > limit || mergedEntries.length > limit
+    const pagedUsers = users.slice(0, limit)
+    const pagedHashtags = hashtags.slice(0, limit)
+    const pagedEntries = mergedEntries.slice(0, limit)
 
     res.status(200).json({
-      users: pagedUsers,
+      users: pagedUsers.map(u => ({
+        id: u.id,
+        username: u.username,
+        displayName: u.displayName,
+        avatarUrl: u.avatarUrl,
+        avatarColor: u.avatarColor
+      })),
       results: pagedEntries,
       hashtags: pagedHashtags,
       page,

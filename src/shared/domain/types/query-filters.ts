@@ -9,6 +9,8 @@ export interface SearchOrderParams {
   order_by?: 'popular' | 'recent'
   order_dir?: 'asc' | 'desc'
   limit?: number
+  skip?: number
+  page?: number
 }
 
 export interface BaseQueryParams {

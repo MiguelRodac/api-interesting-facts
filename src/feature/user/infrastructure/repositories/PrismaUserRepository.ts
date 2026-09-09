@@ -48,35 +48,8 @@ export class PrismaUserRepository implements UserRepository {
     const orderBy = orderParams?.order_by ?? 'popular'
     const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
     const limit = orderParams?.limit ?? 10
+    const skip = orderParams?.skip ?? (orderParams?.page != null ? (orderParams.page - 1) * limit : 0)
 
-    // For "popular" ordering by fact count, we fetch with _count and sort in memory
-    // For "recent" ordering, we sort by createdAt directly in the query
-    if (orderBy === 'recent') {
-      const users = await prisma.user.findMany({
-        where: {
-          OR: [
-            { username: { startsWith: query, mode: 'insensitive' } },
-            { displayName: { contains: query, mode: 'insensitive' } }
-          ]
-        },
-        take: limit,
-        orderBy: { createdAt: dir }
-      })
-
-      return users.map(user => ({
-        id: user.firebaseUid,
-        email: user.email,
-        username: user.username,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        avatarColor: user.avatarColor,
-        createdAt: user.createdAt
-      }))
-    }
-
-    // Popular: order by fact count
-    // Fetch more than limit to sort by count, then slice
-    const fetchLimit = Math.max(50, limit * 5)
     const users = await prisma.user.findMany({
       where: {
         OR: [
@@ -84,21 +57,14 @@ export class PrismaUserRepository implements UserRepository {
           { displayName: { contains: query, mode: 'insensitive' } }
         ]
       },
-      include: {
-        _count: {
-          select: { facts: true }
-        }
-      },
-      take: fetchLimit
+      skip,
+      take: limit,
+      orderBy: orderBy === 'recent'
+        ? { createdAt: dir }
+        : { facts: { _count: dir } }
     })
 
-    // Sort by fact count and take top `limit`
-    users.sort((a, b) => dir === 'desc'
-      ? b._count.facts - a._count.facts
-      : a._count.facts - b._count.facts
-    )
-
-    return users.slice(0, limit).map(user => ({
+    return users.map(user => ({
       id: user.firebaseUid,
       email: user.email,
       username: user.username,

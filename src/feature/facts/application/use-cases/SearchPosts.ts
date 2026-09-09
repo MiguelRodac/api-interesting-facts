@@ -82,7 +82,8 @@ export class SearchPosts {
 
   async execute (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FeedEntry[]> {
     const limit = orderParams?.limit ?? 10
-    const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page: 1, limit }, viewerId, orderParams)
+    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const { results: facts } = await this.factRepository.findByTitleOrHashtag(query, { page, limit }, viewerId, orderParams)
 
     const factEntries: FeedEntry[] = facts.map(fact => ({
       type: 'fact',
@@ -93,7 +94,7 @@ export class SearchPosts {
     const factIds = facts.map(f => f.id)
     if (factIds.length === 0) return factEntries
 
-    const { results: reposts } = await this.repostRepository.findByFactIdsWithFact(factIds, { page: 1, limit })
+    const { results: reposts } = await this.repostRepository.findByFactIdsWithFact(factIds, { page, limit })
     const repostEntries = await this.enrichReposts(reposts, viewerId)
 
     return [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -101,7 +102,8 @@ export class SearchPosts {
 
   async executeByAuthorOrMention (query: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FeedEntry[]> {
     const limit = orderParams?.limit ?? 10
-    const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page: 1, limit }, viewerId, orderParams)
+    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const { results: facts } = await this.factRepository.findByAuthorOrMention(query, { page, limit }, viewerId, orderParams)
 
     const factEntries: FeedEntry[] = facts.map(fact => ({
       type: 'fact',
@@ -113,7 +115,7 @@ export class SearchPosts {
     const authorIds = [...new Set(facts.map(f => f.authorId))]
     if (authorIds.length === 0) return factEntries
 
-    const { results: reposts } = await this.repostRepository.findByAuthorsWithFact(authorIds, { page: 1, limit })
+    const { results: reposts } = await this.repostRepository.findByAuthorsWithFact(authorIds, { page, limit })
     const repostEntries = await this.enrichReposts(reposts, viewerId)
 
     return [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -121,7 +123,8 @@ export class SearchPosts {
 
   async executeByHashtag (tag: string, viewerId?: string, orderParams?: SearchOrderParams): Promise<FeedEntry[]> {
     const limit = orderParams?.limit ?? 10
-    const { results: facts } = await this.factRepository.findByHashtag(tag, { page: 1, limit }, viewerId, orderParams)
+    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const { results: facts } = await this.factRepository.findByHashtag(tag, { page, limit }, viewerId, orderParams)
 
     const factEntries: FeedEntry[] = facts.map(fact => ({
       type: 'fact',
@@ -132,7 +135,7 @@ export class SearchPosts {
     const factIds = facts.map(f => f.id)
     if (factIds.length === 0) return factEntries
 
-    const { results: reposts } = await this.repostRepository.findByFactIdsWithFact(factIds, { page: 1, limit })
+    const { results: reposts } = await this.repostRepository.findByFactIdsWithFact(factIds, { page, limit })
     const repostEntries = await this.enrichReposts(reposts, viewerId)
 
     return [...factEntries, ...repostEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
