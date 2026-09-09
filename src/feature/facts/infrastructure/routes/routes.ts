@@ -129,7 +129,8 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         searchPosts.executeByAuthorOrMention(query, viewerId, orderParams)
       ])
 
-      const hasMore = (usersResult.nextPage !== null) || feedResult.hasMore
+      const hasMore = (usersResult.nextPage !== null) || feedResult.hasMore || feedResult.results.length > limit
+      const pagedEntries = feedResult.results.slice(0, limit)
 
       res.status(200).json({
         users: usersResult.results.map(u => ({
@@ -139,7 +140,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
           avatarUrl: u.avatarUrl,
           avatarColor: u.avatarColor
         })),
-        results: feedResult.results,
+        results: pagedEntries,
         hashtags: [],
         page,
         limit,
@@ -155,11 +156,12 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         searchPosts.executeByHashtag(query, viewerId, orderParams)
       ])
 
-      const hasMore = hashtagsResult.hasMore || feedResult.hasMore
+      const hasMore = hashtagsResult.hasMore || feedResult.hasMore || feedResult.results.length > limit
+      const pagedEntries = feedResult.results.slice(0, limit)
 
       res.status(200).json({
         users: [],
-        results: feedResult.results,
+        results: pagedEntries,
         hashtags: hashtagsResult.results,
         page,
         limit,
@@ -188,11 +190,13 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
       }
     }
     const mergedEntries = Array.from(entriesMap.values())
+    const pagedEntries = mergedEntries.slice(0, limit)
 
     const hasMore = (usersResult.nextPage !== null) ||
       hashtagsResult.hasMore ||
       factsResult.hasMore ||
-      authorMentionResult.hasMore
+      authorMentionResult.hasMore ||
+      mergedEntries.length > limit
 
     res.status(200).json({
       users: usersResult.results.map(u => ({
@@ -202,7 +206,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
         avatarUrl: u.avatarUrl,
         avatarColor: u.avatarColor
       })),
-      results: mergedEntries,
+      results: pagedEntries,
       hashtags: hashtagsResult.results,
       page,
       limit,
