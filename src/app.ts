@@ -40,18 +40,31 @@ const RATE_LIMIT_MAX = Number(process.env.RATE_LIMIT_MAX)
 const RATE_LIMIT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS)
 
 if (!isDev) {
+  const rateLimitHandler = (req: Request, res: express.Response): void => {
+    const traceId = crypto.randomUUID()
+    const baseUrl = process.env.BASE_URL ?? 'https://api-interesting-facts.onrender.com'
+    res.setHeader('Content-Type', 'application/problem+json')
+    res.setHeader('X-Trace-Id', traceId)
+    res.status(429).json({
+      type: `${baseUrl}/errors/rate-limit/exceeded`,
+      title: 'Too Many Requests',
+      status: 429,
+      detail: `Rate limit exceeded. Try again in ${Math.round(RATE_LIMIT_WINDOW_MS / 60000)} minutes.`,
+      error_code: 'RATE_LIMITED',
+      category: 'infrastructure',
+      instance: req.originalUrl,
+      trace_id: traceId,
+      timestamp: new Date().toISOString()
+    })
+  }
+
   const limiter = rateLimit({
     windowMs: RATE_LIMIT_WINDOW_MS,
     max: RATE_LIMIT_MAX,
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) => req.path.startsWith('/ping'),
-    message: (req: Request) => ({
-      status: 429,
-      error: 'Too Many Requests',
-      message: `Rate limit exceeded. Try again in ${Math.round(RATE_LIMIT_WINDOW_MS / 60000)} minutes.`,
-      documentation: `${req.protocol}://${req.get('host') ?? 'localhost'}/api/docs`
-    })
+    handler: rateLimitHandler
   })
   app.use(limiter)
 
@@ -62,12 +75,7 @@ if (!isDev) {
     max: autocompleteLimit,
     standardHeaders: true,
     legacyHeaders: false,
-    message: (req: Request) => ({
-      status: 429,
-      error: 'Too Many Requests',
-      message: `Rate limit exceeded. Try again in ${Math.round(RATE_LIMIT_WINDOW_MS / 60000)} minutes.`,
-      documentation: `${req.protocol}://${req.get('host') ?? 'localhost'}/api/docs`
-    })
+    handler: rateLimitHandler
   })
   app.use('/hashtags', autocompleteLimiter)
   app.use('/users/search', autocompleteLimiter)
