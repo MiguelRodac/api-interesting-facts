@@ -2,7 +2,7 @@ import prisma from '@shared/infrastructure/prisma'
 import { type Hashtag } from '../../domain/models/Hashtag'
 import { type HashtagResponse } from '../../application/dto/HashtagResponse'
 import { type HashtagWithUsage } from '../../application/dto/HashtagWithUsage'
-import { type SearchOrderParams } from '@shared/domain/types/query-filters'
+import { buildPaginatedResult, type ResultWithPagination, type SearchOrderParams } from '@shared/domain/types/query-filters'
 
 export class PrismaHashtagRepository {
   async upsertByTag (tag: string): Promise<Hashtag> {
@@ -71,33 +71,33 @@ export class PrismaHashtagRepository {
     })
   }
 
-  async findByTagUsed (query: string, orderParams?: SearchOrderParams): Promise<HashtagResponse[]> {
+  async findByTagUsed (query: string, orderParams?: SearchOrderParams): Promise<ResultWithPagination<HashtagResponse>> {
     const normalizedQuery = query.toLowerCase()
     const orderBy = orderParams?.order_by ?? 'popular'
     const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
     const limit = orderParams?.limit ?? 10
+    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const skip = orderParams?.skip ?? (page - 1) * limit
 
-    const skip = orderParams?.skip ?? (orderParams?.page != null ? (orderParams.page - 1) * limit : 0)
+    const where = {
+      tag: { contains: normalizedQuery },
+      factHashtags: { some: {} }
+    }
 
-    const hashtags = await prisma.hashtag.findMany({
-      where: {
-        tag: { contains: normalizedQuery }
-      },
-      include: {
-        _count: {
-          select: { factHashtags: true }
-        }
-      },
-      orderBy: orderBy === 'recent'
-        ? { createdAt: dir }
-        : { factHashtags: { _count: dir } },
-      skip,
-      take: limit
-    })
+    const [hashtags, total] = await Promise.all([
+      prisma.hashtag.findMany({
+        where,
+        orderBy: orderBy === 'recent'
+          ? { createdAt: dir }
+          : { factHashtags: { _count: dir } },
+        skip,
+        take: limit
+      }),
+      prisma.hashtag.count({ where })
+    ])
 
-    return hashtags
-      .filter(h => h._count.factHashtags > 0)
-      .map(h => ({ id: h.id, tag: h.tag }))
+    const mapped = hashtags.map(h => ({ id: h.id, tag: h.tag }))
+    return buildPaginatedResult(mapped, total, page, limit)
   }
 
   async findPopular (query?: string, limit: number = 10): Promise<HashtagWithUsage[]> {

@@ -1,12 +1,12 @@
 import { type User, type CreateUserData, type UpdateUserData } from '../entities/User'
-import { type SearchOrderParams } from '@shared/domain/types/query-filters'
+import { type ResultWithPagination, type SearchOrderParams } from '@shared/domain/types/query-filters'
 
 export interface UserRepository {
   findById: (id: string) => Promise<User | null>
   findByFirebaseUid: (firebaseUid: string) => Promise<User | null>
   findByUsername: (username: string) => Promise<User | null>
   findByEmail: (email: string) => Promise<User | null>
-  findBySearch: (query: string, orderParams?: SearchOrderParams) => Promise<User[]>
+  findBySearch: (query: string, orderParams?: SearchOrderParams) => Promise<ResultWithPagination<User>>
   findUidsByUsernames: (usernames: string[]) => Promise<Map<string, string>>
   existsByUsername: (username: string) => Promise<boolean>
   existsByEmail: (email: string) => Promise<boolean>

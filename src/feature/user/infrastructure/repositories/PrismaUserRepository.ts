@@ -1,7 +1,7 @@
 import prisma from '@shared/infrastructure/prisma'
 import { type User, type CreateUserData, type UpdateUserData } from '../../domain/entities/User'
 import { type UserRepository } from '../../domain/ports/UserRepository'
-import { type SearchOrderParams } from '@shared/domain/types/query-filters'
+import { buildPaginatedResult, type ResultWithPagination, type SearchOrderParams } from '@shared/domain/types/query-filters'
 
 export class PrismaUserRepository implements UserRepository {
   async findById (id: string): Promise<User | null> {
@@ -44,27 +44,33 @@ export class PrismaUserRepository implements UserRepository {
     }
   }
 
-  async findBySearch (query: string, orderParams?: SearchOrderParams): Promise<User[]> {
+  async findBySearch (query: string, orderParams?: SearchOrderParams): Promise<ResultWithPagination<User>> {
     const orderBy = orderParams?.order_by ?? 'popular'
     const dir = orderParams?.order_dir === 'asc' ? 'asc' : 'desc'
     const limit = orderParams?.limit ?? 10
-    const skip = orderParams?.skip ?? (orderParams?.page != null ? (orderParams.page - 1) * limit : 0)
+    const page = orderParams?.page ?? (orderParams?.skip != null && limit > 0 ? Math.floor(orderParams.skip / limit) + 1 : 1)
+    const skip = orderParams?.skip ?? (page - 1) * limit
 
-    const users = await prisma.user.findMany({
-      where: {
-        OR: [
-          { username: { startsWith: query, mode: 'insensitive' } },
-          { displayName: { contains: query, mode: 'insensitive' } }
-        ]
-      },
-      skip,
-      take: limit,
-      orderBy: orderBy === 'recent'
-        ? { createdAt: dir }
-        : { facts: { _count: dir } }
-    })
+    const where = {
+      OR: [
+        { username: { startsWith: query, mode: 'insensitive' as const } },
+        { displayName: { contains: query, mode: 'insensitive' as const } }
+      ]
+    }
 
-    return users.map(user => ({
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: orderBy === 'recent'
+          ? { createdAt: dir }
+          : { facts: { _count: dir } }
+      }),
+      prisma.user.count({ where })
+    ])
+
+    const mappedUsers = users.map(user => ({
       id: user.firebaseUid,
       email: user.email,
       username: user.username,
@@ -73,6 +79,8 @@ export class PrismaUserRepository implements UserRepository {
       avatarColor: user.avatarColor,
       createdAt: user.createdAt
     }))
+
+    return buildPaginatedResult(mappedUsers, total, page, limit)
   }
 
   async findUidsByUsernames (usernames: string[]): Promise<Map<string, string>> {

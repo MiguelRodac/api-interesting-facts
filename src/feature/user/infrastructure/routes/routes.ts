@@ -138,7 +138,7 @@ router.patch('/me', requireAuth, requireProfile, async (req: Request, res: Respo
 router.get('/', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { q, limit } = MentionQuerySchema.parse(req.query)
-    const users = await userRepository.findBySearch(q.trim(), { order_by: 'popular', order_dir: 'desc', limit })
+    const { results: users } = await userRepository.findBySearch(q.trim(), { order_by: 'popular', order_dir: 'desc', limit })
     res.status(200).json({
       results: users.map(u => ({
         id: u.id,

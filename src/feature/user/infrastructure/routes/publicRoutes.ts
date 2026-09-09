@@ -51,7 +51,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response, next: Nex
     }
 
     const { q } = parsed.data
-    const users = await userRepository.findBySearch(q)
+    const { results: users } = await userRepository.findBySearch(q)
 
     const response = users.map(user => ({
       id: user.id,
