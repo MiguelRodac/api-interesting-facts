@@ -33,12 +33,22 @@ const prisma = new PrismaClient()
 const TEST_UIDS = [
   'test-uid',
   'other-uid',
+  'third-uid',
   'no-profile-uid',
   'public-user-uid',
-  'another-user-uid'
+  'another-user-uid',
+  'search-user-1',
+  'search-user-2',
+  'paginated-user-1',
+  'paginated-user-2'
 ]
 
-afterEach(async () => {
+const TEST_TAGS = [
+  'populartag1',
+  'populartag2'
+]
+
+const cleanupTestData = async (): Promise<void> => {
   // Cleanup ONLY data created by tests (filtered by test UIDs).
   // Never touch rows belonging to real users.
   // Reposts reference facts, so delete them before facts/users.
@@ -56,9 +66,19 @@ afterEach(async () => {
   })
   await prisma.fact.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
   await prisma.user.deleteMany({ where: { firebaseUid: { in: TEST_UIDS } } })
+  await prisma.hashtag.deleteMany({ where: { tag: { in: TEST_TAGS } } })
+}
+
+beforeAll(async () => {
+  await cleanupTestData()
+})
+
+afterEach(async () => {
+  await cleanupTestData()
 })
 
 afterAll(async () => {
+  await cleanupTestData()
   await prisma.$disconnect()
 })
 

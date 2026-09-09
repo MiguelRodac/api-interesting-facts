@@ -109,6 +109,19 @@ describe('Users Endpoints', () => {
   })
 
   describe('GET /auth (mention autocomplete)', () => {
+    beforeEach(async () => {
+      await prisma.user.upsert({
+        where: { firebaseUid: 'search-user-1' },
+        update: {},
+        create: {
+          firebaseUid: 'search-user-1',
+          email: 'search1@example.com',
+          username: 'autocompletesearch1',
+          displayName: 'Search Alpha'
+        }
+      })
+    })
+
     it('should return standardized pagination wrapper', async () => {
       const res = await request(app)
         .get('/auth?q=autocompletesearch&page=1&limit=10')
@@ -125,6 +138,16 @@ describe('Users Endpoints', () => {
 
   describe('GET /hashtags', () => {
     beforeEach(async () => {
+      await prisma.user.upsert({
+        where: { firebaseUid: 'search-user-1' },
+        update: {},
+        create: {
+          firebaseUid: 'search-user-1',
+          email: 'search1@example.com',
+          username: 'autocompletesearch1',
+          displayName: 'Search Alpha'
+        }
+      })
       const tag1 = await prisma.hashtag.upsert({
         where: { tag: 'populartag1' },
         update: {},
