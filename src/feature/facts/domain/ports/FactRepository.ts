@@ -1,6 +1,7 @@
 import { type Fact, type CreateFactData, type UpdateFactData } from '../entities/Fact'
 import { type FactView } from '../models/FactView'
 import { type BaseQueryParams, type ResultWithPagination, type SearchOrderParams } from '@shared/domain/types/query-filters'
+import { type CursorPayload } from '@shared/domain/types/cursor-pagination'
 import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 import { type CommentPreview } from '@comments/application/dto/CommentPreview'
 
@@ -41,8 +42,8 @@ export interface FactRepository {
   batchEnrichFacts: (facts: Array<{ id: string, authorId: string, author: { firebaseUid: string, username: string, email: string, displayName: string, avatarUrl: string | null, avatarColor: string | null }, title: string | null, content: string, createdAt: Date, updatedAt: Date }>, enrichmentMaps: EnrichmentMaps, viewerId?: string) => Promise<FactView[]>
   batchViewerContext: (factIds: string[], viewerId: string) => Promise<{ viewerLikedSet: Set<string>, viewerRepostedSet: Set<string> }>
 
-  findFeedPagination: (params: { skip: number, take: number }) => Promise<FeedPaginationEntry[]>
-  findAuthorFeedPagination: (authorId: string, params: { skip: number, take: number }) => Promise<FeedPaginationEntry[]>
+  findFeedPagination: (params: { cursor?: CursorPayload | null, take: number }) => Promise<FeedPaginationEntry[]>
+  findAuthorFeedPagination: (authorId: string, params: { cursor?: CursorPayload | null, take: number }) => Promise<FeedPaginationEntry[]>
   findFactIdsByQuery: (query: string) => Promise<string[]>
   findFactIdsByHashtag: (tag: string) => Promise<string[]>
   findMentionSearchTargets: (query: string) => Promise<{ authorIds: string[], factIds: string[] }>

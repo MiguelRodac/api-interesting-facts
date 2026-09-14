@@ -5,6 +5,7 @@ import { type FactView } from '../../domain/models/FactView'
 import { type UserAvatarPreview } from '@shared/domain/types/UserAvatarPreview'
 import { type CommentPreview } from '@comments/application/dto/CommentPreview'
 import { DEFAULT_PAGE, DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination, type SearchOrderParams, buildPaginatedResult } from '@shared/domain/types/query-filters'
+import { type CursorPayload } from '@shared/domain/types/cursor-pagination'
 import { ValidationError } from '@shared/domain/errors/ValidationError'
 
 function buildOrderBy (orderBy?: string, orderDir?: string): Record<string, unknown> {
@@ -995,19 +996,46 @@ export class PrismaFactRepository implements FactRepository {
     return { viewerLikedSet, viewerRepostedSet }
   }
 
-  async findFeedPagination (params: { skip: number, take: number }): Promise<FeedPaginationEntry[]> {
+  async findFeedPagination (params: { cursor?: CursorPayload | null, take: number }): Promise<FeedPaginationEntry[]> {
+    const where = params.cursor != null
+      ? {
+          OR: [
+            { createdAt: { lt: params.cursor.createdAt } },
+            {
+              createdAt: params.cursor.createdAt,
+              id: { lt: params.cursor.id }
+            }
+          ]
+        }
+      : undefined
+
     return await prisma.viewFactsRepostPagination.findMany({
-      orderBy: { createdAt: 'desc' },
-      skip: params.skip,
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: params.take
     })
   }
 
-  async findAuthorFeedPagination (authorId: string, params: { skip: number, take: number }): Promise<FeedPaginationEntry[]> {
+  async findAuthorFeedPagination (authorId: string, params: { cursor?: CursorPayload | null, take: number }): Promise<FeedPaginationEntry[]> {
+    const cursorCondition = params.cursor != null
+      ? {
+          OR: [
+            { createdAt: { lt: params.cursor.createdAt } },
+            {
+              createdAt: params.cursor.createdAt,
+              id: { lt: params.cursor.id }
+            }
+          ]
+        }
+      : undefined
+
+    const where = cursorCondition != null
+      ? { AND: [{ authorId }, cursorCondition] }
+      : { authorId }
+
     return await prisma.viewFactsRepostPagination.findMany({
-      where: { authorId },
-      orderBy: { createdAt: 'desc' },
-      skip: params.skip,
+      where,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: params.take
     })
   }

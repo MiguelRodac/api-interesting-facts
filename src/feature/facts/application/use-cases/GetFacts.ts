@@ -4,7 +4,13 @@ import { type LikeRepository } from '@likes/domain/ports/LikeRepository'
 import { type CommentRepository } from '@comments/domain/ports/CommentRepository'
 import { type FeedEntry } from '../dto/FeedEntry'
 import { FeedHydrator } from '../services/FeedHydrator'
-import { DEFAULT_LIMIT, type BaseQueryParams, type ResultWithPagination } from '@shared/domain/types/query-filters'
+import { DEFAULT_LIMIT } from '@shared/domain/types/query-filters'
+import {
+  type CursorQueryParams,
+  type ResultWithCursor,
+  decodeCursor,
+  encodeCursor
+} from '@shared/domain/types/cursor-pagination'
 
 export class GetFacts {
   private readonly factRepository: FactRepository
@@ -15,22 +21,26 @@ export class GetFacts {
     this.hydrator = new FeedHydrator(factRepository, repostRepository, likeRepository, commentRepository)
   }
 
-  async execute (params?: BaseQueryParams, viewerId?: string): Promise<ResultWithPagination<FeedEntry>> {
+  async execute (params?: CursorQueryParams, viewerId?: string): Promise<ResultWithCursor<FeedEntry>> {
     const limit = params?.limit ?? DEFAULT_LIMIT
-    const page = params?.page ?? 1
-    const skip = (page - 1) * limit
+    const cursor = decodeCursor(params?.cursor)
     const take = limit + 1
 
-    const entries = await this.factRepository.findFeedPagination({ skip, take })
+    const entries = await this.factRepository.findFeedPagination({ cursor, take })
     const hasMore = entries.length > limit
     const pageEntries = entries.slice(0, limit)
     const results = await this.hydrator.hydrate(pageEntries, viewerId)
 
+    const lastEntry = pageEntries.length > 0 ? pageEntries[pageEntries.length - 1] : null
+    const nextCursor = hasMore && lastEntry != null
+      ? encodeCursor({ createdAt: lastEntry.createdAt, id: lastEntry.id })
+      : null
+
     return {
       results,
-      page,
       limit,
-      nextPage: hasMore ? page + 1 : null
+      nextCursor,
+      hasMore
     }
   }
 }

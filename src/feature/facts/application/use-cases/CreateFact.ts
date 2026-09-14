@@ -9,6 +9,7 @@ import { PrismaMentionRepository } from '@mentions/infrastructure/repositories/P
 import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
 import { MentionParser } from '@mentions/application/MentionParser'
 import { FACT_TITLE_MAX_LENGTH, FACT_CONTENT_MIN_LENGTH, FACT_CONTENT_MAX_LENGTH, validateMentions } from '@shared/domain/validation'
+import { sanitizeUnicode } from '@shared/domain/utils/unicode'
 
 export class CreateFact {
   private readonly factRepository: FactRepository
@@ -22,7 +23,8 @@ export class CreateFact {
   }
 
   async execute (data: CreateFactInput, authorId: string): Promise<FactResponse> {
-    const content = data.content.trim()
+    const content = sanitizeUnicode(data.content.trim())
+    const title = data.title != null ? sanitizeUnicode(data.title.trim()) : undefined
 
     if (content.length < FACT_CONTENT_MIN_LENGTH) {
       throw new ContentTooShortError(FACT_CONTENT_MIN_LENGTH)
@@ -32,7 +34,7 @@ export class CreateFact {
       throw new ContentTooLongError(FACT_CONTENT_MAX_LENGTH)
     }
 
-    if (data.title != null && data.title.length > FACT_TITLE_MAX_LENGTH) {
+    if (title != null && title.length > FACT_TITLE_MAX_LENGTH) {
       throw new TitleTooLongError(FACT_TITLE_MAX_LENGTH)
     }
 
@@ -40,7 +42,7 @@ export class CreateFact {
 
     const fact = await this.factRepository.create({
       authorId,
-      title: data.title,
+      title,
       content
     })
 

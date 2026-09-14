@@ -11,6 +11,7 @@ import { PrismaMentionRepository } from '@mentions/infrastructure/repositories/P
 import { PrismaUserRepository } from '@user/infrastructure/repositories/PrismaUserRepository'
 import { MentionParser } from '@mentions/application/MentionParser'
 import { FACT_TITLE_MAX_LENGTH, FACT_CONTENT_MIN_LENGTH, FACT_CONTENT_MAX_LENGTH, validateMentions } from '@shared/domain/validation'
+import { sanitizeUnicode } from '@shared/domain/utils/unicode'
 
 export class UpdateFact {
   private readonly factRepository: FactRepository
@@ -34,27 +35,30 @@ export class UpdateFact {
       throw new FactForbiddenError()
     }
 
-    if (data.title != null && data.title.length > FACT_TITLE_MAX_LENGTH) {
+    const normalizedTitle = data.title != null ? sanitizeUnicode(data.title.trim()) : data.title
+
+    if (normalizedTitle != null && normalizedTitle.length > FACT_TITLE_MAX_LENGTH) {
       throw new TitleTooLongError(FACT_TITLE_MAX_LENGTH)
     }
 
     let normalizedContent: string | undefined
     if (data.content !== undefined) {
-      normalizedContent = data.content.trim()
+      const content = sanitizeUnicode(data.content.trim())
 
-      if (normalizedContent.length < FACT_CONTENT_MIN_LENGTH) {
+      if (content.length < FACT_CONTENT_MIN_LENGTH) {
         throw new ContentTooShortError(FACT_CONTENT_MIN_LENGTH)
       }
 
-      if (normalizedContent.length > FACT_CONTENT_MAX_LENGTH) {
+      if (content.length > FACT_CONTENT_MAX_LENGTH) {
         throw new ContentTooLongError(FACT_CONTENT_MAX_LENGTH)
       }
 
-      validateMentions(normalizedContent)
+      validateMentions(content)
+      normalizedContent = content
     }
 
     await this.factRepository.update(id, {
-      title: data.title,
+      title: normalizedTitle,
       content: normalizedContent
     })
 

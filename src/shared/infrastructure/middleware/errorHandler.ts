@@ -30,6 +30,7 @@ const PG_ERROR_CODES = {
   NOT_NULL_VIOLATION: '23502',
   CHECK_VIOLATION: '23514',
   EXCLUSION_VIOLATION: '23P01',
+  CHARACTER_NOT_IN_REPERTOIRE: '22021',
   CONNECTION_FAILURE: '08006',
   CONNECTION_DOES_NOT_EXIST: '08003'
 } as const
@@ -43,6 +44,10 @@ interface PrismaError {
  * Convert Prisma errors to domain errors
  */
 function convertPrismaError (error: Error & PrismaError): DomainError | null {
+  if (error.name === 'PrismaClientValidationError') {
+    return new BadRequestError('Invalid database request parameters')
+  }
+
   const code = error.code
 
   if (code == null) {
@@ -50,6 +55,11 @@ function convertPrismaError (error: Error & PrismaError): DomainError | null {
   }
 
   switch (code) {
+    case 'InvalidArg':
+    case PG_ERROR_CODES.CHARACTER_NOT_IN_REPERTOIRE: {
+      return new BadRequestError('Invalid character encoding or malformed request payload')
+    }
+
     case PG_ERROR_CODES.UNIQUE_VIOLATION:
     case 'P2002': {
       return new ConflictError('Value already exists')

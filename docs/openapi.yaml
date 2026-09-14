@@ -2627,6 +2627,373 @@ components:
         - page
         - limit
         - nextPage
+    CursorFeedResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            oneOf:
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - fact
+                  fact:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                      author:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          username:
+                            type: string
+                          email:
+                            type: string
+                            format: email
+                          displayName:
+                            type: string
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                          avatarColor:
+                            type: string
+                            nullable: true
+                        required:
+                          - id
+                          - username
+                          - email
+                          - displayName
+                          - avatarUrl
+                          - avatarColor
+                      title:
+                        type: string
+                        nullable: true
+                      content:
+                        type: string
+                      likes:
+                        type: integer
+                      liked:
+                        type: boolean
+                      likeBy:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - username
+                            - avatarUrl
+                            - avatarColor
+                        maxItems: 3
+                      comments:
+                        type: integer
+                      commentsDetails:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          content:
+                            type: string
+                          author:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                              avatarUrl:
+                                type: string
+                                nullable: true
+                              avatarColor:
+                                type: string
+                                nullable: true
+                            required:
+                              - username
+                              - avatarUrl
+                              - avatarColor
+                          parentCommentId:
+                            type: string
+                            nullable: true
+                            format: uuid
+                          replies:
+                            type: integer
+                          createdAt:
+                            type: string
+                            format: date-time
+                        required:
+                          - id
+                          - content
+                          - author
+                          - parentCommentId
+                          - replies
+                          - createdAt
+                      repostCount:
+                        type: integer
+                      repostedByMe:
+                        type: boolean
+                      repostBy:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - username
+                            - avatarUrl
+                            - avatarColor
+                        maxItems: 2
+                      hashtags:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            tag:
+                              type: string
+                          required:
+                            - id
+                            - tag
+                      createdAt:
+                        type: string
+                        format: date-time
+                      updatedAt:
+                        type: string
+                        format: date-time
+                    required:
+                      - id
+                      - author
+                      - title
+                      - content
+                      - likes
+                      - likeBy
+                      - comments
+                      - commentsDetails
+                      - repostCount
+                      - repostBy
+                      - hashtags
+                      - createdAt
+                      - updatedAt
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - type
+                  - fact
+                  - createdAt
+              - type: object
+                properties:
+                  type:
+                    type: string
+                    enum:
+                      - repost
+                  repost:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: Repost UUID — use for like/comment on the repost
+                      factId:
+                        type: string
+                        format: uuid
+                        description: Original fact UUID — use for reposting the original fact
+                      author:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          username:
+                            type: string
+                          email:
+                            type: string
+                            format: email
+                          displayName:
+                            type: string
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                          avatarColor:
+                            type: string
+                            nullable: true
+                        required:
+                          - id
+                          - username
+                          - email
+                          - displayName
+                          - avatarUrl
+                          - avatarColor
+                        description: Author of the original fact
+                      title:
+                        type: string
+                        nullable: true
+                        description: Title of the original fact
+                      content:
+                        type: string
+                        description: Content of the original fact
+                      hashtags:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            tag:
+                              type: string
+                          required:
+                            - id
+                            - tag
+                      repostCount:
+                        type: integer
+                        description: Total reposts of the original fact
+                      repostedBy:
+                        type: object
+                        properties:
+                          username:
+                            type: string
+                          displayName:
+                            type: string
+                          avatarUrl:
+                            type: string
+                            nullable: true
+                          avatarColor:
+                            type: string
+                            nullable: true
+                          isMe:
+                            type: boolean
+                        required:
+                          - username
+                          - displayName
+                          - avatarUrl
+                          - avatarColor
+                          - isMe
+                        description: Who reposted this
+                      repostLikeCount:
+                        type: integer
+                        description: Likes ON this repost
+                      liked:
+                        type: boolean
+                        description: Did the authenticated user like this repost?
+                      likeBy:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            username:
+                              type: string
+                            avatarUrl:
+                              type: string
+                              nullable: true
+                            avatarColor:
+                              type: string
+                              nullable: true
+                          required:
+                            - username
+                            - avatarUrl
+                            - avatarColor
+                        maxItems: 3
+                        description: Recent users who liked this repost
+                      repostCommentCount:
+                        type: integer
+                        description: Comments ON this repost
+                      repostCommentsDetails:
+                        type: object
+                        nullable: true
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          content:
+                            type: string
+                          author:
+                            type: object
+                            properties:
+                              username:
+                                type: string
+                              avatarUrl:
+                                type: string
+                                nullable: true
+                              avatarColor:
+                                type: string
+                                nullable: true
+                            required:
+                              - username
+                              - avatarUrl
+                              - avatarColor
+                          parentCommentId:
+                            type: string
+                            nullable: true
+                            format: uuid
+                          replies:
+                            type: integer
+                          createdAt:
+                            type: string
+                            format: date-time
+                        required:
+                          - id
+                          - content
+                          - author
+                          - parentCommentId
+                          - replies
+                          - createdAt
+                        description: First comment on this repost
+                      createdAt:
+                        type: string
+                        format: date-time
+                        description: When the repost was created
+                    required:
+                      - id
+                      - factId
+                      - author
+                      - title
+                      - content
+                      - hashtags
+                      - repostCount
+                      - repostedBy
+                      - repostLikeCount
+                      - likeBy
+                      - repostCommentCount
+                      - repostCommentsDetails
+                      - createdAt
+                  createdAt:
+                    type: string
+                    format: date-time
+                required:
+                  - type
+                  - repost
+                  - createdAt
+        limit:
+          type: integer
+        nextCursor:
+          type: string
+          nullable: true
+        hasMore:
+          type: boolean
+      required:
+        - results
+        - limit
+        - nextCursor
+        - hasMore
     PaginatedRepostPreviewResponse:
       type: object
       properties:
@@ -5438,12 +5805,11 @@ paths:
             type: string
             pattern: ^\d+\.\d+\.\d+$
         - schema:
-            type: integer
-            minimum: 0
-            exclusiveMinimum: true
-            default: 1
+            type: string
+            description: Opaque Base64URL cursor for keyset pagination
           required: false
-          name: page
+          description: Opaque Base64URL cursor for keyset pagination
+          name: cursor
           in: query
         - schema:
             type: integer
@@ -5451,28 +5817,14 @@ paths:
             exclusiveMinimum: true
             maximum: 100
             default: 10
+            description: Items per page (max 100)
           required: false
+          description: Items per page (max 100)
           name: limit
-          in: query
-        - schema:
-            type: string
-            enum:
-              - createdAt
-              - updatedAt
-          required: false
-          name: order_by
-          in: query
-        - schema:
-            type: string
-            enum:
-              - asc
-              - desc
-          required: false
-          name: order_dir
           in: query
       responses:
         '200':
-          description: Paginated feed with facts and reposts
+          description: Cursor paginated feed with facts and reposts
           content:
             application/json:
               schema:
@@ -5830,18 +6182,18 @@ paths:
                             - type
                             - repost
                             - createdAt
-                  page:
-                    type: integer
                   limit:
                     type: integer
-                  nextPage:
-                    type: integer
+                  nextCursor:
+                    type: string
                     nullable: true
+                  hasMore:
+                    type: boolean
                 required:
                   - results
-                  - page
                   - limit
-                  - nextPage
+                  - nextCursor
+                  - hasMore
     post:
       summary: Create a new fact
       operationId: createFact
@@ -8242,12 +8594,11 @@ paths:
           name: authorId
           in: path
         - schema:
-            type: integer
-            minimum: 0
-            exclusiveMinimum: true
-            default: 1
+            type: string
+            description: Opaque Base64URL cursor for keyset pagination
           required: false
-          name: page
+          description: Opaque Base64URL cursor for keyset pagination
+          name: cursor
           in: query
         - schema:
             type: integer
@@ -8255,28 +8606,14 @@ paths:
             exclusiveMinimum: true
             maximum: 100
             default: 10
+            description: Items per page (max 100)
           required: false
+          description: Items per page (max 100)
           name: limit
-          in: query
-        - schema:
-            type: string
-            enum:
-              - createdAt
-              - updatedAt
-          required: false
-          name: order_by
-          in: query
-        - schema:
-            type: string
-            enum:
-              - asc
-              - desc
-          required: false
-          name: order_dir
           in: query
       responses:
         '200':
-          description: Paginated feed with facts and reposts by author
+          description: Cursor paginated feed with facts and reposts by author
           content:
             application/json:
               schema:
@@ -8634,18 +8971,18 @@ paths:
                             - type
                             - repost
                             - createdAt
-                  page:
-                    type: integer
                   limit:
                     type: integer
-                  nextPage:
-                    type: integer
+                  nextCursor:
+                    type: string
                     nullable: true
+                  hasMore:
+                    type: boolean
                 required:
                   - results
-                  - page
                   - limit
-                  - nextPage
+                  - nextCursor
+                  - hasMore
   /hashtags:
     get:
       summary: Get popular hashtags for autocomplete

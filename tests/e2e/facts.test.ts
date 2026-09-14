@@ -75,6 +75,20 @@ describe('Facts Endpoints', () => {
       })
     })
 
+    it('should create a fact with lone surrogate characters safely', async () => {
+      const res = await request(app)
+        .post('/facts')
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({
+          title: 'Surrogate \ud83e test',
+          content: 'This fact has broken surrogate \ud83e\ud83e\udd14\udd14 text'
+        })
+
+      expect(res.status).toBe(201)
+      expect(res.body.title).toBe('Surrogate \uFFFD test')
+      expect(res.body.content).toBe('This fact has broken surrogate \uFFFD🤔\uFFFD text')
+    })
+
     it('should return 400 for content too short', async () => {
       const res = await request(app)
         .post('/facts')
@@ -128,17 +142,22 @@ describe('Facts Endpoints', () => {
       expect(res.status).toBe(200)
       expect(Array.isArray(res.body.results)).toBe(true)
       expect(res.body.results.length).toBeGreaterThan(0)
-      expect(res.body.page).toBe(1)
       expect(res.body.limit).toBe(20)
+      expect(typeof res.body.hasMore).toBe('boolean')
     })
 
-    it('should return empty array beyond last page', async () => {
-      // A page beyond any data guarantees empty results without assuming the DB is clean
-      const res = await request(app).get('/facts?page=999')
+    it('should paginate with cursor', async () => {
+      const page1 = await request(app).get('/facts?limit=1')
+      expect(page1.status).toBe(200)
+      expect(page1.body.limit).toBe(1)
+      expect(Array.isArray(page1.body.results)).toBe(true)
 
-      expect(res.status).toBe(200)
-      expect(Array.isArray(res.body.results)).toBe(true)
-      expect(res.body.results.length).toBe(0)
+      if (page1.body.hasMore && page1.body.nextCursor) {
+        const page2 = await request(app).get(`/facts?cursor=${page1.body.nextCursor}&limit=1`)
+        expect(page2.status).toBe(200)
+        expect(page2.body.limit).toBe(1)
+        expect(Array.isArray(page2.body.results)).toBe(true)
+      }
     })
   })
 
@@ -227,6 +246,39 @@ describe('Facts Endpoints', () => {
 
       expect(res.status).toBe(200)
       expect(res.body.content).toBe('Updated content here')
+    })
+
+    it('should safely update fact with lone surrogate characters in content', async () => {
+      const fact = await prisma.fact.create({
+        data: {
+          authorId: 'test-uid',
+          content: 'Original content here'
+        }
+      })
+
+      const res = await request(app)
+        .patch(`/facts/${fact.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({ content: 'Ajustar facts \ud83e\ud83e\udd14\udd14' })
+
+      expect(res.status).toBe(200)
+      expect(res.body.content).toBe('Ajustar facts \uFFFD🤔\uFFFD')
+    })
+
+    it('should return 422 when PATCH body has no valid fields', async () => {
+      const fact = await prisma.fact.create({
+        data: {
+          authorId: 'test-uid',
+          content: 'Original content'
+        }
+      })
+
+      const res = await request(app)
+        .patch(`/facts/${fact.id}`)
+        .set('Authorization', `Bearer ${validToken}`)
+        .send({})
+
+      expect(res.status).toBe(422)
     })
 
     it('should return 403 when non-author tries to update', async () => {

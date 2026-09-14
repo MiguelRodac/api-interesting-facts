@@ -13,6 +13,7 @@ import {
   AvatarOptionResponseSchema,
   PublicUserResponseSchema,
   PaginatedFeedResponseSchema,
+  CursorFeedResponseSchema,
   CreateFactRequestSchema,
   FactResponseSchema,
   UpdateFactRequestSchema,
@@ -326,6 +327,11 @@ registry.registerPath({
 
 // ── Facts ───────────────────────────────────────────────────────────────────
 
+const CursorListQuerySchema = z.object({
+  cursor: z.string().optional().describe('Opaque Base64URL cursor for keyset pagination'),
+  limit: z.coerce.number().int().positive().max(100).default(10).optional().describe('Items per page (max 100)')
+})
+
 const ListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1).optional(),
   limit: z.coerce.number().int().positive().max(100).default(10).optional(),
@@ -355,11 +361,11 @@ registry.registerPath({
   operationId: 'getFacts',
   tags: ['Facts'],
   description: 'Returns a mixed stream of facts and reposts. Each entry has a `type` discriminator: "fact" or "repost".',
-  request: { query: ListQuerySchema },
+  request: { query: CursorListQuerySchema },
   responses: {
     200: {
-      description: 'Paginated feed with facts and reposts',
-      content: { 'application/json': { schema: PaginatedFeedResponseSchema } }
+      description: 'Cursor paginated feed with facts and reposts',
+      content: { 'application/json': { schema: CursorFeedResponseSchema } }
     }
   }
 })
@@ -502,12 +508,12 @@ registry.registerPath({
   tags: ['Facts'],
   request: {
     params: z.object({ authorId: z.string() }),
-    query: ListQuerySchema
+    query: CursorListQuerySchema
   },
   responses: {
     200: {
-      description: 'Paginated feed with facts and reposts by author',
-      content: { 'application/json': { schema: PaginatedFeedResponseSchema } }
+      description: 'Cursor paginated feed with facts and reposts by author',
+      content: { 'application/json': { schema: CursorFeedResponseSchema } }
     }
   }
 })

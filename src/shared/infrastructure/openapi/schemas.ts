@@ -413,6 +413,13 @@ export const PaginatedFeedResponseSchema = z.object({
   nextPage: z.number().int().nullable()
 })
 
+export const CursorFeedResponseSchema = z.object({
+  results: z.array(FeedEntrySchema),
+  limit: z.number().int(),
+  nextCursor: z.string().nullable(),
+  hasMore: z.boolean()
+})
+
 export const PaginatedRepostPreviewResponseSchema = z.object({
   results: z.array(RepostPreviewSchema),
   page: z.number().int(),
@@ -427,6 +434,7 @@ registry.register('FeedEntryFact', FeedEntryFactSchema)
 registry.register('FeedEntryRepost', FeedEntryRepostSchema)
 registry.register('FeedEntry', FeedEntrySchema)
 registry.register('PaginatedFeedResponse', PaginatedFeedResponseSchema)
+registry.register('CursorFeedResponse', CursorFeedResponseSchema)
 registry.register('PaginatedRepostPreviewResponse', PaginatedRepostPreviewResponseSchema)
 
 // ── Comment ────────────────────────────────────────────────────────────────

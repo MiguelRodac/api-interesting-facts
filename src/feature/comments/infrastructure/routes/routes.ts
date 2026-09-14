@@ -12,6 +12,8 @@ import { GetCommentsByUser } from '../../application/use-cases/GetCommentsByUser
 import { requireAuth } from '@shared/infrastructure/middleware/auth'
 import { requireProfile } from '@shared/infrastructure/middleware/requireProfile'
 
+import { sanitizeUnicode } from '@shared/domain/utils/unicode'
+
 const ListQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(DEFAULT_PAGE),
   limit: z.coerce.number().int().positive().max(100).default(DEFAULT_LIMIT),
@@ -20,12 +22,12 @@ const ListQuerySchema = z.object({
 })
 
 const CreateCommentBodySchema = z.object({
-  content: z.string(),
+  content: z.string().transform((s: string): string => sanitizeUnicode(s)),
   parentCommentId: z.string().uuid().optional()
 })
 
 const UpdateCommentBodySchema = z.object({
-  content: z.string()
+  content: z.string().transform((s: string): string => sanitizeUnicode(s))
 })
 
 const router = Router()
