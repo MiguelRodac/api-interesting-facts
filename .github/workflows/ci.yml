@@ -26,9 +26,22 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://testuser:testpassword@localhost:5432/testdb
+      NODE_ENV: test
       PORT: 3000
-      ADMIN_API_KEY: test-admin-api-key
+      FIREBASE_PROJECT_ID: test-project-id
+      FIREBASE_CLIENT_EMAIL: test@test.iam.gserviceaccount.com
+      FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC3\n-----END PRIVATE KEY-----"
+      FIREBASE_API_KEY: test-api-key
+      PINO_LOG_LEVEL: fatal
+      TRACE_ID_HEADER: x-trace-id
+      CORS_ORIGIN: http://localhost:8081
+      BASE_URL: http://localhost:3000
       STRICT_VERSION_CHECK: 'false'
+      RATE_LIMIT_MAX: 100
+      RATE_LIMIT_WINDOW_MS: 900000
+      AUTOCOMPLETE_RATE_LIMIT: 200
+      KEEP_ALIVE_IDLE_THRESHOLD_MS: 1200000
+      ADMIN_API_KEY: test-admin-api-key
 
     steps:
       - uses: actions/checkout@v4
