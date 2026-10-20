@@ -152,8 +152,9 @@ describe('Facts Endpoints', () => {
       expect(page1.body.limit).toBe(1)
       expect(Array.isArray(page1.body.results)).toBe(true)
 
-      if (page1.body.hasMore && page1.body.nextCursor) {
-        const page2 = await request(app).get(`/facts?cursor=${page1.body.nextCursor}&limit=1`)
+      if (page1.body.hasMore === true && typeof page1.body.nextCursor === 'string') {
+        const nextCursor: string = page1.body.nextCursor
+        const page2 = await request(app).get('/facts?cursor=' + nextCursor + '&limit=1')
         expect(page2.status).toBe(200)
         expect(page2.body.limit).toBe(1)
         expect(Array.isArray(page2.body.results)).toBe(true)
