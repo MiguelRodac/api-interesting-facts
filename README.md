@@ -18,6 +18,8 @@ REST API for sharing interesting facts — built with Express.js, TypeScript, Po
 | `/users/:userId/likes` | Everything a user liked (facts + reposts, enriched feed) |
 | `/users/:username/comments` | User's comments |
 | `/users/:username/mentions` | User's mentions |
+| `/users/search` | Search users for autocomplete (`{ results, page, limit, hasMore }`) |
+| `/hashtags` | Popular hashtags for autocomplete (`{ results, page, limit, hasMore }`) |
 | `/facts/search` | Search facts, reposts, users, hashtags (`@mention`, `#hashtag`, plain) |
 | `/api/docs` | Interactive API docs (Scalar/OpenAPI) |
 | `/ping` | Health check — HTML page in browser, JSON for API clients (includes docs link) |
@@ -28,13 +30,14 @@ REST API for sharing interesting facts — built with Express.js, TypeScript, Po
 
 | Layer | Technology |
 |-------|------------|
-| Runtime | Node.js 22 (Alpine Linux) |
+| Runtime | Node.js 24 (Alpine Linux) |
 | Framework | Express.js 5 + TypeScript |
 | ORM | Prisma 6 (PostgreSQL) |
 | Auth | Firebase Authentication (ID tokens) |
 | Validation | Zod |
 | Logging | Pino + pino-http |
 | API Docs | Scalar (OpenAPI 3) |
+| CI/CD | GitHub Actions |
 
 ## Architecture
 
@@ -106,11 +109,22 @@ The API runs on `http://localhost:3000`. API docs at `http://localhost:3000/api/
 ## Running locally
 
 ```bash
-pnpm run dev        # Development server with hot-reload
-pnpm run lint       # Lint with ts-standard
-pnpm run test       # Run all test suites
-pnpm run prisma:studio  # Open Prisma Studio (database GUI)
+pnpm run dev              # Development server with hot-reload
+pnpm run lint             # Lint with ts-standard
+pnpm run tsc              # Typecheck with TypeScript
+pnpm run test             # Run all test suites
+pnpm run openapi:generate # Re-generate docs/openapi.yaml from Zod schemas
+pnpm run prisma:studio    # Open Prisma Studio (database GUI)
 ```
+
+## Continuous Integration (CI)
+
+Automated testing and verification runs on every push to `main` and pull request via [GitHub Actions](.github/workflows/ci.yml):
+- **Ephemeral Database:** Spawns a dedicated PostgreSQL 16 service container.
+- **Dependency Management:** Configured via `pnpm` (lockfile frozen).
+- **Prisma Synchronization:** Generates client types and applies database migrations (`prisma:migrate`).
+- **Code Standards:** Enforces strict linting (`ts-standard`) and static typechecking (`tsc`).
+- **Automated Tests:** Executes the full unit and E2E test suites with Jest.
 
 ## Docker
 
@@ -247,10 +261,17 @@ Ensure these environment variables are set in your deployment project:
 | `DELETE` | `/reposts/:repostId/comments/:commentId/likes` | Firebase token | Unlike a repost comment |
 | `GET` | `/reposts/:repostId/comments/:commentId/likes` | Firebase token | List likes on a repost comment |
 
+### Hashtags — `/hashtags`
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/hashtags?q=&page=&limit=` | None | List popular hashtags for autocomplete (`{ results, page, limit, hasMore }`) |
+
 ### Users — `/users/:username`
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
+| `GET` | `/users/search?q=&page=&limit=` | Firebase token | Search users for autocomplete / mentions (`{ results, page, limit, hasMore }`) |
 | `GET` | `/users/:username` | None | Get user profile |
 | `GET` | `/users/:username/facts` | None | Get user's facts + reposts |
 | `GET` | `/users/:userId/likes` | Optional token | Get everything the user liked — FeedEntry[] (facts + reposts, enriched) |
