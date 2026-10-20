@@ -1,6 +1,7 @@
 {
   "name": "api-express-nodejs-typescript",
   "version": "0.0.1",
+  "packageManager": "pnpm@11.16.0",
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register src/index.ts --env-file=.env",
