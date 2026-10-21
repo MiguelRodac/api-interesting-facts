@@ -52,21 +52,22 @@ const cleanupTestData = async (): Promise<void> => {
   // Cleanup ONLY data created by tests (filtered by test UIDs).
   // Never touch rows belonging to real users.
   // Reposts reference facts, so delete them before facts/users.
-  await prisma.repost.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
-  await prisma.comment.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
-  await prisma.like.deleteMany({ where: { userId: { in: TEST_UIDS } } })
-  // Mentions reference facts/comments and users, so delete them before facts/users.
-  await prisma.mention.deleteMany({
-    where: {
-      OR: [
-        { authorId: { in: TEST_UIDS } },
-        { mentionedUserId: { in: TEST_UIDS } }
-      ]
-    }
-  })
-  await prisma.fact.deleteMany({ where: { authorId: { in: TEST_UIDS } } })
-  await prisma.user.deleteMany({ where: { firebaseUid: { in: TEST_UIDS } } })
-  await prisma.hashtag.deleteMany({ where: { tag: { in: TEST_TAGS } } })
+  await prisma.$transaction([
+    prisma.repost.deleteMany({ where: { authorId: { in: TEST_UIDS } } }),
+    prisma.comment.deleteMany({ where: { authorId: { in: TEST_UIDS } } }),
+    prisma.like.deleteMany({ where: { userId: { in: TEST_UIDS } } }),
+    prisma.mention.deleteMany({
+      where: {
+        OR: [
+          { authorId: { in: TEST_UIDS } },
+          { mentionedUserId: { in: TEST_UIDS } }
+        ]
+      }
+    }),
+    prisma.fact.deleteMany({ where: { authorId: { in: TEST_UIDS } } }),
+    prisma.user.deleteMany({ where: { firebaseUid: { in: TEST_UIDS } } }),
+    prisma.hashtag.deleteMany({ where: { tag: { in: TEST_TAGS } } })
+  ])
 }
 
 beforeAll(async () => {

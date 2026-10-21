@@ -10,6 +10,8 @@
     "start": "node build/index.js",
     "tsc": "tsc",
     "test": "jest",
+    "test:unit": "jest --selectProjects unit",
+    "test:e2e": "jest --selectProjects e2e",
     "seed": "npx ts-node --transpile-only scripts/seed-firestore.ts --env-file=.env",
     "seed:versions": "npx ts-node --transpile-only scripts/seed-versions.ts --env-file=.env",
     "prisma:generate": "prisma generate",
